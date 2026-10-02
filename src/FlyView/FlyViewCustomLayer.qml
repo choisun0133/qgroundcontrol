@@ -38,7 +38,13 @@ Item {
 
     property var    _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
     property real   _margin:        ScreenTools.defaultFontPixelWidth
-    property real   _buttonWidth:   ScreenTools.defaultFontPixelWidth * 9
+    property real   _buttonWidth:   ScreenTools.defaultFontPixelWidth * 20  // 장갑 착용 고려 대형 버튼
+    property real   _buttonFont:    ScreenTools.largeFontPointSize
+    property real   _buttonHeight:  1.0                                     // QGCButton heightFactor (기본 0.5)
+
+    readonly property color _colorOpen:   "#C62828"   // 후크 열림 = 빨강
+    readonly property color _colorClose:  "#2E7D32"   // 후크 닫힘 = 초록
+    readonly property color _colorText:   "#FFFFFF"
     property string _hookState:     "-"
     property string _lineState:     "-"
 
@@ -86,9 +92,15 @@ Item {
             QGCLabel {
                 text:               qsTr("후크 (CH%1): %2").arg(hookChannel).arg(_hookState)
                 font.bold:          true
+                font.pointSize:     _buttonFont
             }
             QGCButton {
                 text:                   qsTr("후크 열림")
+                iconSource:             "/res/GripperRelease.svg"
+                pointSize:              _buttonFont
+                heightFactor:           _buttonHeight
+                backgroundColor:        _colorOpen
+                textColor:              _colorText
                 Layout.preferredWidth:  _buttonWidth
                 // 화물 투하 방지를 위해 확인창 표시
                 onClicked: QGroundControl.showMessageDialog(_root, qsTr("후크 열림"),
@@ -98,29 +110,44 @@ Item {
             }
             QGCButton {
                 text:                   qsTr("후크 닫힘")
+                iconSource:             "/res/GripperGrab.svg"
+                pointSize:              _buttonFont
+                heightFactor:           _buttonHeight
+                backgroundColor:        _colorClose
+                textColor:              _colorText
                 Layout.preferredWidth:  _buttonWidth
                 onClicked: { _setServo(hookChannel, hookClosePwm); _hookState = qsTr("닫힘") }
             }
 
-            Item { Layout.preferredHeight: _margin / 2; Layout.preferredWidth: 1 }
+            Item { Layout.preferredHeight: _margin; Layout.preferredWidth: 1 }
 
             // ----- 줄 -----
             QGCLabel {
                 text:               qsTr("줄 (CH%1): %2").arg(lineChannel).arg(_lineState)
                 font.bold:          true
+                font.pointSize:     _buttonFont
             }
             QGCButton {
                 text:                   qsTr("줄 올림")
+                iconSource:             "/res/PayloadUp.svg"
+                pointSize:              _buttonFont
+                heightFactor:           _buttonHeight
                 Layout.preferredWidth:  _buttonWidth
                 onClicked: { _setServo(lineChannel, lineUpPwm); _lineState = qsTr("올림") }
             }
             QGCButton {
                 text:                   qsTr("줄 멈춤")
+                iconSource:             "/res/PayloadStop.svg"
+                pointSize:              _buttonFont
+                heightFactor:           _buttonHeight
                 Layout.preferredWidth:  _buttonWidth
                 onClicked: { _setServo(lineChannel, lineStopPwm); _lineState = qsTr("멈춤") }
             }
             QGCButton {
                 text:                   qsTr("줄 내림")
+                iconSource:             "/res/PayloadDown.svg"
+                pointSize:              _buttonFont
+                heightFactor:           _buttonHeight
                 Layout.preferredWidth:  _buttonWidth
                 onClicked: { _setServo(lineChannel, lineDownPwm); _lineState = qsTr("내림") }
             }
