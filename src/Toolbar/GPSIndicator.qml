@@ -14,6 +14,32 @@ Item {
 
     property var    _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
     property bool   _rtkConnected:  QGroundControl.gpsRtk.connected.value
+    property int    _gpsLock:       _activeVehicle ? _activeVehicle.gps.lock.rawValue : 0
+
+    // GPS_FIX_TYPE -> short status text shown next to the satellite count
+    function _fixText(lock) {
+        switch (lock) {
+        case 2:  return qsTr("2D")
+        case 3:  return qsTr("GPS")
+        case 4:  return qsTr("DGPS")
+        case 5:  return qsTr("RTK Float")
+        case 6:  return qsTr("RTK Fix")
+        case 7:  return qsTr("Static")
+        default: return qsTr("No Fix")
+        }
+    }
+
+    function _fixColor(lock) {
+        switch (lock) {
+        case 2:  return qgcPal.colorOrange
+        case 3:
+        case 4:  return qgcPal.text
+        case 5:  return qgcPal.colorYellow
+        case 6:
+        case 7:  return qgcPal.colorGreen
+        default: return qgcPal.colorRed
+        }
+    }
 
     QGCPalette { id: qgcPal }
 
@@ -67,6 +93,17 @@ Item {
                 color:  qgcPal.text
                 text:   _activeVehicle ? _activeVehicle.gps.hdop.value.toFixed(1) : ""
             }
+        }
+
+        // Fix type: No Fix / GPS / DGPS / RTK Float / RTK Fix
+        QGCLabel {
+            id:                     gpsFixLabel
+            anchors.verticalCenter: parent.verticalCenter
+            visible:                !!_activeVehicle
+            text:                   _fixText(_gpsLock)
+            color:                  _fixColor(_gpsLock)
+            font.bold:              true
+            font.pointSize:         ScreenTools.mediumFontPointSize
         }
     }
 
