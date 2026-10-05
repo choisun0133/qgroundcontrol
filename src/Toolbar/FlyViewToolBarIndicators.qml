@@ -20,6 +20,11 @@ Item {
         anchors.bottom:     parent.bottom
         spacing:            ScreenTools.defaultFontPixelWidth * 1.75
 
+        AeroLinkIndicator {
+            anchors.top:    parent.top
+            anchors.bottom: parent.bottom
+        }
+
         Repeater {
             id:     appRepeater
             model:  QGroundControl.corePlugin.toolBarIndicators

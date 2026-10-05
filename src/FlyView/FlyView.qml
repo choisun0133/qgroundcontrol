@@ -184,4 +184,10 @@ Item {
         guidedValueSlider:  _guidedValueSlider
         visible:            !QGroundControl.videoManager.fullScreen
     }
+
+    // AeroResearch start screen with connection settings; hides once a vehicle connects
+    AeroStartScreen {
+        anchors.fill:   parent
+        z:              QGroundControl.zOrderTopMost + 1
+    }
 }
