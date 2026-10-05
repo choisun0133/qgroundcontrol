@@ -11,6 +11,7 @@ qt_add_qml_module(FlyViewModule
     RESOURCE_PREFIX /qml
     QML_FILES
         AeroGuidedActionArm.qml
+        AeroGuidedActionStartMission.qml
         AeroStartScreen.qml
         CustomGuidedActionsController.qml
         DefaultChecklist.qml

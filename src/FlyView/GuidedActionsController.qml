@@ -129,7 +129,7 @@ Item {
     property bool showRTL:                  _guidedActionsEnabled && _activeVehicle && _vehicleArmed && _activeVehicle.supports.guidedMode && _vehicleFlying && !_vehicleInRTLMode
     property bool showTakeoff:              _guidedActionsEnabled && _activeVehicle && (_activeVehicle.supports.guidedTakeoffWithAltitude || _activeVehicle.supports.guidedTakeoffWithoutAltitude) && !_vehicleFlying && _canTakeoff && _vehicleArmed  // AeroResearch: takeoff never arms; arm first
     property bool showLand:                 _guidedActionsEnabled && _activeVehicle && _activeVehicle.supports.guidedMode && _vehicleArmed && !_activeVehicle.fixedWing && !_vehicleInLandMode
-    property bool showStartMission:         _guidedActionsEnabled && _missionAvailable && !_missionActive && !_vehicleFlying && _canStartMission
+    property bool showStartMission:         _guidedActionsEnabled && _missionAvailable && !_missionActive && !_vehicleFlying && _canStartMission && _vehicleArmed  // AeroResearch: mission start never arms; arm first
     property bool showContinueMission:      _guidedActionsEnabled && _missionAvailable && !_missionActive && _vehicleArmed && _vehicleFlying && (_currentMissionIndex < _visualItemsCount - 1)
     property bool showPause:                _guidedActionsEnabled && _activeVehicle && _vehicleArmed && _activeVehicle.supports.pauseVehicle && _vehicleFlying && !_vehiclePaused && !_fixedWingOnApproach
     property bool showChangeAlt:            _guidedActionsEnabled && _activeVehicle && _vehicleFlying && _activeVehicle.supports.guidedMode && _vehicleArmed && !_missionActive

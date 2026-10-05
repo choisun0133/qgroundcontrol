@@ -15,6 +15,7 @@
         <file alias="QGCLogoArrow.svg">resources/QGCLogoArrow.svg</file>
         <file alias="AeroWordmark.svg">resources/AeroWordmark.svg</file>
         <file alias="AeroPower.svg">resources/AeroPower.svg</file>
+        <file alias="AeroStartMission.svg">resources/AeroStartMission.svg</file>
         <file alias="AeroLockup.svg">resources/AeroLockup.svg</file>
         <file alias="AeroDroneLineArt.svg">resources/AeroDroneLineArt.svg</file>
         <file alias="rtl.svg">resources/rtl.svg</file>

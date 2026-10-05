@@ -14,6 +14,7 @@ ToolStripActionList {
         PreFlightCheckListShowAction { onTriggered: displayPreFlightChecklist() },
         AeroGuidedActionArm { },
         GuidedActionTakeoff { },
+        AeroGuidedActionStartMission { },
         GuidedActionLand { },
         GuidedActionRTL { },
         GuidedActionPause { },
