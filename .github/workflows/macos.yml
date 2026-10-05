@@ -40,7 +40,7 @@ jobs:
   build:
     needs: changes
     if: needs.changes.outputs.should_build == 'true'
-    runs-on: macos-15
+    runs-on: macos-15-intel  # AeroResearch: arm64 runner pool kept refusing our jobs
     timeout-minutes: 120
 
     # id-token/attestations scoped here: only the attestation upload step needs them.
