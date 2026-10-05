@@ -132,11 +132,15 @@ Rectangle {
     }
 
     // Blueprint-style drone line art
-    QGCVectorImage {
-        anchors.centerIn:   parent
-        width:              parent.width
-        height:             parent.height
+    // Rasterised once at window size (cheaper than a curve-rendered full-screen vector)
+    Image {
+        anchors.fill:       parent
         source:             "/res/AeroDroneLineArt.svg"
+        sourceSize.width:   width
+        sourceSize.height:  height
+        fillMode:           Image.PreserveAspectFit
+        asynchronous:       true
+        cache:              false
         opacity:            0.9
     }
 
@@ -177,11 +181,13 @@ Rectangle {
                     source:             "/res/QGCLogoFull.svg"
                 }
             }
-            QGCVectorImage {
+            Image {
                 Layout.alignment:       Qt.AlignHCenter
                 Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.1
                 Layout.preferredWidth:  Layout.preferredHeight * 13.7
                 source:                 "/res/AeroWordmark.svg"
+                sourceSize.height:      Layout.preferredHeight * 2
+                fillMode:               Image.PreserveAspectFit
             }
             QGCLabel {
                 Layout.alignment:   Qt.AlignHCenter

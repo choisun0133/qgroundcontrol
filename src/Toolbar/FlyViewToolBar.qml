@@ -89,12 +89,14 @@ Item {
                             Layout.preferredWidth:  aeroWordmark.width + ScreenTools.defaultFontPixelWidth
                             visible:                !ScreenTools.isMobile
 
-                            QGCVectorImage {
+                            Image {
                                 id:                     aeroWordmark
                                 anchors.verticalCenter: parent.verticalCenter
                                 height:                 ScreenTools.defaultFontPixelHeight * 0.7
                                 width:                  height * 13.7
                                 source:                 "/res/AeroWordmark.svg"
+                                sourceSize.height:      height * 2
+                                fillMode:               Image.PreserveAspectFit
                             }
                         }
 
