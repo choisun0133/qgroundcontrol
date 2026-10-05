@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - 'Stable*'
+      - 'aero-*'
     tags:
       - 'v*'
     paths-ignore:
@@ -252,7 +253,7 @@ jobs:
         uses: ./.github/actions/android-emulator-test
         with:
           apk-path: ${{ runner.temp }}/build/${{ env.PACKAGE }}.apk
-          package: org.mavlink.qgroundcontrol
+          package: kr.co.aeroresearch.gcs
           android-platform: ${{ steps.setup.outputs.android_platform }}
           qt-version: ${{ steps.setup.outputs.qt_version }}
           ndk-version: ${{ steps.setup.outputs.android_ndk_full_version }}
