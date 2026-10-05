@@ -22,6 +22,20 @@ Item {
     property var totalToolInsets:   _toolInsets // These are the insets for your custom overlay additions
     property var mapControl
 
+    readonly property real _panelMargin: ScreenTools.defaultFontPixelWidth
+
+    // AeroResearch floating windows (movable / collapsible, positions saved)
+    AeroMessageWindow {
+        id:         aeroMessageWindow
+        defaultX:   _root.width - panelWidth - _root._panelMargin
+        defaultY:   _root._panelMargin
+    }
+
+    AeroCameraPanel {
+        defaultX:   _root.width - panelWidth - _root._panelMargin
+        defaultY:   aeroMessageWindow.y + aeroMessageWindow.height + _root._panelMargin
+    }
+
     // since this file is a placeholder for the custom layer in a standard build, we will just pass through the parent insets
     QGCToolInsets {
         id:                     _toolInsets

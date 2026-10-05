@@ -14,6 +14,7 @@ Item {
     property var    item2:                  null    // Optional, may come and go
     property string item1IsFullSettingsKey          // Settings key to save whether item1 was saved in full mode
     property bool   show:                   true
+    property bool   movable:                false   // AeroResearch: drag the PiP to move it (parent must not anchor it)
 
     readonly property string _pipExpandedSettingsKey: "IsPIPVisible"
 
@@ -103,6 +104,12 @@ Item {
         enabled:        _isExpanded
         preventStealing: true
         hoverEnabled:   true
+        cursorShape:    _root.movable && pressed ? Qt.ClosedHandCursor : Qt.ArrowCursor
+        drag.target:    _root.movable ? _root : null
+        drag.minimumX:  0
+        drag.minimumY:  0
+        drag.maximumX:  _root.parent ? _root.parent.width - _root.width : 0
+        drag.maximumY:  _root.parent ? _root.parent.height - _root.height : 0
         onClicked:      _swapPip()
     }
 

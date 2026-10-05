@@ -89,11 +89,12 @@ Item {
             pipView:    _pipView
         }
 
+        // AeroResearch: positioned by x/y (not anchors) so the video window can be dragged
         PipView {
             id:                     _pipView
-            anchors.left:           parent.left
-            anchors.bottom:         parent.bottom
-            anchors.margins:        _toolsMargin
+            x:                      _toolsMargin
+            y:                      parent.height - height - _toolsMargin
+            movable:                true
             item1IsFullSettingsKey: "MainFlyWindowIsMap"
             item1:                  mapControl
             item2:                  QGroundControl.videoManager.hasVideo ? videoControl : null
@@ -101,8 +102,8 @@ Item {
                                         (videoControl.pipState.state === videoControl.pipState.pipState || mapControl.pipState.state === mapControl.pipState.pipState)
             z:                      QGroundControl.zOrderWidgets
 
-            property real leftEdgeBottomInset: visible ? width + anchors.margins : 0
-            property real bottomEdgeLeftInset: visible ? height + anchors.margins : 0
+            property real leftEdgeBottomInset: visible ? width + _toolsMargin : 0
+            property real bottomEdgeLeftInset: visible ? height + _toolsMargin : 0
         }
 
         FlyViewWidgetLayer {
