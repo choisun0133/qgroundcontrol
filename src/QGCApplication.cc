@@ -93,6 +93,7 @@ QGCApplication::QGCApplication(int& argc, char* argv[], const QGCCommandLinePars
 #endif
     }
     setApplicationName(applicationName);
+    setApplicationDisplayName(QStringLiteral(QGC_APP_DISPLAY_NAME));
     setDesktopFileName(QGC_PACKAGE_NAME);
     setOrganizationName(QGC_ORG_NAME);
     setOrganizationDomain(QGC_ORG_DOMAIN);

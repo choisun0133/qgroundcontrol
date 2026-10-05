@@ -375,5 +375,6 @@ QString QGroundControlQmlGlobal::telemetryFileExtension() const
 
 QString QGroundControlQmlGlobal::appName()
 {
-    return QCoreApplication::applicationName();
+    // User-visible product name; applicationName() stays the internal settings/storage key.
+    return QStringLiteral(QGC_APP_DISPLAY_NAME);
 }

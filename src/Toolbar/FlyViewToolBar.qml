@@ -83,6 +83,21 @@ Item {
                             onClicked:          mainWindow.showToolSelectDialog()
                         }
 
+                        // AeroResearch wordmark next to the logo button
+                        Item {
+                            Layout.fillHeight:      true
+                            Layout.preferredWidth:  aeroWordmark.width + ScreenTools.defaultFontPixelWidth
+                            visible:                !ScreenTools.isMobile
+
+                            QGCVectorImage {
+                                id:                     aeroWordmark
+                                anchors.verticalCenter: parent.verticalCenter
+                                height:                 ScreenTools.defaultFontPixelHeight * 0.7
+                                width:                  height * 13.7
+                                source:                 "/res/AeroWordmark.svg"
+                            }
+                        }
+
                         MainStatusIndicator {
                             id:                 mainStatusIndicator
                             objectName:         "toolbar_mainStatusIndicator"
@@ -179,6 +194,15 @@ Item {
             interval:       4000
             onTriggered:    messageOpacityAnimation.start()
         }
+    }
+
+    // AeroResearch accent line along the bottom edge of the toolbar
+    Rectangle {
+        anchors.left:   parent.left
+        anchors.right:  parent.right
+        anchors.bottom: parent.bottom
+        height:         Math.max(2, ScreenTools.defaultFontPixelHeight * 0.12)
+        color:          qgcPal.brandingBlue
     }
 
     ParameterDownloadProgress {

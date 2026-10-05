@@ -15,11 +15,14 @@ set(QGC_CUSTOM_DIR "custom" CACHE STRING "Custom build overlay directory, relati
 # ============================================================================
 
 set(QGC_APP_NAME "QGroundControl" CACHE STRING "Application name")
+# User-visible product name (window title, installer, shortcuts, Android label, macOS bundle name).
+# QGC_APP_NAME stays the internal target/binary name so CI packaging paths keep working.
+set(QGC_APP_DISPLAY_NAME "AeroResearch GCS" CACHE STRING "User-visible application name")
 string(TIMESTAMP _copyright_year "%Y")
-set(QGC_APP_COPYRIGHT "Copyright (c) ${_copyright_year} QGroundControl. All rights reserved." CACHE STRING "Copyright notice")
-set(QGC_APP_DESCRIPTION "Open Source Ground Control App" CACHE STRING "Application description")
-set(QGC_ORG_NAME "QGroundControl" CACHE STRING "Organization name")
-set(QGC_ORG_DOMAIN "qgroundcontrol.com" CACHE STRING "Organization domain")
+set(QGC_APP_COPYRIGHT "Copyright (c) ${_copyright_year} AeroResearch Co., Ltd. Based on QGroundControl." CACHE STRING "Copyright notice")
+set(QGC_APP_DESCRIPTION "AeroResearch Ground Control Station" CACHE STRING "Application description")
+set(QGC_ORG_NAME "AeroResearch" CACHE STRING "Organization name")
+set(QGC_ORG_DOMAIN "aeroresearch.co.kr" CACHE STRING "Organization domain")
 set(QGC_PACKAGE_NAME "org.mavlink.qgroundcontrol" CACHE STRING "Package identifier")
 
 # Settings version - increment to clear stored settings on next boot after incompatible changes
@@ -145,7 +148,7 @@ option(QGC_DISABLE_PX4_PLUGIN_FACTORY "Disable PX4 plugin factory" OFF)
 set(QGC_QT_ANDROID_COMPILE_SDK_VERSION "${QGC_CONFIG_ANDROID_PLATFORM}" CACHE STRING "Android compile SDK version")
 set(QGC_QT_ANDROID_TARGET_SDK_VERSION "${QGC_CONFIG_ANDROID_PLATFORM}" CACHE STRING "Android target SDK version")
 set(QGC_QT_ANDROID_MIN_SDK_VERSION "${QGC_CONFIG_ANDROID_MIN_SDK}" CACHE STRING "Android minimum SDK version")
-set(QGC_ANDROID_PACKAGE_NAME "${QGC_PACKAGE_NAME}" CACHE STRING "Android package identifier")
+set(QGC_ANDROID_PACKAGE_NAME "kr.co.aeroresearch.gcs" CACHE STRING "Android package identifier")
 set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/android" CACHE PATH "Android package source directory")
 set(QT_ANDROID_DEPLOYMENT_TYPE "" CACHE STRING "Android deployment type (empty or Release)")
 option(QT_ANDROID_SIGN_APK "Enable APK signing" OFF)
@@ -156,7 +159,7 @@ option(QT_USE_TARGET_ANDROID_BUILD_DIR "Use target-specific Android build direct
 # macOS Platform
 # ----------------------------------------------------------------------------
 set(QGC_MACOS_PLIST_PATH "${CMAKE_SOURCE_DIR}/deploy/macos/MacOSXBundleInfo.plist.in" CACHE FILEPATH "macOS Info.plist template path")
-set(QGC_MACOS_BUNDLE_ID "${QGC_PACKAGE_NAME}" CACHE STRING "macOS bundle identifier")
+set(QGC_MACOS_BUNDLE_ID "kr.co.aeroresearch.gcs" CACHE STRING "macOS bundle identifier")
 set(QGC_MACOS_ICON_PATH "${CMAKE_SOURCE_DIR}/deploy/macos/qgroundcontrol.icns" CACHE FILEPATH "macOS application icon path")
 set(QGC_MACOS_ENTITLEMENTS_PATH "${CMAKE_SOURCE_DIR}/deploy/macos/qgroundcontrol.entitlements" CACHE FILEPATH "macOS entitlements file path")
 option(QGC_MACOS_UNIVERSAL_BUILD "Build macOS universal binary (x86_64h + arm64)" ON)
