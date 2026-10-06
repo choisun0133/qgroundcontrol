@@ -5913,7 +5913,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlyView/DefaultChecklist.qml" line="53"/>
       <source>Please confirm mission is valid (waypoints valid, no terrain collision).</source>
-      <translation>미션이 올바른지(경로지점 확인, 지면과의 충돌) 확인해주십시오.</translation>
+      <translation>미션이 올바른지(경유점 확인, 지면과의 충돌) 확인해주십시오.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/DefaultChecklist.qml" line="61"/>
@@ -7310,7 +7310,7 @@ Click Ok to start the auto-tuning process.
     <message>
       <location filename="../src/FlyView/FixedWingChecklist.qml" line="53"/>
       <source>Please confirm mission is valid (waypoints valid, no terrain collision).</source>
-      <translation>미션이 올바른지(경로지점 확인, 지면과의 충돌) 확인해주십시오.</translation>
+      <translation>미션이 올바른지(경유점 확인, 지면과의 충돌) 확인해주십시오.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/FixedWingChecklist.qml" line="61"/>
@@ -7661,7 +7661,7 @@ VTOL</translation>
     <message>
       <location filename="../src/FlyView/FlyViewMissionCompleteDialog.qml" line="122"/>
       <source>Resume Mission will rebuild the current mission from the last flown waypoint and upload it to the vehicle for the next flight.</source>
-      <translation>미션 다시시작은 마지막 비행 경로지점에서 현재 미션을 다시 구축하여, 다음 비행에 사용하기 위해 기체에 미션을 업로드합니다.</translation>
+      <translation>미션 다시시작은 마지막 비행 경유점에서 현재 미션을 다시 구축하여, 다음 비행에 사용하기 위해 기체에 미션을 업로드합니다.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/FlyViewMissionCompleteDialog.qml" line="130"/>
@@ -8942,7 +8942,7 @@ VTOL</translation>
     <message>
       <location filename="../src/FlyView/GuidedActionsController.qml" line="45"/>
       <source>Set Waypoint</source>
-      <translation>경로지점 추가</translation>
+      <translation>경유점 추가</translation>
     </message>
     <message>
       <location filename="../src/FlyView/GuidedActionsController.qml" line="46"/>
@@ -13277,7 +13277,7 @@ Do you wish to proceed?</source>
     <message>
       <location filename="../src/FlyView/MultiRotorChecklist.qml" line="48"/>
       <source>Please confirm mission is valid (waypoints valid, no terrain collision).</source>
-      <translation>미션이 올바른지(경로지점 확인, 지면과의 충돌) 확인해주십시오.</translation>
+      <translation>미션이 올바른지(경유점 확인, 지면과의 충돌) 확인해주십시오.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/MultiRotorChecklist.qml" line="56"/>
@@ -16498,7 +16498,7 @@ UAVCAN 노드, 모든 기체 설정, 셋업 및 보정을 포함한 모든 항�
     <message>
       <location filename="../src/PlanView/PlanView.qml" line="464"/>
       <source>Waypoint</source>
-      <translation>경로지점</translation>
+      <translation>경유점</translation>
     </message>
     <message>
       <location filename="../src/PlanView/PlanView.qml" line="474"/>
@@ -18666,7 +18666,7 @@ sudo apt-get remove modemmanager</translation>
     <message>
       <location filename="../src/FlyView/RoverChecklist.qml" line="43"/>
       <source>Please confirm mission is valid (waypoints valid, no terrain collision).</source>
-      <translation>미션이 올바른지(경로지점 확인, 지면과의 충돌) 확인해주십시오.</translation>
+      <translation>미션이 올바른지(경유점 확인, 지면과의 충돌) 확인해주십시오.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/RoverChecklist.qml" line="51"/>
@@ -20227,7 +20227,7 @@ If a vehicle still has this key configured, you will no longer be able to commun
     <message>
       <location filename="../src/FlyView/SubChecklist.qml" line="53"/>
       <source>Please confirm mission is valid (waypoints valid, no terrain collision).</source>
-      <translation>미션이 올바른지(경로지점 확인, 지면과의 충돌) 확인해주십시오.</translation>
+      <translation>미션이 올바른지(경유점 확인, 지면과의 충돌) 확인해주십시오.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/SubChecklist.qml" line="61"/>
@@ -21146,7 +21146,7 @@ If a vehicle still has this key configured, you will no longer be able to commun
     <message>
       <location filename="../src/FlyView/VTOLChecklist.qml" line="53"/>
       <source>Please confirm mission is valid (waypoints valid, no terrain collision).</source>
-      <translation>미션이 올바른지(경로지점 확인, 지면과의 충돌) 확인해주십시오.</translation>
+      <translation>미션이 올바른지(경유점 확인, 지면과의 충돌) 확인해주십시오.</translation>
     </message>
     <message>
       <location filename="../src/FlyView/VTOLChecklist.qml" line="61"/>
