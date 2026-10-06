@@ -15,36 +15,45 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TAG: aerogcs-1.0.0
+      TAG: aerogcs-1.1.0
     steps:
-      - name: Download build artifacts
+      - name: Download build artifacts (only builds of the current aero-gcs head)
         run: |
           set -euo pipefail
           mkdir -p dl out
-          gh run download 37354596075 -R "$REPO" -n QGroundControl-installer-AMD64 -D dl/win
-          gh run download 37354596011 -R "$REPO" -n QGroundControl-linux -D dl/android
-          gh run download 37354595913 -R "$REPO" -n QGroundControl -D dl/mac
+          head=$(gh api "repos/$REPO/commits/aero-gcs" -q .sha)
+          echo "aero-gcs head: $head"
+          fetch() {  # workflow, artifact, dir
+            run=$(gh run list -R "$REPO" -b aero-gcs -w "$1" -s success -L 1 --json databaseId,headSha -q ".[] | select(.headSha==\"$head\") | .databaseId")
+            if [ -n "$run" ]; then
+              echo "$1: run $run"
+              gh run download "$run" -R "$REPO" -n "$2" -D "$3"
+            else
+              echo "$1: no successful build for $head yet - skipped"
+            fi
+          }
+          fetch Windows QGroundControl-installer-AMD64 dl/win
+          fetch Android QGroundControl-linux dl/android
+          fetch MacOS QGroundControl dl/mac
           find dl -type f -exec ls -l {} \;
 
       - name: Rename files
         run: |
           set -euo pipefail
-          win=$(find dl/win -iname '*.exe' | head -1)
-          cp "$win" "out/AeroResearchGCS-1.0.0-Windows-x64-Setup.exe"
-          i=0
-          for apk in $(find dl/android -iname '*.apk' | sort); do
-            i=$((i+1)); n=$(basename "$apk")
-            cp "$apk" "out/AeroResearchGCS-1.0.0-Android-${i}-${n}"
-          done
-          dmg=$(find dl/mac -iname '*.dmg' | head -1)
-          cp "$dmg" "out/AeroResearchGCS-1.0.0-macOS.dmg"
+          win=$(find dl -path 'dl/win/*' -iname '*.exe' | head -1)
+          [ -n "$win" ] && cp "$win" "out/AeroResearchGCS-1.1.0-Windows-x64-Setup.exe"
+          apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
+          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.1.0-Android.apk"
+          dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
+          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.1.0-macOS.dmg"
           ls -l out
+          [ -n "$(ls out)" ]
 
       - name: Publish release
         run: |
           set -euo pipefail
           gh release delete "$TAG" -R "$REPO" -y --cleanup-tag || true
           gh release create "$TAG" -R "$REPO" --target "${{ github.sha }}" \
-            --title "AeroResearch GCS 1.0.0" \
+            --title "AeroResearch GCS 1.1.0" \
             --notes "AeroResearch GCS 설치 파일 (Windows / Android / macOS). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." \
             out/*
