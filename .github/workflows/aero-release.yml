@@ -1,0 +1,50 @@
+name: AeroResearch GCS Release
+
+on:
+  push:
+    branches:
+      - 'publish-aero'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      TAG: aerogcs-1.0.0
+    steps:
+      - name: Download build artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p dl out
+          gh run download 37354596075 -R "$REPO" -n QGroundControl-installer-AMD64 -D dl/win
+          gh run download 37354596011 -R "$REPO" -n QGroundControl-linux -D dl/android
+          gh run download 37354595913 -R "$REPO" -n QGroundControl -D dl/mac
+          find dl -type f -exec ls -l {} \;
+
+      - name: Rename files
+        run: |
+          set -euo pipefail
+          win=$(find dl/win -iname '*.exe' | head -1)
+          cp "$win" "out/AeroResearchGCS-1.0.0-Windows-x64-Setup.exe"
+          i=0
+          for apk in $(find dl/android -iname '*.apk' | sort); do
+            i=$((i+1)); n=$(basename "$apk")
+            cp "$apk" "out/AeroResearchGCS-1.0.0-Android-${i}-${n}"
+          done
+          dmg=$(find dl/mac -iname '*.dmg' | head -1)
+          cp "$dmg" "out/AeroResearchGCS-1.0.0-macOS.dmg"
+          ls -l out
+
+      - name: Publish release
+        run: |
+          set -euo pipefail
+          gh release delete "$TAG" -R "$REPO" -y --cleanup-tag || true
+          gh release create "$TAG" -R "$REPO" --target "${{ github.sha }}" \
+            --title "AeroResearch GCS 1.0.0" \
+            --notes "AeroResearch GCS 설치 파일 (Windows / Android / macOS). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." \
+            out/*
