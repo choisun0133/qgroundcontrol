@@ -33,7 +33,7 @@ Item {
     property var    _planViewSettings: QGroundControl.settingsManager.planViewSettings
     property bool   _promptForPlanUsageShowing: false
     property bool   _addROIOnClick: false
-    property bool   _addWaypointOnClick: false
+    property bool   _addWaypointOnClick: true    // AeroResearch: clicking the map adds a waypoint by default (Mission Planner style)
 
     readonly property int _layerMission: PlanEditLayers.layerMission
     readonly property int _layerFence: PlanEditLayers.layerFence
@@ -49,7 +49,6 @@ Item {
     Connections {
         target: planToolBar
         function onToolbarButtonClicked() {
-            _addWaypointOnClick = false
             _addROIOnClick = false
         }
     }
@@ -295,7 +294,7 @@ Item {
 
                 switch (_editingLayer) {
                 case _layerMission:
-                    if (_planMasterController.showCreateFromTemplate) {
+                    if (_planMasterController.showCreateFromTemplate && !_addWaypointOnClick) {
                         _missionController.setHomePosition(coordinate)
                     } else if (_addROIOnClick) {
                         _addROIOnClick = false
@@ -309,6 +308,15 @@ Item {
                             insertROIAfterCurrent(coordinate)
                         }
                     } else if (_addWaypointOnClick) {
+                        // Leave the empty-plan template mode so the click inserts a waypoint
+                        if (_planMasterController.showCreateFromTemplate) {
+                            _planMasterController.userSelectedManualCreation = true
+                        }
+                        // First click on an empty mission: add the takeoff item automatically
+                        if (_missionController.visualItems.count <= 1 && _missionController.isInsertTakeoffValid &&
+                                !_planMasterController.controllerVehicle.rover) {
+                            insertTakeoffItemAfterCurrent()
+                        }
                         insertSimpleItemAfterCurrent(coordinate)
                     }
                     break
