@@ -14,8 +14,12 @@ qt_add_qml_module(FlyViewModule
         AeroFloatingPanel.qml
         AeroGuidedActionArm.qml
         AeroGuidedActionStartMission.qml
+        AeroInstrumentPanel.qml
         AeroMessageWindow.qml
+        AeroPlanViewAction.qml
+        AeroSettingsAction.qml
         AeroStartScreen.qml
+        AeroVideoPanel.qml
         CustomGuidedActionsController.qml
         DefaultChecklist.qml
         FixedWingChecklist.qml

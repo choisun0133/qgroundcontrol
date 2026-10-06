@@ -29,10 +29,29 @@ RowLayout {
         id:                 mainStatusLabel
         Layout.fillHeight:  true
         Layout.preferredWidth: contentWidth + (vehicleMessagesIcon.visible ? vehicleMessagesIcon.width + control.spacing : 0)
+        Layout.leftMargin:  _activeVehicle ? ScreenTools.defaultFontPixelWidth * 1.5 : 0
+        Layout.rightMargin: _activeVehicle ? ScreenTools.defaultFontPixelWidth * 1.5 : 0
         verticalAlignment:  Text.AlignVCenter
-        text:               mainStatusText()
-        color:              qgcPal.text
-        font.pointSize:     ScreenTools.largeFontPointSize
+        text:               (_activeVehicle ? "●  " : "") + mainStatusText()
+        color:              _activeVehicle ? _pillColor : qgcPal.text
+        font.pointSize:     _activeVehicle ? ScreenTools.mediumFontPointSize : ScreenTools.largeFontPointSize
+        font.bold:          !!_activeVehicle
+
+        // AeroResearch: vehicle status shown as a coloured pill (green ready / yellow warning / red not ready)
+        property color _pillColor: Qt.colorEqual(_mainStatusBGColor, "green") ? "#3DDC84" :
+                                   (Qt.colorEqual(_mainStatusBGColor, "yellow") ? "#F5C518" :
+                                   (Qt.colorEqual(_mainStatusBGColor, "red") ? "#FF4D4D" : qgcPal.text))
+
+        Rectangle {
+            z:                      -1
+            visible:                !!_activeVehicle
+            anchors.verticalCenter: parent.verticalCenter
+            x:                      -ScreenTools.defaultFontPixelWidth
+            width:                  parent.width + ScreenTools.defaultFontPixelWidth * 2
+            height:                 parent.contentHeight * 1.6
+            radius:                 height / 2
+            color:                  Qt.rgba(mainStatusLabel._pillColor.r, mainStatusLabel._pillColor.g, mainStatusLabel._pillColor.b, 0.16)
+        }
 
         property string _commLostText:      qsTr("Comms Lost")
         property string _readyToFlyText:    qsTr("Ready")

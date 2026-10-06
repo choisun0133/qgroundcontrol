@@ -46,14 +46,7 @@ Item {
                     id:         gradientBackground
                     height:     parent.height
                     width:      mainStatusLayout.width
-                    opacity:    qgcPal.windowTransparent.a
-
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0; color: _mainStatusBGColor }
-                        //GradientStop { position: qgcButton.x + qgcButton.width; color: _mainStatusBGColor }
-                        GradientStop { position: 1; color: qgcPal.window }
-                    }
+                    color:      qgcPal.brandingPurple   // AeroResearch: flat black, status shown as a pill instead
                 }
 
                 // Standard toolbar background to the right of the gradient
@@ -83,21 +76,41 @@ Item {
                             onClicked:          mainWindow.showToolSelectDialog()
                         }
 
-                        // AeroResearch wordmark next to the logo button
+                        // AeroResearch wordmark + "GROUND CONTROL" next to the logo button
                         Item {
                             Layout.fillHeight:      true
-                            Layout.preferredWidth:  aeroWordmark.width + ScreenTools.defaultFontPixelWidth
+                            Layout.preferredWidth:  wordmarkColumn.width + ScreenTools.defaultFontPixelWidth * 2
                             visible:                !ScreenTools.isMobile
 
-                            Image {
-                                id:                     aeroWordmark
+                            Column {
+                                id:                     wordmarkColumn
                                 anchors.verticalCenter: parent.verticalCenter
-                                height:                 ScreenTools.defaultFontPixelHeight * 0.7
-                                width:                  height * 13.7
-                                source:                 "/res/AeroWordmark.svg"
-                                sourceSize.height:      height * 2
-                                fillMode:               Image.PreserveAspectFit
+                                spacing:                ScreenTools.defaultFontPixelHeight * 0.25
+
+                                Image {
+                                    id:                 aeroWordmark
+                                    height:             ScreenTools.defaultFontPixelHeight * 0.65
+                                    width:              height * 13.7
+                                    source:             "/res/AeroWordmark.svg"
+                                    sourceSize.height:  height * 2
+                                    fillMode:           Image.PreserveAspectFit
+                                }
+                                QGCLabel {
+                                    text:               "GROUND CONTROL"
+                                    color:              qgcPal.brandingBlue
+                                    font.pointSize:     ScreenTools.smallFontPointSize
+                                    font.bold:          true
+                                    font.letterSpacing: ScreenTools.defaultFontPixelWidth * 0.3
+                                }
                             }
+                        }
+
+                        Rectangle {
+                            Layout.alignment:       Qt.AlignVCenter
+                            Layout.preferredWidth:  1
+                            Layout.preferredHeight: parent.height * 0.55
+                            Layout.rightMargin:     ScreenTools.defaultFontPixelWidth * 1.5
+                            color:                  "#2A2D31"
                         }
 
                         MainStatusIndicator {

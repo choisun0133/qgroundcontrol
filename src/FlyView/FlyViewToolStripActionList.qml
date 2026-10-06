@@ -18,6 +18,8 @@ ToolStripActionList {
         GuidedActionPause { },
         GuidedActionRTL { },
         GuidedActionLand { },
+        AeroPlanViewAction { },
+        AeroSettingsAction { },
         FlyViewAdditionalActionsButton { },
         FlyViewGripperButton { }
     ]

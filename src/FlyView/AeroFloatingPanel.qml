@@ -32,7 +32,7 @@ Item {
 
     Settings {
         id:         saved
-        category:   "AeroPanel_" + control.settingsKey
+        category:   "AeroPanel2_" + control.settingsKey
 
         property real posX:         -1
         property real posY:         -1
