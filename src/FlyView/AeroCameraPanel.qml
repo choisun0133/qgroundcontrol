@@ -11,7 +11,7 @@ AeroFloatingPanel {
     id:             control
     title:          qsTr("카메라")
     settingsKey:    "CameraPanel"
-    panelWidth:     ScreenTools.defaultFontPixelWidth * 38
+    panelWidth:     ScreenTools.defaultFontPixelWidth * 34
     visible:        !!_activeVehicle
     badgeText:      _recording ? "● REC " + _camera.recordTimeStr : ""
 

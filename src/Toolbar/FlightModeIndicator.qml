@@ -8,7 +8,7 @@ import QGroundControl.FactControls
 
 Item {
     id:                     control
-    Layout.preferredWidth:  mainLayout.width
+    Layout.preferredWidth:  mainLayout.width + ScreenTools.defaultFontPixelWidth * 2.4
 
     property bool   showIndicator:          true
     property bool   waitForParameters:      false
@@ -24,27 +24,41 @@ Item {
 
     QGCPalette { id: qgcPal }
 
+    // AeroResearch: mode shown as a button  [ 모드  Loiter ▾ ]
+    Rectangle {
+        anchors.verticalCenter: mainLayout.verticalCenter
+        x:                      mainLayout.x - ScreenTools.defaultFontPixelWidth * 1.2
+        width:                  mainLayout.width + ScreenTools.defaultFontPixelWidth * 2.4
+        height:                 Math.min(control.height * 0.72, ScreenTools.defaultFontPixelHeight * 2.6)
+        radius:                 ScreenTools.defaultFontPixelWidth * 0.6
+        color:                  "#1C1F23"
+        border.color:           "#2A2D31"
+        border.width:           1
+    }
+
     RowLayout {
         id:                     mainLayout
+        x:                      ScreenTools.defaultFontPixelWidth * 1.2
         anchors.verticalCenter: parent.verticalCenter
-        spacing:                ScreenTools.defaultFontPixelWidth / 2
+        spacing:                ScreenTools.defaultFontPixelWidth * 0.8
 
-        QGCColoredImage {
-            id:                     flightModeIcon
-            Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 3
-            Layout.preferredHeight: ScreenTools.defaultFontPixelHeight
-            fillMode:               Image.PreserveAspectFit
-            mipmap:                 true
-            color:                  qgcPal.text
-            source:                 "/qmlimages/FlightModesComponentIcon.png"
+        QGCLabel {
+            text:               qsTr("모드")
+            color:              "#9BA1A6"
+            font.pointSize:     ScreenTools.smallFontPointSize
         }
 
         QGCLabel {
             id:                 flightModeLabel
             text:               activeVehicle ? activeVehicle.flightMode : qsTr("N/A", "No data to display")
             color:              qgcPal.text
-            font.pointSize:     fontPointSize
+            font.pointSize:     ScreenTools.mediumFontPointSize
+            font.bold:          true
+        }
 
+        QGCLabel {
+            text:               "▾"
+            color:              "#9BA1A6"
         }
 
         QGCLabel {

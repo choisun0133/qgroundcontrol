@@ -11,7 +11,7 @@ Rectangle {
     id: _root
     width: parent.width
     height: ScreenTools.toolbarHeight
-    color: qgcPal.toolbarBackground
+    color: qgcPal.brandingPurple
 
     property var planMasterController
     property bool showRallyPointsHelp: false
@@ -20,6 +20,39 @@ Rectangle {
 
     property var _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
     property real _controllerProgressPct: planMasterController.missionController.progressPct
+
+    // AeroResearch mission summary shown in the toolbar
+    property var  _missionController: planMasterController.missionController
+    property real _distance:    _missionController.missionPlannedDistance
+    property real _maxDistance: _missionController.missionMaxTelemetry
+    property real _timeSec:     _missionController.missionTime
+    property int  _waypoints:   Math.max(0, _missionController.visualItems ? _missionController.visualItems.count - 1 : 0)
+
+    function _distanceText(meters) {
+        if (isNaN(meters) || meters <= 0) {
+            return "—"
+        }
+        return QGroundControl.unitsConversion.metersToAppSettingsHorizontalDistanceUnits(meters).toFixed(0) + " " +
+               QGroundControl.unitsConversion.appSettingsHorizontalDistanceUnitsString
+    }
+
+    function _timeText(seconds) {
+        if (isNaN(seconds) || seconds <= 0) {
+            return "—"
+        }
+        var m = Math.floor(seconds / 60)
+        var sec = Math.floor(seconds % 60)
+        return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec
+    }
+
+    component Stat: Column {
+        property string label
+        property string value
+        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        spacing: 0
+        QGCLabel { text: label; color: "#9BA1A6"; font.pointSize: ScreenTools.smallFontPointSize }
+        QGCLabel { text: value; font.family: ScreenTools.fixedFontFamily; font.pointSize: ScreenTools.mediumFontPointSize; font.bold: true }
+    }
 
     QGCPalette { id: qgcPal }
 
@@ -42,24 +75,89 @@ Rectangle {
         onClicked: mainWindow.showToolSelectDialog()
     }
 
+    // AeroResearch lockup: wordmark + "MISSION PLAN"
+    Column {
+        id: planLockup
+        anchors.left: qgcButton.right
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: ScreenTools.defaultFontPixelHeight * 0.25
+        visible: !ScreenTools.isMobile
+        width: visible ? implicitWidth : 0
+
+        Image {
+            height: ScreenTools.defaultFontPixelHeight * 0.65
+            width: height * 13.7
+            source: "/res/AeroWordmark.svg"
+            sourceSize.height: height * 2
+            fillMode: Image.PreserveAspectFit
+        }
+        QGCLabel {
+            text: "MISSION PLAN"
+            color: qgcPal.brandingBlue
+            font.pointSize: ScreenTools.smallFontPointSize
+            font.bold: true
+            font.letterSpacing: ScreenTools.defaultFontPixelWidth * 0.3
+        }
+    }
+
     QGCFlickable {
         id: toolsFlickable
         anchors.bottomMargin: 1
-        anchors.left: qgcButton.right
+        anchors.left: planLockup.right
+        anchors.leftMargin: ScreenTools.defaultFontPixelWidth * 2
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        contentWidth: toolIndicators.width
+        anchors.right: flyViewButton.left
+        anchors.rightMargin: ScreenTools.defaultFontPixelWidth
+        contentWidth: planRow.width
         flickableDirection: Flickable.HorizontalFlick
 
-        PlanToolBarIndicators {
-            id: toolIndicators
+        Row {
+            id: planRow
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            planMasterController: _root.planMasterController
-            showRallyPointsHelp: _root.showRallyPointsHelp
-            onToolbarButtonClicked: _root.toolbarButtonClicked()
+            spacing: ScreenTools.defaultFontPixelWidth * 2.5
+
+            Rectangle { width: 1; height: parent.height * 0.55; anchors.verticalCenter: parent.verticalCenter; color: "#2A2D31" }
+            Stat { label: qsTr("총 거리");   value: _root._distanceText(_root._distance) }
+            Stat { label: qsTr("예상 시간"); value: _root._timeText(_root._timeSec) }
+            Stat { label: qsTr("최대 거리"); value: _root._distanceText(_root._maxDistance) }
+            Stat { label: qsTr("미션 항목"); value: _root._waypoints.toString() }
+            Rectangle { width: 1; height: parent.height * 0.55; anchors.verticalCenter: parent.verticalCenter; color: "#2A2D31" }
+
+            PlanToolBarIndicators {
+                id: toolIndicators
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                planMasterController: _root.planMasterController
+                showRallyPointsHelp: _root.showRallyPointsHelp
+                onToolbarButtonClicked: _root.toolbarButtonClicked()
+            }
         }
+    }
+
+    // Back to the flight view
+    QGCButton {
+        id: flyViewButton
+        anchors.right: parent.right
+        anchors.rightMargin: ScreenTools.defaultFontPixelWidth
+        anchors.verticalCenter: parent.verticalCenter
+        text: qsTr("비행 화면")
+        iconSource: "/qmlimages/PaperPlane.svg"
+        onClicked: {
+            if (mainWindow.allowViewSwitch()) {
+                mainWindow.showFlyView()
+            }
+        }
+    }
+
+    // AeroResearch accent line along the bottom edge
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: Math.max(2, ScreenTools.defaultFontPixelHeight * 0.12)
+        color: qgcPal.brandingBlue
     }
 
     // Small mission download progress bar

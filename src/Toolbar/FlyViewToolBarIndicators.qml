@@ -47,5 +47,28 @@ Item {
                 visible:            item.showIndicator
             }
         }
+
+        // AeroResearch: armed state at the far right of the toolbar
+        Item {
+            anchors.top:    parent.top
+            anchors.bottom: parent.bottom
+            width:          armedLabel.contentWidth + ScreenTools.defaultFontPixelWidth * 2
+            visible:        !!_activeVehicle
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width:                  1
+                height:                 parent.height * 0.8
+                color:                  "#2A2D31"
+            }
+            QGCLabel {
+                id:                     armedLabel
+                anchors.right:          parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                text:                   _activeVehicle && _activeVehicle.armed ? qsTr("시동 걸림") : qsTr("시동 꺼짐")
+                color:                  _activeVehicle && _activeVehicle.armed ? "#FF4D4D" : "#9BA1A6"
+                font.bold:              _activeVehicle && _activeVehicle.armed
+            }
+        }
     }
 }

@@ -198,7 +198,13 @@ Item {
                     platformFontPointSize = 14;
                 }
             } else {
-                platformFontPointSize = _defaultFont.font.pointSize;
+                // AeroResearch: desktop OS default fonts (e.g. 9pt on Windows) make the UI tiny on
+                // large monitors, so grow the base size with the screen height (capped at 2.4x).
+                // 1080p -> ~13.5pt, 1440p and up -> 18pt+; small/laptop screens keep the OS default.
+                var basePointSize = _defaultFont.font.pointSize
+                var screenHeight = Screen.height > 0 ? Screen.height :
+                                       (Qt.application.screens.length > 0 ? Qt.application.screens[0].height : 0)
+                platformFontPointSize = Math.max(basePointSize, Math.min(basePointSize * 2.4, screenHeight / 80))
             }
             //-- See if we are using a custom size
             var _uiScalePercentFact = QGroundControl.settingsManager.appSettings.uiScalePercent

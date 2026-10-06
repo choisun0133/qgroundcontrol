@@ -31,9 +31,16 @@ Item {
         defaultY:   _root._panelMargin
     }
 
+    // Bottom centre, between the video window and the instrument panel (as in the design)
     AeroCameraPanel {
-        defaultX:   _root.width - panelWidth - _root._panelMargin
-        defaultY:   aeroMessageWindow.y + aeroMessageWindow.height + _root._panelMargin
+        defaultX:   (_root.width - panelWidth) / 2
+        defaultY:   _root.height - height - _root._panelMargin
+    }
+
+    // Shown in the bottom-left corner until a video stream is available
+    AeroVideoPanel {
+        defaultX:   ScreenTools.defaultFontPixelWidth * 10     // clear of the left tool strip
+        defaultY:   _root.height - height - _root._panelMargin
     }
 
     // since this file is a placeholder for the custom layer in a standard build, we will just pass through the parent insets
