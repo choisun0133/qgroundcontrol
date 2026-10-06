@@ -24,12 +24,12 @@ jobs:
           head=$(gh api "repos/$REPO/commits/aero-gcs" -q .sha)
           echo "aero-gcs head: $head"
           fetch() {  # workflow, artifact, dir
-            run=$(gh run list -R "$REPO" -b aero-gcs -w "$1" -s success -L 1 --json databaseId,headSha -q ".[] | select(.headSha==\"$head\") | .databaseId")
-            if [ -n "$run" ]; then
+            # The run may still be going (other matrix legs); the artifact is enough
+            run=$(gh run list -R "$REPO" -b aero-gcs -w "$1" -L 5 --json databaseId,headSha -q "[.[] | select(.headSha==\"$head\")][0].databaseId")
+            if [ -n "$run" ] && gh run download "$run" -R "$REPO" -n "$2" -D "$3"; then
               echo "$1: run $run"
-              gh run download "$run" -R "$REPO" -n "$2" -D "$3"
             else
-              echo "$1: no successful build for $head yet - skipped"
+              echo "$1: no artifact for $head yet - skipped"
             fi
           }
           fetch Windows QGroundControl-installer-AMD64 dl/win
