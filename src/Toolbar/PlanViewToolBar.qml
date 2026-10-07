@@ -100,14 +100,29 @@ Rectangle {
         }
     }
 
+    MouseArea {
+        anchors.fill: planLockup
+        cursorShape: Qt.PointingHandCursor
+        onClicked: mainWindow.showToolSelectDialog()
+    }
+
+    // Always-visible 비행 / 임무 계획 switch
+    AeroViewSwitch {
+        id: viewSwitch
+        anchors.left: planLockup.right
+        anchors.leftMargin: ScreenTools.defaultFontPixelWidth * 1.5
+        anchors.verticalCenter: parent.verticalCenter
+        current: "plan"
+    }
+
     QGCFlickable {
         id: toolsFlickable
         anchors.bottomMargin: 1
-        anchors.left: planLockup.right
+        anchors.left: viewSwitch.right
         anchors.leftMargin: ScreenTools.defaultFontPixelWidth * 2
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.right: flyViewButton.left
+        anchors.right: parent.right
         anchors.rightMargin: ScreenTools.defaultFontPixelWidth
         contentWidth: planRow.width
         flickableDirection: Flickable.HorizontalFlick
@@ -132,21 +147,6 @@ Rectangle {
                 planMasterController: _root.planMasterController
                 showRallyPointsHelp: _root.showRallyPointsHelp
                 onToolbarButtonClicked: _root.toolbarButtonClicked()
-            }
-        }
-    }
-
-    // Back to the flight view
-    QGCButton {
-        id: flyViewButton
-        anchors.right: parent.right
-        anchors.rightMargin: ScreenTools.defaultFontPixelWidth
-        anchors.verticalCenter: parent.verticalCenter
-        text: qsTr("비행 화면")
-        iconSource: "/qmlimages/PaperPlane.svg"
-        onClicked: {
-            if (mainWindow.allowViewSwitch()) {
-                mainWindow.showFlyView()
             }
         }
     }

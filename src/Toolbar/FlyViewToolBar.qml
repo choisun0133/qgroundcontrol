@@ -82,6 +82,12 @@ Item {
                             Layout.preferredWidth:  wordmarkColumn.width + ScreenTools.defaultFontPixelWidth * 2
                             visible:                !ScreenTools.isMobile
 
+                            MouseArea {
+                                anchors.fill:   parent
+                                cursorShape:    Qt.PointingHandCursor
+                                onClicked:      mainWindow.showToolSelectDialog()
+                            }
+
                             Column {
                                 id:                     wordmarkColumn
                                 anchors.verticalCenter: parent.verticalCenter
@@ -109,8 +115,15 @@ Item {
                             Layout.alignment:       Qt.AlignVCenter
                             Layout.preferredWidth:  1
                             Layout.preferredHeight: parent.height * 0.55
-                            Layout.rightMargin:     ScreenTools.defaultFontPixelWidth * 1.5
+                            Layout.rightMargin:     ScreenTools.defaultFontPixelWidth
                             color:                  "#2A2D31"
+                        }
+
+                        // Always-visible 비행 / 임무 계획 switch
+                        AeroViewSwitch {
+                            Layout.alignment:       Qt.AlignVCenter
+                            Layout.rightMargin:     ScreenTools.defaultFontPixelWidth * 1.5
+                            current:                "fly"
                         }
 
                         MainStatusIndicator {
@@ -184,7 +197,7 @@ Item {
         height:                     messageLabel.contentHeight + (_margins * 2)
         color:                      qgcPal.windowTransparent
         radius:                     ScreenTools.defaultBorderRadius
-        visible:                    guidedActionConfirm.visible
+        visible:                    false   // AeroResearch: the confirm card shows the message itself
 
         QGCLabel {
             id:         messageLabel

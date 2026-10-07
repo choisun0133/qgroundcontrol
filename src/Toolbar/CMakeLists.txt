@@ -6,6 +6,7 @@ qt_add_qml_module(ToolbarModule
     RESOURCE_PREFIX /qml
     QML_FILES
         AeroLinkIndicator.qml
+        AeroViewSwitch.qml
         ArmedIndicator.qml
         BatteryIndicator.qml
         EscIndicator.qml

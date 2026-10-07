@@ -154,11 +154,11 @@ ApplicationWindow {
     }
 
     function showAnalyzeTool() {
-        showTool(qsTr("Analyze Tools"), "qrc:/qml/QGroundControl/AnalyzeView/AnalyzeView.qml", "/qmlimages/Analyze.svg")
+        showTool(qsTr("분석 도구"), "qrc:/qml/QGroundControl/AnalyzeView/AnalyzeView.qml", "/qmlimages/Analyze.svg")
     }
 
     function showVehicleConfig() {
-        showTool(qsTr("Vehicle Configuration"), "qrc:/qml/QGroundControl/VehicleSetup/VehicleConfigView.qml", "/qmlimages/Gears.svg")
+        showTool(qsTr("기체 설정"), "qrc:/qml/QGroundControl/VehicleSetup/VehicleConfigView.qml", "/qmlimages/Gears.svg")
     }
 
     function showVehicleConfigParametersPage() {
@@ -175,7 +175,7 @@ ApplicationWindow {
     }
 
     function showSettingsTool(settingsPage = "") {
-        showTool(qsTr("Application Settings"), "qrc:/qml/QGroundControl/Controls/AppSettings.qml", "/res/QGCLogoWhite")
+        showTool(qsTr("앱 설정"), "qrc:/qml/QGroundControl/Controls/AppSettings.qml", "/res/QGCLogoWhite")
         if (settingsPage !== "") {
             toolDrawerLoader.item.showSettingsPage(settingsPage)
         }
@@ -436,7 +436,7 @@ ApplicationWindow {
             anchors.right:  parent.right
             anchors.top:    parent.top
             height:         ScreenTools.toolbarHeight
-            color:          qgcPal.toolbarBackground
+            color:          qgcPal.brandingPurple
 
             RowLayout {
                 id:                 toolDrawerToolbarLayout
@@ -455,11 +455,30 @@ ApplicationWindow {
                     onClicked: mainWindow.showToolSelectDialog()
                 }
 
+                // AeroResearch: back to the fly / plan view
+                QGCButton {
+                    text:       qsTr("‹  돌아가기")
+                    onClicked: {
+                        if (mainWindow.allowViewSwitch()) {
+                            toolDrawer.visible = false
+                        }
+                    }
+                }
+
                 QGCLabel {
                     id:             toolbarDrawerText
                     text:           toolDrawer.toolTitle
                     font.pointSize: ScreenTools.largeFontPointSize
+                    font.bold:      true
                 }
+            }
+
+            Rectangle {
+                anchors.left:   parent.left
+                anchors.right:  parent.right
+                anchors.bottom: parent.bottom
+                height:         Math.max(2, ScreenTools.defaultFontPixelHeight * 0.12)
+                color:          qgcPal.brandingBlue
             }
         }
 
