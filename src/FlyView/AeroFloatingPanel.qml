@@ -32,7 +32,7 @@ Item {
 
     Settings {
         id:         saved
-        category:   "AeroPanel2_" + control.settingsKey
+        category:   "AeroPanel3_" + control.settingsKey
 
         property real posX:         -1
         property real posY:         -1
@@ -53,20 +53,36 @@ Item {
         saved.collapsed = collapsed
     }
 
-    // Defer placement until the parent has its real size
-    Component.onCompleted: Qt.callLater(function() {
-        control.collapsed = saved.collapsed
-        control.x = saved.posX >= 0 ? saved.posX : control.defaultX
-        control.y = saved.posY >= 0 ? saved.posY : control.defaultY
-        control._clamp()
-    })
+    // Place the panel only once the parent has its real size and the panel is shown.
+    // (At startup the fly view is still 0x0 / hidden behind the start screen, which used
+    // to pile every panel into the top-left corner.)
+    property bool _placed: false
 
-    onCollapsedChanged: Qt.callLater(function() { control._clamp(); control._save() })
+    function _place() {
+        if (_placed || !parent || parent.width <= 0 || parent.height <= 0 || !visible) {
+            return
+        }
+        _placed = true
+        collapsed = saved.collapsed
+        x = saved.posX >= 0 ? saved.posX : defaultX
+        y = saved.posY >= 0 ? saved.posY : defaultY
+        _clamp()
+    }
+
+    Component.onCompleted:  Qt.callLater(_place)
+    onHeightChanged:        if (_placed) { Qt.callLater(_clamp) }
+    onVisibleChanged:       Qt.callLater(_place)
+
+    onCollapsedChanged: {
+        if (_placed) {
+            Qt.callLater(function() { control._clamp(); control._save() })
+        }
+    }
 
     Connections {
         target:                 control.parent
-        function onWidthChanged()  { control._clamp() }
-        function onHeightChanged() { control._clamp() }
+        function onWidthChanged()  { control._placed ? control._clamp() : Qt.callLater(control._place) }
+        function onHeightChanged() { control._placed ? control._clamp() : Qt.callLater(control._place) }
     }
 
     // ---- Expanded panel ----

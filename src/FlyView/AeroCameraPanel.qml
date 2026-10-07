@@ -25,7 +25,6 @@ AeroFloatingPanel {
     property bool   _videoMode:     _hasCamera && _camera.cameraMode === MavlinkCameraControlInterface.CAM_MODE_VIDEO
     property bool   _recording:     _hasCamera && _camera.captureVideoState === MavlinkCameraControlInterface.CaptureVideoStateCapturing
     property bool   _hasThermal:    _hasCamera && !!_camera.thermalStreamInstance
-    property int    _thermalMode:   _hasThermal ? _camera.thermalMode : MavlinkCameraControlInterface.THERMAL_OFF
     property real   _pitch:         _gimbal && !isNaN(_gimbal.absolutePitch.rawValue) ? _gimbal.absolutePitch.rawValue : 0
     property real   _yaw:           _gimbal && !isNaN(_gimbal.bodyYaw.rawValue) ? _gimbal.bodyYaw.rawValue : 0
 
@@ -35,6 +34,27 @@ AeroFloatingPanel {
     readonly property real  _btn:       ScreenTools.defaultFontPixelHeight * 2.4
 
     QGCPalette { id: qgcPal }
+
+    property int _sensor: 0     // 0 EO, 1 IR, 2 EO+IR (picture-in-picture)
+
+    readonly property int _autopilotCompId:     1       // MAV_COMP_ID_AUTOPILOT1
+    readonly property int _cmdSetCameraSource:  534     // MAV_CMD_SET_CAMERA_SOURCE
+    readonly property int _sourceRgb:           1       // CAMERA_SOURCE_RGB
+    readonly property int _sourceIr:            2       // CAMERA_SOURCE_IR
+
+    function _setSensor(sensor) {
+        _sensor = sensor
+        if (_activeVehicle) {
+            var primary = sensor === 1 ? _sourceIr : _sourceRgb
+            var secondary = sensor === 2 ? _sourceIr : 0
+            // param1 0 = all cameras on the autopilot
+            _activeVehicle.sendCommand(_autopilotCompId, _cmdSetCameraSource, true, 0, primary, secondary)
+        }
+        if (_hasThermal) {
+            _camera.thermalMode = sensor === 1 ? MavlinkCameraControlInterface.THERMAL_FULL :
+                                  (sensor === 2 ? MavlinkCameraControlInterface.THERMAL_PIP : MavlinkCameraControlInterface.THERMAL_OFF)
+        }
+    }
 
     function _sendGimbal(pitch, yaw) {
         if (!_gimbalController) {
@@ -67,7 +87,7 @@ AeroFloatingPanel {
         Layout.fillWidth:   true
         visible:            !control._hasCamera
         wrapMode:           Text.WordWrap
-        text:               qsTr("MAVLink 카메라가 감지되지 않았습니다. 짐벌 조작만 사용할 수 있어요.")
+        text:               qsTr("MAVLink 카메라 정보가 없어 촬영 버튼은 숨겨집니다. 센서 전환과 짐벌 조작은 사용할 수 있어요.")
         opacity:            0.7
     }
 
@@ -90,27 +110,28 @@ AeroFloatingPanel {
         }
     }
 
-    // EO / IR / EO+IR
+    // EO / IR / EO+IR - always shown. Sends MAV_CMD_SET_CAMERA_SOURCE to the autopilot
+    // (ArduPilot 4.5+: SIYI, Topotek, Viewpro... gimbals) and, when QGC also receives a
+    // separate thermal stream, switches the local thermal view to match.
     RowLayout {
         Layout.fillWidth:   true
-        visible:            control._hasThermal
         spacing:            2
 
         QGCLabel { text: qsTr("센서"); opacity: 0.7 }
         SegButton {
             text:       "EO"
-            selected:   control._thermalMode === MavlinkCameraControlInterface.THERMAL_OFF
-            onClicked:  control._camera.thermalMode = MavlinkCameraControlInterface.THERMAL_OFF
+            selected:   control._sensor === 0
+            onClicked:  control._setSensor(0)
         }
         SegButton {
             text:       "IR"
-            selected:   control._thermalMode === MavlinkCameraControlInterface.THERMAL_FULL
-            onClicked:  control._camera.thermalMode = MavlinkCameraControlInterface.THERMAL_FULL
+            selected:   control._sensor === 1
+            onClicked:  control._setSensor(1)
         }
         SegButton {
             text:       "EO+IR"
-            selected:   control._thermalMode === MavlinkCameraControlInterface.THERMAL_PIP
-            onClicked:  control._camera.thermalMode = MavlinkCameraControlInterface.THERMAL_PIP
+            selected:   control._sensor === 2
+            onClicked:  control._setSensor(2)
         }
     }
 
