@@ -339,6 +339,30 @@ ApplicationWindow {
         visible:        false
     }
 
+    AeroMissionSyncNotice {
+        anchors.horizontalCenter:   parent.horizontalCenter
+        anchors.top:                parent.top
+        anchors.topMargin:          ScreenTools.toolbarHeight + ScreenTools.defaultFontPixelHeight * 0.5
+        z:                          100
+        onDownloadRequested:        mainWindow.downloadMissionFromVehicle()
+    }
+
+    /// Downloads mission, geofence and rally points from the active vehicle into the plan editor (the fly view follows)
+    function downloadMissionFromVehicle() {
+        let planController = planView._planMasterController
+        if (!planController || planController.offline || planController.syncInProgress) {
+            return
+        }
+        if (planController.dirtyForSave || planController.dirtyForUpload) {
+            QGroundControl.showMessageDialog(mainWindow, qsTr("미션 다운로드"),
+                                             qsTr("임무 계획에 저장하거나 전송하지 않은 변경이 있습니다. 기체 미션을 받으면 이 변경은 사라집니다. 계속할까요?"),
+                                             Dialog.Yes | Dialog.Cancel,
+                                             function() { planController.loadFromVehicle() })
+        } else {
+            planController.loadFromVehicle()
+        }
+    }
+
     footer: LogReplayStatusBar {
         visible: QGroundControl.settingsManager.flyViewSettings.showLogReplayStatusBar.rawValue
     }

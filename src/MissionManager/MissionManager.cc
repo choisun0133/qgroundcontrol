@@ -15,6 +15,11 @@ MissionManager::MissionManager(Vehicle* vehicle)
     , _cachedLastCurrentIndex   (-1)
 {
     connect(_vehicle, &Vehicle::mavlinkMessageReceived, this, &MissionManager::_mavlinkMessageReceived);
+
+    // Any completed sync by this GCS defines the new baseline for detecting missions changed elsewhere
+    connect(this, &PlanManager::newMissionItemsAvailable, this, &MissionManager::_resetVehicleMissionTracking);
+    connect(this, &PlanManager::sendComplete, this, &MissionManager::_resetVehicleMissionTracking);
+    connect(this, &PlanManager::removeAllComplete, this, &MissionManager::_resetVehicleMissionTracking);
 }
 
 MissionManager::~MissionManager()
@@ -269,6 +274,83 @@ void MissionManager::_handleMissionCurrent(const mavlink_message_t& message)
     mavlink_mission_current_t missionCurrent;
     mavlink_msg_mission_current_decode(&message, &missionCurrent);
     _updateMissionIndex(missionCurrent.seq);
+    if (missionCurrent.total != UINT16_MAX) {
+        _checkVehicleMissionCount(missionCurrent.total);
+    }
+}
+
+int MissionManager::_syncedMissionCount() const
+{
+    int count = _missionItems.count();
+    // ArduPilot keeps home at seq 0 but excludes it from MISSION_CURRENT.total
+    if (count > 0 && _vehicle->firmwarePlugin()->sendHomePositionToVehicle()) {
+        count--;
+    }
+    return count;
+}
+
+void MissionManager::_resetVehicleMissionTracking()
+{
+    _vehicleMissionCountTrusted = false;
+    _dismissedMissionCount = -1;
+    _pendingMismatchCount = -1;
+    if (_vehicleMissionOutOfSync) {
+        _vehicleMissionOutOfSync = false;
+        emit vehicleMissionOutOfSyncChanged();
+    }
+}
+
+void MissionManager::_checkVehicleMissionCount(int vehicleCount)
+{
+    if (vehicleCount != _vehicleMissionCount) {
+        _vehicleMissionCount = vehicleCount;
+        emit vehicleMissionOutOfSyncChanged();
+    }
+
+    if (inProgress()) {
+        _pendingMismatchCount = -1;
+        return;
+    }
+
+    const int syncedCount = _syncedMissionCount();
+    if (vehicleCount == syncedCount) {
+        // Firmware without the MISSION_CURRENT.total extension always decodes 0, so only trust the field
+        // once it has agreed with a mission we synced ourselves.
+        _vehicleMissionCountTrusted = true;
+        _pendingMismatchCount = -1;
+        if (_vehicleMissionOutOfSync) {
+            _vehicleMissionOutOfSync = false;
+            emit vehicleMissionOutOfSyncChanged();
+        }
+        return;
+    }
+
+    if (!_vehicleMissionCountTrusted || _vehicleMissionOutOfSync || vehicleCount == _dismissedMissionCount) {
+        return;
+    }
+
+    if (vehicleCount != _pendingMismatchCount) {
+        _pendingMismatchCount = vehicleCount;
+        _mismatchTimer.start();
+        return;
+    }
+
+    if (_mismatchTimer.elapsed() >= _mismatchSettleMs) {
+        qCDebug(MissionManagerLog) << "Vehicle mission changed outside this GCS: vehicle count" << vehicleCount
+                                   << "synced count" << syncedCount;
+        _pendingMismatchCount = -1;
+        _vehicleMissionOutOfSync = true;
+        emit vehicleMissionOutOfSyncChanged();
+    }
+}
+
+void MissionManager::dismissVehicleMissionChange()
+{
+    _dismissedMissionCount = _vehicleMissionCount;
+    if (_vehicleMissionOutOfSync) {
+        _vehicleMissionOutOfSync = false;
+        emit vehicleMissionOutOfSyncChanged();
+    }
 }
 
 void MissionManager::_handleHeartbeat(const mavlink_message_t& message)

@@ -94,6 +94,7 @@ class Vehicle : public VehicleFactGroup, public VehicleTypes
     Q_MOC_INCLUDE("GimbalController.h")
     Q_MOC_INCLUDE("LinkInterface.h")
     Q_MOC_INCLUDE("MAVLinkLogManager.h")
+    Q_MOC_INCLUDE("MissionManager.h")
     Q_MOC_INCLUDE("ParameterManager.h")
     Q_MOC_INCLUDE("QGCMapCircle.h")
     Q_MOC_INCLUDE("QmlObjectListModel.h")
@@ -227,6 +228,7 @@ public:
 
     Q_PROPERTY(ParameterManager*        parameterManager    READ parameterManager   CONSTANT)
     Q_PROPERTY(VehicleLinkManager*      vehicleLinkManager  READ vehicleLinkManager CONSTANT)
+    Q_PROPERTY(MissionManager* missionManager READ missionManager CONSTANT)
     Q_PROPERTY(VehicleObjectAvoidance*  objectAvoidance     READ objectAvoidance    CONSTANT)
     Q_PROPERTY(Autotune*                autotune            READ autotune           CONSTANT)
     Q_PROPERTY(RemoteIDManager*         remoteIDManager     READ remoteIDManager    CONSTANT)

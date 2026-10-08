@@ -137,6 +137,16 @@ RowLayout {
     }
 
     QGCButton {
+        objectName: "planToolbar_downloadButton"
+        text: qsTr("Download")
+        iconSource: "/res/Download.svg"
+        enabled: !_syncInProgress && !_controllerOffline
+        visible: !_syncInProgress
+        primary: QGroundControl.multiVehicleManager.activeVehicle ? QGroundControl.multiVehicleManager.activeVehicle.missionManager.vehicleMissionOutOfSync : false
+        onClicked: { toolbarButtonClicked(); _downloadClicked() }
+    }
+
+    QGCButton {
         objectName: "planToolbar_clearButton"
         text: qsTr("Clear")
         iconSource: "/res/TrashCan.svg"
@@ -193,18 +203,6 @@ RowLayout {
                         onClicked: {
                             dropPanel.close()
                             _saveAsKMLClicked()
-                        }
-                    }
-
-                    QGCButton {
-                        Layout.fillWidth: true
-                        text: qsTr("Download")
-                        enabled: !_syncInProgress && !_controllerOffline
-                        visible: !_syncInProgress
-
-                        onClicked: {
-                            dropPanel.close()
-                            _downloadClicked()
                         }
                     }
                 }
