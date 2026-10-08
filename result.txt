@@ -1,0 +1,356 @@
+case: local-h264
+NO CRASH: still running after 90 s
+----- cdb.log -----
+Opened log file 'cdb.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.047 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.266 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4202 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: "C:\Program Files\AeroResearch GCS\bin\QGroundControl.exe"
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*C:\symbols*https://msdl.microsoft.com/download/symbols
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*C:\symbols*https://msdl.microsoft.com/download/symbols
+Symbol search path is: srv*C:\symbols*https://msdl.microsoft.com/download/symbols
+Executable search path is: 
+
++------------------------------------------------------------------------+
+| This target supports Hardware-enforced Stack Protection. A HW based    |
+| "Shadow Stack" may be available to assist in debugging and analysis.   |
+| See aka.ms/userhsp for more info.                                      |
+|                                                                        |
+| dps @ssp                                                               |
+|                                                                        |
++------------------------------------------------------------------------+
+
+ModLoad: 00007ff6`410f0000 00007ff6`4435e000   QGroundControl.exe
+ModLoad: 00007ffc`95300000 00007ffc`95502000   ntdll.dll
+ModLoad: 00007ffc`939a0000 00007ffc`93a5e000   C:\Windows\System32\KERNEL32.DLL
+ModLoad: 00007ffc`92850000 00007ffc`92bc1000   C:\Windows\System32\KERNELBASE.dll
+ModLoad: 00007ffc`94790000 00007ffc`947bc000   C:\Windows\System32\GDI32.dll
+ModLoad: 00007ffc`92d10000 00007ffc`92d36000   C:\Windows\System32\win32u.dll
+ModLoad: 00007ffc`644d0000 00007ffc`644f3000   C:\Program Files\AeroResearch GCS\bin\Qt6SerialPort.dll
+ModLoad: 00007ffc`92dc0000 00007ffc`92edd000   C:\Windows\System32\gdi32full.dll
+ModLoad: 00007ffc`5e000000 00007ffc`5e0d3000   C:\Program Files\AeroResearch GCS\bin\Qt6Bluetooth.dll
+ModLoad: 00007ffc`930c0000 00007ffc`93160000   C:\Windows\System32\msvcp_win.dll
+ModLoad: 00007ffc`92c00000 00007ffc`92d10000   C:\Windows\System32\ucrtbase.dll
+ModLoad: 00007ffc`936d0000 00007ffc`93876000   C:\Windows\System32\USER32.dll
+ModLoad: 00007ffc`93b10000 00007ffc`93e80000   C:\Windows\System32\combase.dll
+ModLoad: 00007ffc`932d0000 00007ffc`93381000   C:\Windows\System32\ADVAPI32.dll
+ModLoad: 00007ffc`5dd80000 00007ffc`5dff2000   C:\Program Files\AeroResearch GCS\bin\Qt6Graphs.dll
+ModLoad: 00007ffc`93880000 00007ffc`9399f000   C:\Windows\System32\RPCRT4.dll
+ModLoad: 00007ffc`93a60000 00007ffc`93b03000   C:\Windows\System32\msvcrt.dll
+ModLoad: 00007ffc`93e80000 00007ffc`93fb6000   C:\Windows\System32\ole32.dll
+ModLoad: 00007ffc`94820000 00007ffc`948c2000   C:\Windows\System32\sechost.dll
+ModLoad: 00007ffc`92bd0000 00007ffc`92bf7000   C:\Windows\System32\bcrypt.dll
+ModLoad: 00007ffc`5dd20000 00007ffc`5dd75000   C:\Program Files\AeroResearch GCS\bin\Qt6StateMachine.dll
+ModLoad: 00007ffc`935e0000 00007ffc`936b9000   C:\Windows\System32\OLEAUT32.dll
+ModLoad: 00007ffc`94a10000 00007ffc`94e82000   C:\Windows\System32\SETUPAPI.dll
+ModLoad: 00007ffc`5dd00000 00007ffc`5dd1b000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickControls2.dll
+ModLoad: 00007ffc`5dcb0000 00007ffc`5dcf9000   C:\Program Files\AeroResearch GCS\bin\Qt6MultimediaQuick.dll
+ModLoad: 00007ffc`94030000 00007ffc`9478b000   C:\Windows\System32\SHELL32.dll
+ModLoad: 00007ffc`5dc80000 00007ffc`5dca3000   C:\Program Files\AeroResearch GCS\bin\Qt6TextToSpeech.dll
+ModLoad: 00007ffc`5dc20000 00007ffc`5dc76000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickShapes.dll
+ModLoad: 00007ffc`5dab0000 00007ffc`5dc18000   C:\Program Files\AeroResearch GCS\bin\Qt6Quick3D.dll
+ModLoad: 00007ffc`5d0a0000 00007ffc`5daa6000   C:\Program Files\AeroResearch GCS\bin\Qt6Core.dll
+ModLoad: 00007ffc`94f10000 00007ffc`94f8a000   C:\Windows\System32\WS2_32.dll
+ModLoad: 00007ffc`5ca50000 00007ffc`5d09d000   C:\Program Files\AeroResearch GCS\bin\Qt6Quick.dll
+ModLoad: 00007ffc`5c110000 00007ffc`5ca4a000   C:\Program Files\AeroResearch GCS\bin\Qt6Gui.dll
+ModLoad: 00007ffc`5bbe0000 00007ffc`5c105000   C:\Program Files\AeroResearch GCS\bin\Qt6Qml.dll
+ModLoad: 00007ffc`5bb50000 00007ffc`5bbd9000   C:\Program Files\AeroResearch GCS\bin\MSVCP140.dll
+ModLoad: 00007ffc`5bb00000 00007ffc`5bb44000   C:\Program Files\AeroResearch GCS\bin\MSVCP140_2.dll
+ModLoad: 00007ffc`71100000 00007ffc`7110c000   C:\Program Files\AeroResearch GCS\bin\VCRUNTIME140_1.dll
+ModLoad: 00007ffc`5bae0000 00007ffc`5bafe000   C:\Program Files\AeroResearch GCS\bin\VCRUNTIME140.dll
+ModLoad: 00007ffc`77be0000 00007ffc`77c07000   C:\Windows\SYSTEM32\WINMM.dll
+ModLoad: 00007ffc`5ba60000 00007ffc`5bad5000   C:\Program Files\AeroResearch GCS\bin\gstgl-1.0-0.dll
+ModLoad: 00007ffc`5ba20000 00007ffc`5ba58000   C:\Program Files\AeroResearch GCS\bin\Qt6Sensors.dll
+ModLoad: 00007ffc`5b9f0000 00007ffc`5ba15000   C:\Program Files\AeroResearch GCS\bin\gstrtsp-1.0-0.dll
+ModLoad: 00007ffc`5b900000 00007ffc`5b9e1000   C:\Program Files\AeroResearch GCS\bin\gstvideo-1.0-0.dll
+ModLoad: 00007ffc`5b790000 00007ffc`5b8f2000   C:\Program Files\AeroResearch GCS\bin\gstreamer-1.0-0.dll
+ModLoad: 00007ffc`5b700000 00007ffc`5b783000   C:\Program Files\AeroResearch GCS\bin\gstbase-1.0-0.dll
+ModLoad: 00007ffc`5b6a0000 00007ffc`5b6fe000   C:\Program Files\AeroResearch GCS\bin\gobject-2.0-0.dll
+ModLoad: 00007ffc`5b530000 00007ffc`5b695000   C:\Program Files\AeroResearch GCS\bin\glib-2.0-0.dll
+ModLoad: 00007ffc`5b4e0000 00007ffc`5b530000   C:\Program Files\AeroResearch GCS\bin\gstd3d11-1.0-0.dll
+ModLoad: 00007ffc`5b3a0000 00007ffc`5b4db000   C:\Program Files\AeroResearch GCS\bin\Qt6Multimedia.dll
+ModLoad: 00007ffc`5b2e0000 00007ffc`5b39d000   C:\Program Files\AeroResearch GCS\bin\gstd3d12-1.0-0.dll
+ModLoad: 00007ffc`5b290000 00007ffc`5b2dd000   C:\Program Files\AeroResearch GCS\bin\Qt6Sql.dll
+ModLoad: 00007ffc`5b260000 00007ffc`5b289000   C:\Program Files\AeroResearch GCS\bin\Qt6Xml.dll
+ModLoad: 00007ffc`5b1c0000 00007ffc`5b25d000   C:\Program Files\AeroResearch GCS\bin\Qt6Svg.dll
+ModLoad: 00007ffc`70e20000 00007ffc`70e2b000   C:\Program Files\AeroResearch GCS\bin\Qt6Concurrent.dll
+ModLoad: 00007ffc`5b020000 00007ffc`5b1bf000   C:\Program Files\AeroResearch GCS\bin\Qt6Location.dll
+ModLoad: 00007ffc`5af90000 00007ffc`5b011000   C:\Program Files\AeroResearch GCS\bin\Qt6Positioning.dll
+ModLoad: 00007ffc`5add0000 00007ffc`5af83000   C:\Program Files\AeroResearch GCS\bin\Qt6Network.dll
+ModLoad: 00007ffc`5abd0000 00007ffc`5adc8000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickTemplates2.dll
+ModLoad: 00007ffc`5ab50000 00007ffc`5abc7000   C:\Program Files\AeroResearch GCS\bin\Qt6Quick3DUtils.dll
+ModLoad: 00007ffc`5a6d0000 00007ffc`5ab47000   C:\Program Files\AeroResearch GCS\bin\Qt6Quick3DRuntimeRender.dll
+ModLoad: 00007ffc`5a5d0000 00007ffc`5a6c5000   C:\Program Files\AeroResearch GCS\bin\Qt6QmlModels.dll
+ModLoad: 00007ffc`8f1f0000 00007ffc`8f20d000   C:\Windows\SYSTEM32\MPR.dll
+ModLoad: 00007ffc`91d90000 00007ffc`91dbe000   C:\Windows\SYSTEM32\USERENV.dll
+ModLoad: 00007ffc`91560000 00007ffc`915ae000   C:\Windows\SYSTEM32\AUTHZ.dll
+ModLoad: 00007ffc`88eb0000 00007ffc`88ec9000   C:\Windows\SYSTEM32\NETAPI32.dll
+ModLoad: 00007ffc`8b9c0000 00007ffc`8b9ca000   C:\Windows\SYSTEM32\VERSION.dll
+ModLoad: 00007ffc`84c00000 00007ffc`84e83000   C:\Windows\SYSTEM32\d3d11.dll
+ModLoad: 00007ffc`70940000 00007ffc`70949000   C:\Program Files\AeroResearch GCS\bin\MSVCP140_1.dll
+ModLoad: 00007ffc`90c30000 00007ffc`90d12000   C:\Windows\SYSTEM32\dxgi.dll
+ModLoad: 00007ffc`5a5a0000 00007ffc`5a5c6000   C:\Windows\SYSTEM32\d3d12.dll
+ModLoad: 00007ffc`90a50000 00007ffc`90af4000   C:\Windows\SYSTEM32\UxTheme.dll
+ModLoad: 00007ffc`6b6c0000 00007ffc`6b91f000   C:\Windows\SYSTEM32\DWrite.dll
+ModLoad: 00007ffc`5a570000 00007ffc`5a599000   C:\Program Files\AeroResearch GCS\bin\Qt6QmlMeta.dll
+ModLoad: 00007ffc`5a380000 00007ffc`5a565000   C:\Program Files\AeroResearch GCS\bin\Qt6OpenGL.dll
+ModLoad: 00007ffc`5a1a0000 00007ffc`5a378000   C:\Program Files\AeroResearch GCS\bin\gio-2.0-0.dll
+ModLoad: 00000290`d30a0000 00000290`d30a9000   C:\Windows\SYSTEM32\icuuc.dll
+ModLoad: 00007ffc`93fd0000 00007ffc`9402f000   C:\Windows\System32\SHLWAPI.dll
+ModLoad: 00007ffc`70670000 00007ffc`7067b000   C:\Program Files\AeroResearch GCS\bin\gmodule-2.0-0.dll
+ModLoad: 00007ffc`5a120000 00007ffc`5a19d000   C:\Program Files\AeroResearch GCS\bin\orc-0.4-0.dll
+ModLoad: 00007ffc`70030000 00007ffc`70038000   C:\Program Files\AeroResearch GCS\bin\intl-8.dll
+ModLoad: 00007ffc`6ea70000 00007ffc`6ea7c000   C:\Program Files\AeroResearch GCS\bin\ffi-7.dll
+ModLoad: 00007ffc`907b0000 00007ffc`907bb000   C:\Windows\SYSTEM32\AVRT.dll
+ModLoad: 00007ffc`59d60000 00007ffc`5a119000   C:\Program Files\AeroResearch GCS\bin\gstd3dshader-1.0-0.dll
+ModLoad: 00007ffc`59d00000 00007ffc`59d59000   C:\Program Files\AeroResearch GCS\bin\pcre2-8-0.dll
+ModLoad: 00007ffc`8e720000 00007ffc`8e820000   C:\Windows\SYSTEM32\PROPSYS.dll
+ModLoad: 00007ffc`91a20000 00007ffc`91afe000   C:\Windows\SYSTEM32\DNSAPI.dll
+ModLoad: 00007ffc`919f0000 00007ffc`91a1d000   C:\Windows\SYSTEM32\IPHLPAPI.DLL
+ModLoad: 00007ffc`59ca0000 00007ffc`59cf5000   C:\Program Files\AeroResearch GCS\bin\Qt6PositioningQuick.dll
+ModLoad: 00007ffc`88ea0000 00007ffc`88eac000   C:\Windows\SYSTEM32\Secur32.dll
+ModLoad: 00007ffc`8ef70000 00007ffc`8f07a000   C:\Windows\SYSTEM32\WINHTTP.dll
+ModLoad: 00007ffc`591e0000 00007ffc`59c97000   C:\Program Files\AeroResearch GCS\bin\Qt6ShaderTools.dll
+ModLoad: 00007ffc`591c0000 00007ffc`591d5000   C:\Program Files\AeroResearch GCS\bin\Qt6QmlWorkerScript.dll
+ModLoad: 00007ffc`92470000 00007ffc`924bc000   C:\Windows\SYSTEM32\cfgmgr32.DLL
+ModLoad: 00007ffc`591a0000 00007ffc`591bb000   C:\Program Files\AeroResearch GCS\bin\z-1.dll
+ModLoad: 00007ffc`921f0000 00007ffc`9223a000   C:\Windows\SYSTEM32\SSPICLI.DLL
+ModLoad: 00007ffc`59090000 00007ffc`59191000   C:\Windows\SYSTEM32\OPENGL32.dll
+ModLoad: 00007ffc`59060000 00007ffc`5908d000   C:\Windows\SYSTEM32\GLU32.dll
+ModLoad: 00000290`d30d0000 00000290`d30d9000   C:\Windows\SYSTEM32\icuuc.dll
+ModLoad: 00007ffc`91ef0000 00007ffc`91efc000   C:\Windows\SYSTEM32\CRYPTBASE.DLL
+ModLoad: 00007ffc`91b50000 00007ffc`91b5c000   C:\Windows\SYSTEM32\NETUTILS.DLL
+ModLoad: 00007ffc`8ef40000 00007ffc`8ef68000   C:\Windows\SYSTEM32\SRVCLI.DLL
+ModLoad: 00007ffc`73f00000 00007ffc`74155000   C:\Windows\SYSTEM32\icu.DLL
+(1e64.1788): Break instruction exception - code 80000003 (first chance)
+ntdll!LdrpDoDebuggerBreak+0x30:
+00007ffc`953d4544 cc              int     3
+0:000> sxd -c2 "!analyze -v; ~* kb 40; q" av
+0:000> sxd -c2 "!analyze -v; ~* kb 40; q" eh
+0:000> sxd -c2 "!analyze -v; ~* kb 40; q" 0xc0000409
+0:000> g
+ModLoad: 00007ffc`93230000 00007ffc`93261000   C:\Windows\System32\IMM32.DLL
+ModLoad: 00007ffc`93040000 00007ffc`930bf000   C:\Windows\System32\bcryptPrimitives.dll
+ModLoad: 00007ffc`951c0000 00007ffc`951c9000   C:\Windows\System32\NSI.dll
+ModLoad: 00007ffc`910f0000 00007ffc`91107000   C:\Windows\SYSTEM32\kernel.appcore.dll
+ModLoad: 00007ffc`89e00000 00007ffc`8a646000   C:\Windows\SYSTEM32\windows.storage.dll
+ModLoad: 00007ffc`951d0000 00007ffc`952ba000   C:\Windows\System32\SHCORE.dll
+ModLoad: 00007ffc`92780000 00007ffc`927a5000   C:\Windows\SYSTEM32\profapi.dll
+ModLoad: 00007ffc`95110000 00007ffc`951bf000   C:\Windows\System32\clbcatq.dll
+ModLoad: 00007ffc`685e0000 00007ffc`6879d000   C:\Windows\System32\Windows.Globalization.dll
+ModLoad: 00007ffc`84af0000 00007ffc`84b53000   C:\Windows\System32\Bcp47Langs.dll
+ModLoad: 00007ffc`58ec0000 00007ffc`58fb9000   C:\Program Files\AeroResearch GCS\plugins\platforms\qwindows.dll
+ModLoad: 00007ffc`90e50000 00007ffc`90e7f000   C:\Windows\SYSTEM32\dwmapi.dll
+ModLoad: 00007ffc`94fb0000 00007ffc`95093000   C:\Windows\System32\COMDLG32.dll
+ModLoad: 00007ffc`8fee0000 00007ffc`8fef4000   C:\Windows\SYSTEM32\WTSAPI32.dll
+ModLoad: 00007ffc`63d20000 00007ffc`63dd2000   C:\Windows\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.20348.5139_none_37738d8d16612594\COMCTL32.dll
+ModLoad: 00007ffc`6baf0000 00007ffc`6befc000   C:\Windows\SYSTEM32\UIAutomationCore.DLL
+ModLoad: 00007ffc`58d10000 00007ffc`58eb6000   C:\Windows\SYSTEM32\d3d9.dll
+ModLoad: 00007ffc`92730000 00007ffc`9277d000   C:\Windows\SYSTEM32\powrprof.dll
+ModLoad: 00007ffc`92710000 00007ffc`92723000   C:\Windows\SYSTEM32\UMPDC.dll
+ModLoad: 00007ffc`948f0000 00007ffc`94a0d000   C:\Windows\System32\MSCTF.dll
+ModLoad: 00007ffc`92440000 00007ffc`9246c000   C:\Windows\SYSTEM32\DEVOBJ.dll
+ModLoad: 00007ffc`92d40000 00007ffc`92db6000   C:\Windows\System32\WINTRUST.dll
+ModLoad: 00007ffc`92ee0000 00007ffc`9303f000   C:\Windows\System32\CRYPT32.dll
+ModLoad: 00007ffc`92280000 00007ffc`92292000   C:\Windows\SYSTEM32\MSASN1.dll
+ModLoad: 00007ffc`6dbd0000 00007ffc`6dd54000   C:\Windows\System32\Windows.UI.dll
+ModLoad: 00007ffc`6bf00000 00007ffc`6c040000   C:\Windows\System32\Windows.UI.Immersive.dll
+ModLoad: 00007ffc`58c60000 00007ffc`58d02000   C:\Program Files\AeroResearch GCS\plugins\multimedia\ffmpegmediaplugin.dll
+ModLoad: 00007ffc`58a90000 00007ffc`58c5e000   C:\Windows\SYSTEM32\MFPlat.DLL
+ModLoad: 00007ffc`58a00000 00007ffc`58a89000   C:\Windows\SYSTEM32\MF.dll
+ModLoad: 00007ffc`589d0000 00007ffc`589f5000   C:\Windows\SYSTEM32\dxva2.dll
+ModLoad: 00007ffc`58700000 00007ffc`5873f000   C:\Program Files\AeroResearch GCS\bin\swresample-5.dll
+ModLoad: 00007ffc`58740000 00007ffc`589c9000   C:\Program Files\AeroResearch GCS\bin\avformat-61.dll
+ModLoad: 00007ffc`57460000 00007ffc`58700000   C:\Program Files\AeroResearch GCS\bin\avcodec-61.dll
+ModLoad: 00007ffc`57390000 00007ffc`57453000   C:\Program Files\AeroResearch GCS\bin\swscale-8.dll
+ModLoad: 00007ffc`56250000 00007ffc`57388000   C:\Program Files\AeroResearch GCS\bin\avutil-59.dll
+ModLoad: 00000290`d7120000 00000290`d8258000   C:\Program Files\AeroResearch GCS\bin\avutil-59.dll
+ModLoad: 00000290`d5fe0000 00000290`d7118000   C:\Program Files\AeroResearch GCS\bin\avutil-59.dll
+ModLoad: 00007ffc`56130000 00007ffc`56249000   C:\Windows\SYSTEM32\MFReadWrite.dll
+ModLoad: 00007ffc`54a80000 00007ffc`54e4e000   C:\Windows\SYSTEM32\MFCORE.DLL
+ModLoad: 00007ffc`560f0000 00007ffc`56122000   C:\Windows\SYSTEM32\RTWorkQ.DLL
+ModLoad: 00007ffc`6d930000 00007ffc`6d938000   C:\Program Files\AeroResearch GCS\lib\gstreamer-1.0\gstapp.dll
+ModLoad: 00007ffc`560d0000 00007ffc`560e9000   C:\Program Files\AeroResearch GCS\bin\gstapp-1.0-0.dll
+ModLoad: 00007ffc`90870000 00007ffc`90902000   C:\Windows\system32\apphelp.dll
+ModLoad: 00007ffc`90370000 00007ffc`903a7000   C:\Windows\SYSTEM32\xmllite.dll
+ModLoad: 00007ffc`8b760000 00007ffc`8b87b000   C:\Windows\System32\AppXDeploymentClient.dll
+ModLoad: 00007ffc`788b0000 00007ffc`78995000   C:\Windows\System32\Windows.ApplicationModel.dll
+ModLoad: 00007ffc`88520000 00007ffc`88645000   C:\Windows\System32\Windows.StateRepositoryPS.dll
+ModLoad: 00007ffc`547e0000 00007ffc`54803000   C:\Windows\System32\Windows.StateRepositoryBroker.dll
+ModLoad: 00007ffc`85790000 00007ffc`85891000   C:\Windows\SYSTEM32\mrmcorer.dll
+ModLoad: 00007ffc`8a650000 00007ffc`8a906000   C:\Windows\SYSTEM32\iertutil.dll
+ModLoad: 00007ffc`853e0000 00007ffc`853f7000   C:\Windows\SYSTEM32\windows.staterepositorycore.dll
+ModLoad: 00007ffc`829f0000 00007ffc`82a1d000   C:\Windows\SYSTEM32\bcp47mrm.dll
+ModLoad: 00007ffc`8aaf0000 00007ffc`8ace4000   C:\Windows\System32\urlmon.dll
+ModLoad: 00007ffc`8eea0000 00007ffc`8eeb3000   C:\Windows\SYSTEM32\virtdisk.dll
+ModLoad: 00007ffc`8ea70000 00007ffc`8ea7b000   C:\Windows\SYSTEM32\FLTLIB.DLL
+ModLoad: 00007ffc`858a0000 00007ffc`858b8000   C:\Windows\system32\NetworkExplorer.dll
+ModLoad: 00007ffc`84ad0000 00007ffc`84aef000   C:\Windows\System32\p9np.dll
+ModLoad: 00007ffc`8dd40000 00007ffc`8dd4c000   C:\Windows\System32\drprov.dll
+ModLoad: 00007ffc`84360000 00007ffc`8437f000   C:\Windows\System32\ntlanman.dll
+ModLoad: 00007ffc`6c910000 00007ffc`6c91c000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Controls\qtquickcontrols2plugin.dll
+ModLoad: 00007ffc`6c040000 00007ffc`6c04a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Controls\Basic\qtquickcontrols2basicstyleplugin.dll
+ModLoad: 00007ffc`55f00000 00007ffc`560ca000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickControls2Basic.dll
+ModLoad: 00007ffc`6b250000 00007ffc`6b25a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Dialogs\qtquickdialogsplugin.dll
+ModLoad: 00007ffc`55ed0000 00007ffc`55ef8000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickDialogs2.dll
+ModLoad: 00007ffc`6aad0000 00007ffc`6aade000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickDialogs2Utils.dll
+ModLoad: 00007ffc`54130000 00007ffc`543f1000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickDialogs2QuickImpl.dll
+ModLoad: 00007ffc`55e70000 00007ffc`55ec1000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickControls2Impl.dll
+ModLoad: 00007ffc`55e60000 00007ffc`55e6a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Layouts\qquicklayoutsplugin.dll
+ModLoad: 00007ffc`55e10000 00007ffc`55e5d000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickLayouts.dll
+ModLoad: 00007ffc`55e00000 00007ffc`55e0a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Window\quickwindowplugin.dll
+ModLoad: 00007ffc`55df0000 00007ffc`55dfa000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Templates\qtquicktemplates2plugin.dll
+ModLoad: 00007ffc`54850000 00007ffc`5485a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\VectorImage\qquickvectorimageplugin.dll
+ModLoad: 00007ffc`54830000 00007ffc`54843000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickVectorImage.dll
+ModLoad: 00007ffc`54790000 00007ffc`547d8000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickVectorImageGenerator.dll
+ModLoad: 00007ffc`54a70000 00007ffc`54a7a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\VectorImage\Helpers\qquickvectorimagehelpersplugin.dll
+ModLoad: 00007ffc`54a40000 00007ffc`54a70000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickVectorImageHelpers.dll
+ModLoad: 00007ffc`54a30000 00007ffc`54a3a000   C:\Program Files\AeroResearch GCS\qml\QtLocation\declarative_locationplugin.dll
+ModLoad: 00007ffc`54a10000 00007ffc`54a21000   C:\Program Files\AeroResearch GCS\qml\QtPositioning\positioningquickplugin.dll
+ModLoad: 00007ffc`54a00000 00007ffc`54a0a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Controls\Basic\impl\qtquickcontrols2basicstyleimplplugin.dll
+ModLoad: 00007ffc`549e0000 00007ffc`549f7000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickControls2BasicStyleImpl.dll
+ModLoad: 00007ffc`549d0000 00007ffc`549da000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Shapes\qmlshapesplugin.dll
+ModLoad: 00007ffc`549c0000 00007ffc`549ca000   C:\Program Files\AeroResearch GCS\qml\QtCore\qtqmlcoreplugin.dll
+ModLoad: 00007ffc`54990000 00007ffc`549b2000   C:\Program Files\AeroResearch GCS\bin\Qt6QmlCore.dll
+ModLoad: 00007ffc`54980000 00007ffc`5498b000   C:\Program Files\AeroResearch GCS\qml\QtQuick3D\qquick3dplugin.dll
+ModLoad: 00007ffc`54970000 00007ffc`5497a000   C:\Program Files\AeroResearch GCS\qml\QtQuick3D\Helpers\qtquick3dhelpersplugin.dll
+ModLoad: 00007ffc`548c0000 00007ffc`54970000   C:\Program Files\AeroResearch GCS\bin\Qt6Quick3DHelpers.dll
+ModLoad: 00007ffc`548b0000 00007ffc`548bb000   C:\Program Files\AeroResearch GCS\qml\QtMultimedia\quickmultimediaplugin.dll
+ModLoad: 00007ffc`90b30000 00007ffc`90b45000   C:\Windows\SYSTEM32\resourcepolicyclient.dll
+ModLoad: 00007ffc`907c0000 00007ffc`907ff000   C:\Windows\SYSTEM32\directxdatabasehelper.dll
+ModLoad: 00007ffc`53f30000 00007ffc`5412a000   C:\Windows\SYSTEM32\D3D12Core.dll
+ModLoad: 00007ffc`8cac0000 00007ffc`8cafa000   C:\Windows\SYSTEM32\dxcore.dll
+ModLoad: 00007ffc`79130000 00007ffc`7982d000   C:\Windows\SYSTEM32\d3d10warp.dll
+onecore\windows\directx\dxcore\dll\dxcore.cpp(359)\dxcore.dll!00007FFC8CAC98FA: (caller: 00007FFC53FD1A80) Exception(1) tid(1788) 887A0004 The specified device interface or feature level is not supported on this system.
+
+(1e64.1788): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 00007ffc`545e0000 00007ffc`5478d000   C:\Windows\SYSTEM32\dxilconv.dll
+ModLoad: 00007ffc`54880000 00007ffc`548ab000   C:\Windows\SYSTEM32\D3DSCache.dll
+ModLoad: 00007ffc`7b6c0000 00007ffc`7b8e6000   C:\Windows\SYSTEM32\twinapi.appcore.dll
+ModLoad: 00007ffc`545e0000 00007ffc`5478d000   C:\Windows\SYSTEM32\dxilconv.dll
+(1e64.1788): C++ EH exception - code e06d7363 (first chance)
+(1e64.1788): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 00007ffc`54870000 00007ffc`5487e000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qgif.dll
+ModLoad: 00007ffc`54860000 00007ffc`54870000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qicns.dll
+ModLoad: 00007ffc`54820000 00007ffc`5482e000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qico.dll
+ModLoad: 00007ffc`53ea0000 00007ffc`53f2f000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qjpeg.dll
+ModLoad: 00007ffc`54810000 00007ffc`5481c000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qsvg.dll
+ModLoad: 00007ffc`54490000 00007ffc`5449c000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qtga.dll
+ModLoad: 00007ffc`53e30000 00007ffc`53e9e000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qtiff.dll
+ModLoad: 00007ffc`54480000 00007ffc`5448c000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qwbmp.dll
+ModLoad: 00007ffc`53da0000 00007ffc`53e2e000   C:\Program Files\AeroResearch GCS\plugins\imageformats\qwebp.dll
+ModLoad: 00007ffc`54460000 00007ffc`54474000   C:\Program Files\AeroResearch GCS\plugins\networkinformation\qnetworklistmanager.dll
+ModLoad: 00007ffc`90450000 00007ffc`904c1000   C:\Windows\System32\netprofm.dll
+ModLoad: 00007ffc`53bb0000 00007ffc`53d96000   C:\Program Files\AeroResearch GCS\plugins\sqldrivers\qsqlite.dll
+ModLoad: 00007ffc`8d180000 00007ffc`8d192000   C:\Windows\System32\npmproxy.dll
+ModLoad: 00007ffc`77dc0000 00007ffc`77eac000   C:\Windows\System32\Windows.Networking.Connectivity.dll
+(1e64.1788): Windows Runtime Originate Error - code 40080201 (first chance)
+(1e64.1788): Windows Runtime Originate Error - code 40080201 (first chance)
+ModLoad: 00007ffc`8ae20000 00007ffc`8af84000   C:\Windows\System32\WinTypes.dll
+ModLoad: 00007ffc`53b70000 00007ffc`53bab000   C:\Windows\System32\Windows.Networking.HostName.dll
+ModLoad: 00007ffc`925d0000 00007ffc`92674000   C:\Windows\SYSTEM32\sxs.dll
+ModLoad: 00007ffc`54450000 00007ffc`5445a000   C:\Program Files\AeroResearch GCS\qml\QtQuick\Effects\effectsplugin.dll
+ModLoad: 00007ffc`53b00000 00007ffc`53b6b000   C:\Program Files\AeroResearch GCS\bin\Qt6QuickEffects.dll
+ModLoad: 00007ffc`54440000 00007ffc`5444a000   C:\Program Files\AeroResearch GCS\qml\Qt\labs\animation\labsanimationplugin.dll
+ModLoad: 00007ffc`53af0000 00007ffc`53afe000   C:\Program Files\AeroResearch GCS\bin\Qt6LabsAnimation.dll
+ModLoad: 00007ffc`7b9d0000 00007ffc`7b9d9000   C:\Windows\system32\IconCodecService.dll
+ModLoad: 00007ffc`824d0000 00007ffc`8267f000   C:\Windows\SYSTEM32\WindowsCodecs.dll
+ModLoad: 00007ffc`79130000 00007ffc`7982d000   C:\Windows\SYSTEM32\d3d10warp.dll
+ModLoad: 00007ffc`6b260000 00007ffc`6b2bc000   C:\Windows\system32\dataexchange.dll
+ModLoad: 00007ffc`84650000 00007ffc`84765000   C:\Windows\SYSTEM32\textinputframework.dll
+ModLoad: 00007ffc`8e230000 00007ffc`8e35f000   C:\Windows\SYSTEM32\CoreMessaging.dll
+ModLoad: 00007ffc`84e90000 00007ffc`851f6000   C:\Windows\SYSTEM32\CoreUIComponents.dll
+ModLoad: 00007ffc`53ad0000 00007ffc`53ae7000   C:\Program Files\AeroResearch GCS\plugins\texttospeech\qtexttospeech_winrt.dll
+ModLoad: 00007ffc`6c050000 00007ffc`6c0e1000   C:\Windows\System32\MMDevApi.dll
+(1e64.1788): Unknown exception - code 000006ba (first chance)
+(1e64.1788): Unknown exception - code 000006ba (first chance)
+(1e64.1788): Unknown exception - code 000006ba (first chance)
+(1e64.1638): Unknown exception - code 000006ba (first chance)
+(1e64.1788): Unknown exception - code 000006ba (first chance)
+avcore\audiocore\deviceapi\core\enumerator.cpp(1605)\MMDevApi.dll!00007FFC6C07A809: (caller: 00007FFC6C06A9B3) ReturnHr(1) tid(1788) 80070490 Element not found.
+
+(1e64.1788): Unknown exception - code 000006ba (first chance)
+ModLoad: 00007ffc`663c0000 00007ffc`665a3000   C:\Windows\System32\Windows.Media.Speech.dll
+ModLoad: 00007ffc`8ed60000 00007ffc`8edf2000   C:\Windows\System32\msvcp110_win.dll
+ModLoad: 00007ffc`91870000 00007ffc`918a4000   C:\Windows\SYSTEM32\ntmarta.dll
+ModLoad: 00007ffc`7b300000 00007ffc`7b581000   C:\Windows\System32\msxml6.dll
+ModLoad: 00007ffc`65f00000 00007ffc`663c0000   C:\Windows\System32\Speech_OneCore\Common\sapi_onecore.dll
+ModLoad: 00007ffc`7a890000 00007ffc`7aa4d000   C:\Windows\SYSTEM32\AudioSes.DLL
+ModLoad: 00007ffc`65ed0000 00007ffc`65ef7000   C:\Windows\SYSTEM32\winmmbase.dll
+ModLoad: 00007ffc`92130000 00007ffc`9214b000   C:\Windows\SYSTEM32\cryptsp.dll
+onecoreuap\enduser\nui\onecore\winrt\synthesizer\voiceinfo.cpp(554)\Windows.Media.Speech.dll!00007FFC6649298D: (caller: 00007FFC6649D517) LogHr(1) tid(1788) 80070002 The system cannot find the file specified.
+
+    Msg:[GetVoiceFromUserSettings(defaultVoice)] CallContext:[\SynthesizerCreationActivity\SynthesizerGetDefaultVoiceActivity] 
+ModLoad: 00007ffc`917d0000 00007ffc`91806000   C:\Windows\system32\rsaenh.dll
+onecore\base\appmodel\runtime\winrt\lib\windows.applicationmodel.packagefactory.cpp(44)\Windows.ApplicationModel.dll!00007FFC788DFC56: (caller: 00007FFC65FF24EC) LogHr(1) tid(1788) 80073D54 The process has no package identity.
+
+ModLoad: 00007ffc`538b0000 00007ffc`53ac5000   C:\Windows\System32\speech_onecore\engines\tts\MSTTSEngine_OneCore.dll
+ModLoad: 00007ffc`537e0000 00007ffc`538ad000   C:\Windows\System32\speech_onecore\engines\tts\MSTTSLoc_OneCore.DLL
+ModLoad: 00007ffc`8d620000 00007ffc`8d635000   C:\Windows\System32\threadpoolwinrt.dll
+ModLoad: 00007ffc`537c0000 00007ffc`537d3000   C:\Program Files\AeroResearch GCS\plugins\position\qtposition_winrt.dll
+ModLoad: 00007ffc`53730000 00007ffc`537b1000   C:\Windows\System32\Geolocation.dll
+ModLoad: 00007ffc`67090000 00007ffc`670e7000   C:\Windows\System32\BiWinrt.dll
+ModLoad: 00007ffc`8e540000 00007ffc`8e586000   C:\Windows\System32\CapabilityAccessManagerClient.dll
+ModLoad: 00007ffc`91270000 00007ffc`9127d000   C:\Windows\SYSTEM32\hid.dll
+ModLoad: 00007ffc`53710000 00007ffc`53721000   C:\Windows\SYSTEM32\XInput1_4.dll
+ModLoad: 00007ffc`7a490000 00007ffc`7a635000   C:\Windows\SYSTEM32\inputhost.dll
+ModLoad: 00007ffc`536c0000 00007ffc`53705000   C:\Windows\System32\dinput8.dll
+ModLoad: 00007ffc`79130000 00007ffc`7982d000   C:\Windows\SYSTEM32\d3d10warp.dll
+ModLoad: 00007ffc`88270000 00007ffc`88484000   C:\Windows\SYSTEM32\dcomp.dll
+(1e64.146c): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 00007ffc`8f3d0000 00007ffc`8f3e9000   C:\Windows\SYSTEM32\dhcpcsvc6.DLL
+ModLoad: 00007ffc`8f380000 00007ffc`8f39d000   C:\Windows\SYSTEM32\dhcpcsvc.DLL
+ModLoad: 00007ffc`91cf0000 00007ffc`91d58000   C:\Windows\system32\mswsock.dll
+ModLoad: 00007ffc`53650000 00007ffc`536bf000   C:\Program Files\AeroResearch GCS\lib\gstreamer-1.0\gstcoreelements.dll
+ModLoad: 00007ffc`53630000 00007ffc`53642000   C:\Program Files\AeroResearch GCS\lib\gstreamer-1.0\gstvideoconvertscale.dll
+ModLoad: 00007ffc`81980000 00007ffc`81997000   C:\Windows\system32\OnDemandConnRouteHelper.dll
+ModLoad: 00007ffc`53610000 00007ffc`5362b000   C:\Program Files\AeroResearch GCS\plugins\tls\qcertonlybackend.dll
+ModLoad: 00007ffc`8ce10000 00007ffc`8ce1a000   C:\Windows\System32\rasadhlp.dll
+ModLoad: 00007ffc`535c0000 00007ffc`53602000   C:\Program Files\AeroResearch GCS\plugins\tls\qschannelbackend.dll
+ModLoad: 00007ffc`92000000 00007ffc`9202f000   C:\Windows\SYSTEM32\ncrypt.dll
+ModLoad: 00007ffc`91fc0000 00007ffc`91ff7000   C:\Windows\SYSTEM32\NTASN1.dll
+ModLoad: 00007ffc`8e9e0000 00007ffc`8ea61000   C:\Windows\System32\fwpuclnt.dll
+----- settings after run -----
+[Video]
+videoSource=RTSP Video Stream
+rtspUrl=rtsp://127.0.0.1:8554/test
