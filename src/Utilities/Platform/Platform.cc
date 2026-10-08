@@ -108,6 +108,78 @@ void WindowsInvalidParameterHandler([[maybe_unused]] const wchar_t* expression,
 
 LPTOP_LEVEL_EXCEPTION_FILTER g_prevUef = nullptr;
 
+// AeroResearch: crash report (%LOCALAPPDATA%\AeroResearch\last_crash.txt) listing the faulting module and
+// the call chain as module+offset, shown to the user on the next launch. Path is resolved at startup so the
+// filter itself only uses Win32 calls that are safe after a fault.
+wchar_t g_crashReportPath[MAX_PATH] = {};
+
+void initCrashReportPath()
+{
+    wchar_t dir[MAX_PATH] = {};
+    const DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", dir, MAX_PATH);
+    if ((n == 0) || (n >= MAX_PATH - 40)) {
+        return;
+    }
+    (void) wcscat_s(dir, L"\\AeroResearch");
+    (void) CreateDirectoryW(dir, nullptr);
+    (void) wcscpy_s(g_crashReportPath, dir);
+    (void) wcscat_s(g_crashReportPath, L"\\last_crash.txt");
+}
+
+void crashReportWrite(HANDLE file, const wchar_t* text)
+{
+    char utf8[1024] = {};
+    const int len = WideCharToMultiByte(CP_UTF8, 0, text, -1, utf8, static_cast<int>(sizeof(utf8)), nullptr, nullptr);
+    if (len > 1) {
+        DWORD written = 0;
+        (void) WriteFile(file, utf8, static_cast<DWORD>(len - 1), &written, nullptr);
+    }
+}
+
+void crashReportFrame(HANDLE file, const wchar_t* label, const void* address)
+{
+    HMODULE module = nullptr;
+    wchar_t modulePath[MAX_PATH] = L"?";
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           static_cast<LPCWSTR>(address), &module) && module) {
+        (void) GetModuleFileNameW(module, modulePath, MAX_PATH);
+    }
+    const wchar_t* moduleName = wcsrchr(modulePath, L'\\');
+    moduleName = moduleName ? moduleName + 1 : modulePath;
+    const unsigned long long offset = module
+        ? static_cast<unsigned long long>(static_cast<const char*>(address) - reinterpret_cast<const char*>(module))
+        : reinterpret_cast<unsigned long long>(address);
+    wchar_t line[512] = {};
+    (void) _snwprintf_s(line, _TRUNCATE, L"%ls %ls+0x%llx\r\n", label, moduleName, offset);
+    crashReportWrite(file, line);
+}
+
+void writeCrashReport(EXCEPTION_POINTERS* ep)
+{
+    if (g_crashReportPath[0] == L'\0') {
+        return;
+    }
+    const HANDLE file = CreateFileW(g_crashReportPath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    const DWORD code = (ep && ep->ExceptionRecord) ? ep->ExceptionRecord->ExceptionCode : 0;
+    wchar_t line[256] = {};
+    (void) _snwprintf_s(line, _TRUNCATE, L"AeroResearch GCS %hs crash 0x%08lX thread %lu\r\n",
+                        QGC_APP_VERSION_STR, static_cast<unsigned long>(code), GetCurrentThreadId());
+    crashReportWrite(file, line);
+    if (ep && ep->ExceptionRecord) {
+        crashReportFrame(file, L"at", ep->ExceptionRecord->ExceptionAddress);
+    }
+    void* frames[48] = {};
+    const USHORT count = RtlCaptureStackBackTrace(0, static_cast<DWORD>(std::size(frames)), frames, nullptr);
+    for (USHORT i = 0; i < count; i++) {
+        crashReportFrame(file, L" ", frames[i]);
+    }
+    (void) FlushFileBuffers(file);
+    (void) CloseHandle(file);
+}
+
 LONG WINAPI WindowsUnhandledExceptionFilter(EXCEPTION_POINTERS* ep)
 {
     const DWORD code = (ep && ep->ExceptionRecord) ? ep->ExceptionRecord->ExceptionCode : 0;
@@ -118,6 +190,10 @@ LONG WINAPI WindowsUnhandledExceptionFilter(EXCEPTION_POINTERS* ep)
     (void) swprintf(buf, static_cast<int>(std::size(buf)), L"QGC: unhandled SEH 0x%08lX\n", static_cast<unsigned long>(code));
 #endif
     (void) OutputDebugStringW(buf);
+
+#if defined(_MSC_VER)
+    writeCrashReport(ep);
+#endif
 
     const HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
     if (h && (h != INVALID_HANDLE_VALUE)) {
@@ -132,6 +208,9 @@ LONG WINAPI WindowsUnhandledExceptionFilter(EXCEPTION_POINTERS* ep)
 void setWindowsErrorModes(bool quietWindowsAsserts)
 {
     (void) SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+#if defined(_MSC_VER)
+    initCrashReportPath();
+#endif
     g_prevUef = SetUnhandledExceptionFilter(WindowsUnhandledExceptionFilter);
 
 #if defined(_MSC_VER)

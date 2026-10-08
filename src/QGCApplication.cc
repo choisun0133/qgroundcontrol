@@ -1,7 +1,9 @@
 #include "QGCApplication.h"
 
 #include <QtCore/QEvent>
+#include <QtCore/QDir>
 #include <QtCore/QFile>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QMetaMethod>
 #include <QtCore/QMetaObject>
 #include <QtCore/QRegularExpression>
@@ -355,6 +357,24 @@ void QGCApplication::_initForNormalAppBoot()
 
     // Probe for joysticks
     JoystickManager::instance()->init();
+
+#ifdef Q_OS_WIN
+    // AeroResearch: report written by the Windows crash filter (Platform.cc) on the previous run
+    {
+        const QString crashPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
+                                  + QStringLiteral("/AeroResearch/last_crash.txt");
+        QFile crashFile(crashPath);
+        if (crashFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QStringList lines = QString::fromUtf8(crashFile.readAll()).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+            crashFile.close();
+            (void) QFile::remove(crashPath + QStringLiteral(".shown"));
+            (void) QFile::rename(crashPath, crashPath + QStringLiteral(".shown"));
+            showAppMessage(tr("The application closed unexpectedly last time. Please send a screenshot of this report "
+                              "to the developer (also saved at %1):").arg(QDir::toNativeSeparators(crashPath + QStringLiteral(".shown")))
+                           + QStringLiteral("\n\n") + lines.mid(0, 24).join(QLatin1Char('\n')));
+        }
+    }
+#endif
 
     if (_settingsUpgraded) {
         showAppMessage(tr("The format for %1 saved settings has been modified. "
