@@ -12,6 +12,26 @@ Item {
     property real _toolIndicatorMargins:    ScreenTools.defaultFontPixelHeight * 0.66
     property real _widthMargin:             _toolIndicatorMargins * 2
 
+    // Stock indicators already covered by AeroStatusGroup
+    readonly property var _replacedIndicators: [ "VehicleGPSIndicator.qml", "TelemetryRSSIIndicator.qml", "RCRSSIIndicator.qml", "BatteryIndicator.qml" ]
+
+    function _filteredIndicators(list) {
+        var out = []
+        for (var i = 0; i < list.length; i++) {
+            var url = String(list[i])
+            var replaced = false
+            for (var j = 0; j < _replacedIndicators.length; j++) {
+                if (url.endsWith("/" + _replacedIndicators[j])) {
+                    replaced = true
+                }
+            }
+            if (!replaced) {
+                out.push(list[i])
+            }
+        }
+        return out
+    }
+
     Row {
         id:                 mainLayout
         anchors.margins:    _toolIndicatorMargins
@@ -20,7 +40,8 @@ Item {
         anchors.bottom:     parent.bottom
         spacing:            ScreenTools.defaultFontPixelWidth * 1.75
 
-        AeroLinkIndicator {
+        // AeroResearch: telemetry / RC / LTE / GPS / battery in one group (replaces the stock indicators below)
+        AeroStatusGroup {
             anchors.top:    parent.top
             anchors.bottom: parent.bottom
         }
@@ -38,7 +59,7 @@ Item {
 
         Repeater {
             id:     toolIndicatorsRepeater
-            model:  _activeVehicle ? _activeVehicle.toolIndicators : []
+            model:  _activeVehicle ? _filteredIndicators(_activeVehicle.toolIndicators) : []
 
             Loader {
                 anchors.top:        parent.top
