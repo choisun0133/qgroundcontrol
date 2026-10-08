@@ -48,7 +48,7 @@
             "name": "keepMapCenteredOnVehicle",
             "shortDesc": "Automatically pan the map to keep the vehicle centered on screen during flight.",
             "type": "bool",
-            "default": false,
+            "default": true,
             "label": "Keep Map Centered On Vehicle",
             "keywords": "center map"
         },
