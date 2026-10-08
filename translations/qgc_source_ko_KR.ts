@@ -16895,6 +16895,11 @@ Click &apos;Ok&apos; to upload the Plan anyway.</source>
   <context>
     <name>QGCApplication</name>
     <message>
+      <location filename="../src/QGCApplication.cc" line="1"/>
+      <source>The application closed unexpectedly last time. Please send a screenshot of this report to the developer (also saved at %1):</source>
+      <translation>지난번에 프로그램이 비정상 종료되었습니다. 아래 내용을 캡처해서 개발자에게 보내 주세요 (파일 위치: %1):</translation>
+    </message>
+    <message>
       <location filename="../src/QGCApplication.cc" line="322"/>
       <source>The current user does not have the correct permissions to access serial devices. You should also remove modemmanager since it also interferes.&lt;br/&gt;&lt;br/&gt;If you are using Ubuntu, execute the following commands to fix these issues:&lt;br/&gt;&lt;pre&gt;sudo usermod -a -G dialout $USER&lt;br/&gt;sudo apt-get remove modemmanager&lt;/pre&gt;</source>
       <translation>%1을(를) 루트 계정으로 실행하고 있습니다. 이러한 %1와(과) 문제를 일으킬 수 있기 때문에 실행할 수 없습니다. %1을(를) 종료합니다. Ubuntu에서 시리얼 포트 관련 문제가 있다면 다음 명령이 문제를 해결할 수 있습니다:
