@@ -339,10 +339,21 @@ ApplicationWindow {
         visible:        false
     }
 
+    // AeroResearch: link / GPS / battery alerts (fly view only)
+    AeroStatusAlert {
+        id:                         aeroStatusAlert
+        anchors.horizontalCenter:   parent.horizontalCenter
+        anchors.top:                parent.top
+        anchors.topMargin:          ScreenTools.toolbarHeight + ScreenTools.defaultFontPixelHeight * 0.5
+        z:                          99
+        visible:                    flyView.visible && !!_alert && _alert.key !== _dismissedKey
+    }
+
     AeroMissionSyncNotice {
         anchors.horizontalCenter:   parent.horizontalCenter
         anchors.top:                parent.top
         anchors.topMargin:          ScreenTools.toolbarHeight + ScreenTools.defaultFontPixelHeight * 0.5
+                                    + (aeroStatusAlert.visible ? aeroStatusAlert.height + ScreenTools.defaultFontPixelHeight * 0.5 : 0)
         z:                          100
         onDownloadRequested:        mainWindow.downloadMissionFromVehicle()
     }

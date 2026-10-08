@@ -6,7 +6,10 @@ qt_add_qml_module(ToolbarModule
     RESOURCE_PREFIX /qml
     QML_FILES
         AeroLinkIndicator.qml
+        AeroLinkStatus.qml
         AeroMissionSyncNotice.qml
+        AeroStatusAlert.qml
+        AeroStatusGroup.qml
         AeroViewSwitch.qml
         ArmedIndicator.qml
         BatteryIndicator.qml
