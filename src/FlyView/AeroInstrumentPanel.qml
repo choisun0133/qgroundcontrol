@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Layouts
 
@@ -11,9 +12,27 @@ Rectangle {
     implicitWidth:  _u * 30
     implicitHeight: mainColumn.implicitHeight + _pad * 2
     radius:         _u * 0.5
-    color:          Qt.rgba(0.055, 0.059, 0.067, 0.94)
-    border.color:   _border
+    color:          Qt.rgba(0.055, 0.059, 0.067, 0.94 * _userOpacity)
+    border.color:   Qt.rgba(0.165, 0.176, 0.192, _userOpacity)
     border.width:   1
+
+    // AeroResearch: user size / transparency (gear button, saved between runs)
+    scale:              _userScale
+    transformOrigin:    Item.BottomRight
+
+    property real _userScale:   prefs.panelScale
+    property real _userOpacity: prefs.panelOpacity
+    property bool _showPrefs:   false
+
+    Settings {
+        id:         prefs
+        category:   "AeroInstrumentPanel"
+        property real panelScale:   1.0
+        property real panelOpacity: 1.0
+    }
+
+    function _stepScale(d)      { prefs.panelScale = Math.round(Math.max(0.6, Math.min(1.6, prefs.panelScale + d)) * 10) / 10 }
+    function _stepOpacity(d)    { prefs.panelOpacity = Math.round(Math.max(0.3, Math.min(1.0, prefs.panelOpacity + d)) * 10) / 10 }
 
     property var    _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
 
@@ -130,6 +149,7 @@ Rectangle {
         y:          control._pad
         width:      control.width - control._pad * 2
         spacing:    control._pad
+        opacity:    control._userOpacity
 
         RowLayout {
             Layout.fillWidth:       true
@@ -383,6 +403,72 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    // Gear button (top-right corner, always fully visible)
+    Rectangle {
+        id:             gearButton
+        anchors.right:  parent.right
+        anchors.top:    parent.top
+        anchors.margins: control._u * 0.15
+        width:          control._u * 1.4
+        height:         width
+        radius:         width / 2
+        z:              10
+        color:          control._showPrefs ? control._accent : "#1C1F23"
+        border.color:   "#2A2D31"
+        QGCLabel {
+            anchors.centerIn:   parent
+            text:               "⚙"
+            color:              control._showPrefs ? "#0E0F11" : "#C9CDD1"
+        }
+        MouseArea {
+            anchors.fill:   parent
+            cursorShape:    Qt.PointingHandCursor
+            onClicked:      control._showPrefs = !control._showPrefs
+        }
+    }
+
+    // Size / transparency controls
+    Rectangle {
+        anchors.right:      gearButton.left
+        anchors.top:        parent.top
+        anchors.margins:    control._u * 0.15
+        width:              prefsRow.implicitWidth + control._u
+        height:             prefsRow.implicitHeight + control._u * 0.5
+        radius:             control._u * 0.3
+        z:                  10
+        visible:            control._showPrefs
+        color:              "#0E0F11"
+        border.color:       "#2A2D31"
+
+        RowLayout {
+            id:                 prefsRow
+            anchors.centerIn:   parent
+            spacing:            control._u * 0.3
+
+            QGCLabel { text: qsTr("크기"); color: control._muted; font.pointSize: ScreenTools.smallFontPointSize }
+            QGCButton { text: "−"; heightFactor: 0.2; onClicked: control._stepScale(-0.1) }
+            QGCLabel {
+                Layout.preferredWidth:  control._u * 2.4
+                horizontalAlignment:    Text.AlignHCenter
+                text:                   Math.round(control._userScale * 100) + "%"
+                font.family:            ScreenTools.fixedFontFamily
+            }
+            QGCButton { text: "+"; heightFactor: 0.2; onClicked: control._stepScale(0.1) }
+
+            Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: control._u; color: "#2A2D31" }
+
+            QGCLabel { text: qsTr("불투명도"); color: control._muted; font.pointSize: ScreenTools.smallFontPointSize }
+            QGCButton { text: "−"; heightFactor: 0.2; onClicked: control._stepOpacity(-0.1) }
+            QGCLabel {
+                Layout.preferredWidth:  control._u * 2.4
+                horizontalAlignment:    Text.AlignHCenter
+                text:                   Math.round(control._userOpacity * 100) + "%"
+                font.family:            ScreenTools.fixedFontFamily
+            }
+            QGCButton { text: "+"; heightFactor: 0.2; onClicked: control._stepOpacity(0.1) }
         }
     }
 }
