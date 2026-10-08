@@ -24,7 +24,7 @@ jobs:
       - name: Install AeroResearch GCS
         shell: pwsh
         run: |
-          curl.exe -fsSL -o setup.exe https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-1.6.1/AeroResearchGCS-1.6.1-Windows-x64-Setup.exe
+          curl.exe -fsSL -o setup.exe https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-1.6.2/AeroResearchGCS-1.6.2-Windows-x64-Setup.exe
           Start-Process .\setup.exe -ArgumentList '/S' -Wait
           $exe = Get-ChildItem 'C:\Program Files', 'C:\Program Files (x86)' -Recurse -Filter QGroundControl.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $exe) { throw "QGroundControl.exe not found after install" }
@@ -65,9 +65,9 @@ jobs:
           "case: ${{ matrix.case }}" | Set-Content $out
           if (Test-Path $cdb) {
             @(
-              'sxe -c2 "!analyze -v; ~* kb 40; q" av',
-              'sxe -c2 "!analyze -v; ~* kb 40; q" eh',
-              'sxe -c2 "!analyze -v; ~* kb 40; q" 0xc0000409',
+              'sxd -c2 "!analyze -v; ~* kb 40; q" av',
+              'sxd -c2 "!analyze -v; ~* kb 40; q" eh',
+              'sxd -c2 "!analyze -v; ~* kb 40; q" 0xc0000409',
               'g'
             ) | Set-Content -Encoding ascii cdbcmds.txt
             $p = Start-Process -FilePath $cdb -ArgumentList @('-G','-lines','-cf','cdbcmds.txt','-logo','cdb.log',"`"$env:QGC_EXE`"") -PassThru
