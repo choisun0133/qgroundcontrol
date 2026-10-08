@@ -168,23 +168,45 @@ Item {
         }
     }
 
+    // AeroResearch: the mission always starts with the takeoff item; every other item goes after it
+    function _takeoffIndex() {
+        for (var i = 1; i < _visualItems.count; i++) {
+            if (_visualItems.get(i).isTakeoffItem) {
+                return i
+            }
+        }
+        return -1
+    }
+
+    function _nextInsertIndex() {
+        return Math.max(_missionController.currentPlanViewVIIndex + 1, _takeoffIndex() + 1, 1)
+    }
+
+    function _ensureTakeoffItem() {
+        if (_takeoffIndex() < 0 && _missionController.isInsertTakeoffValid && !_planMasterController.controllerVehicle.rover) {
+            _missionController.insertTakeoffItem(mapCenter(), 1, false /* makeCurrentItem */)
+        }
+    }
+
     function insertSimpleItemAfterCurrent(coordinate) {
-        var nextIndex = _missionController.currentPlanViewVIIndex + 1
+        _ensureTakeoffItem()
+        var nextIndex = _nextInsertIndex()
         _missionController.insertSimpleMissionItem(coordinate, nextIndex, true /* makeCurrentItem */)
     }
 
     function insertROIAfterCurrent(coordinate) {
-        var nextIndex = _missionController.currentPlanViewVIIndex + 1
+        var nextIndex = _nextInsertIndex()
         _missionController.insertROIMissionItem(coordinate, nextIndex, true /* makeCurrentItem */)
     }
 
     function insertCancelROIAfterCurrent() {
-        var nextIndex = _missionController.currentPlanViewVIIndex + 1
+        var nextIndex = _nextInsertIndex()
         _missionController.insertCancelROIMissionItem(nextIndex, true /* makeCurrentItem */)
     }
 
     function insertComplexItemAfterCurrent(complexItemName) {
-        var nextIndex = _missionController.currentPlanViewVIIndex + 1
+        _ensureTakeoffItem()
+        var nextIndex = _nextInsertIndex()
         _missionController.insertComplexMissionItem(complexItemName, mapCenter(), nextIndex, true /* makeCurrentItem */)
     }
 
@@ -194,7 +216,7 @@ Item {
     }
 
     function insertLandItemAfterCurrent() {
-        var nextIndex = _missionController.currentPlanViewVIIndex + 1
+        var nextIndex = _nextInsertIndex()
         _missionController.insertLandItem(mapCenter(), nextIndex, true /* makeCurrentItem */)
     }
 
@@ -312,11 +334,7 @@ Item {
                         if (_planMasterController.showCreateFromTemplate) {
                             _planMasterController.userSelectedManualCreation = true
                         }
-                        // First click on an empty mission: add the takeoff item automatically
-                        if (_missionController.visualItems.count <= 1 && _missionController.isInsertTakeoffValid &&
-                                !_planMasterController.controllerVehicle.rover) {
-                            insertTakeoffItemAfterCurrent()
-                        }
+                        // Takeoff is added automatically as the first item (see _ensureTakeoffItem)
                         insertSimpleItemAfterCurrent(coordinate)
                     }
                     break
@@ -461,7 +479,8 @@ Item {
                         text: qsTr("Takeoff")
                         iconSource: "/res/takeoff.svg"
                         enabled: _missionController.isInsertTakeoffValid
-                        visible: toolStrip._isMissionLayer && !_planMasterController.controllerVehicle.rover
+                        // Takeoff is fixed as the first item and inserted automatically
+                        visible: false
                         onTriggered: {
                             insertTakeoffItemAfterCurrent()
                         }

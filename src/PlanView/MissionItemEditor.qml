@@ -139,7 +139,8 @@ Rectangle {
             mipmap:                 true
             smooth:                 true
             color:                  qgcPal.buttonHighlightText
-            visible:                _currentItem && missionItem.sequenceNumber !== 0
+            // The leading takeoff item is fixed; it goes away only with "Clear"
+            visible:                _currentItem && missionItem.sequenceNumber !== 0 && !(missionItem.isTakeoffItem && missionItem.sequenceNumber === 1)
             source:                 "/res/TrashDelete.svg"
 
             QGCMouseArea {
