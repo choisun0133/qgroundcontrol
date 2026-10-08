@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - 'Stable*'
-      - 'aero-*'
+      - 'aero-final'
     tags:
       - 'v*'
     paths-ignore:
