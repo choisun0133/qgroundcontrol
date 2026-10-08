@@ -1,0 +1,105 @@
+name: Aero video diagnostics
+
+# Installs the released Windows build, presets an RTSP video source and runs the app under cdb
+# to capture where it crashes. Results are pushed to diag-results-<case> branches because job
+# logs and artifacts are not reachable from every environment that reads them.
+on:
+  push:
+    branches:
+      - diag-video
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [local-h264, local-h265, remote-noauth]
+    steps:
+      - name: Install AeroResearch GCS
+        shell: pwsh
+        run: |
+          curl.exe -fsSL -o setup.exe https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-1.6.1/AeroResearchGCS-1.6.1-Windows-x64-Setup.exe
+          Start-Process .\setup.exe -ArgumentList '/S' -Wait
+          $exe = Get-ChildItem 'C:\Program Files', 'C:\Program Files (x86)' -Recurse -Filter QGroundControl.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe) { throw "QGroundControl.exe not found after install" }
+          "QGC_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
+          Write-Host "Installed: $($exe.FullName)"
+
+      - name: Start local RTSP server
+        if: startsWith(matrix.case, 'local-')
+        shell: pwsh
+        run: |
+          curl.exe -fsSL -o mediamtx.zip https://github.com/bluenviron/mediamtx/releases/download/v1.9.3/mediamtx_v1.9.3_windows_amd64.zip
+          Expand-Archive mediamtx.zip -DestinationPath mediamtx
+          choco install ffmpeg -y --no-progress | Out-Null
+          Start-Process -FilePath .\mediamtx\mediamtx.exe -WorkingDirectory .\mediamtx -WindowStyle Hidden
+          Start-Sleep -Seconds 3
+          $codec = if ('${{ matrix.case }}' -eq 'local-h265') { 'libx265' } else { 'libx264' }
+          $ff = (Get-Command ffmpeg).Source
+          Start-Process -FilePath $ff -WindowStyle Hidden -ArgumentList @('-re','-f','lavfi','-i','testsrc=size=1280x720:rate=30','-c:v',$codec,'-preset','ultrafast','-tune','zerolatency','-g','30','-f','rtsp','rtsp://127.0.0.1:8554/test')
+          Start-Sleep -Seconds 5
+
+      - name: Preset video settings
+        shell: pwsh
+        run: |
+          $url = if ('${{ matrix.case }}' -eq 'remote-noauth') { 'rtsp://116.124.172.134:8554/JenausSG' } else { 'rtsp://127.0.0.1:8554/test' }
+          $dir = Join-Path $env:APPDATA 'AeroResearch'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          "[Video]`r`nvideoSource=RTSP Video Stream`r`nrtspUrl=$url`r`n" | Set-Content -Encoding ascii (Join-Path $dir 'QGroundControl.ini')
+          Get-Content (Join-Path $dir 'QGroundControl.ini')
+
+      - name: Run under debugger
+        shell: pwsh
+        run: |
+          $out = Join-Path $PWD 'result.txt'
+          $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe'
+          $env:GST_DEBUG = '2'
+          $env:QT_LOGGING_RULES = 'Video.*.debug=true'
+          $env:_NT_SYMBOL_PATH = 'srv*C:\symbols*https://msdl.microsoft.com/download/symbols'
+          "case: ${{ matrix.case }}" | Set-Content $out
+          if (Test-Path $cdb) {
+            @(
+              'sxe -c2 "!analyze -v; ~* kb 40; q" av',
+              'sxe -c2 "!analyze -v; ~* kb 40; q" eh',
+              'sxe -c2 "!analyze -v; ~* kb 40; q" 0xc0000409',
+              'g'
+            ) | Set-Content -Encoding ascii cdbcmds.txt
+            $p = Start-Process -FilePath $cdb -ArgumentList @('-o','-G','-lines','-cf','cdbcmds.txt','-logo','cdb.log',"`"$env:QGC_EXE`"") -PassThru -WindowStyle Hidden
+          } else {
+            "cdb not found - running without debugger" | Add-Content $out
+            $p = Start-Process -FilePath $env:QGC_EXE -PassThru
+          }
+          $exited = $p.WaitForExit(90000)
+          if ($exited) { "PROCESS EXITED within 90 s, exit code $($p.ExitCode)" | Add-Content $out }
+          else {
+            "NO CRASH: still running after 90 s" | Add-Content $out
+            Get-Process QGroundControl -ErrorAction SilentlyContinue | Stop-Process -Force
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          }
+          Start-Sleep -Seconds 2
+          if (Test-Path cdb.log) { "----- cdb.log -----" | Add-Content $out; Get-Content cdb.log -Tail 1500 | Add-Content $out }
+          "----- settings after run -----" | Add-Content $out
+          Get-Content (Join-Path $env:APPDATA 'AeroResearch\QGroundControl.ini') -ErrorAction SilentlyContinue | Select-String -Pattern 'video|rtsp|Decoder|Cpu|AeroResearch' | Add-Content $out
+          Get-Content $out -Tail 200
+
+      - name: Publish result
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path result.txt)) { "no result" | Set-Content result.txt }
+          $branch = 'diag-results-${{ matrix.case }}'
+          New-Item -ItemType Directory -Force pub | Out-Null
+          Copy-Item result.txt pub\result.txt
+          Set-Location pub
+          git init -q -b $branch
+          git config user.name 'aero-diag'
+          git config user.email 'aero-diag@users.noreply.github.com'
+          git add result.txt
+          git commit -q -m "diag ${{ matrix.case }} ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$branch"
