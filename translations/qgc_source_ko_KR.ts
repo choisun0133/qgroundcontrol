@@ -21745,6 +21745,11 @@ If a vehicle still has this key configured, you will no longer be able to commun
   <context>
     <name>VideoManager</name>
     <message>
+      <location filename="../src/VideoManager/VideoManager.cc" line="1"/>
+      <source>The application closed while the video stream was starting, so video has been turned off. Check the stream address and decoder in Application Settings &gt; Video, then turn it back on.</source>
+      <translation>지난번 영상 연결 중에 프로그램이 종료되어 영상 수신을 꺼 두었습니다. 앱 설정 → 영상에서 주소와 디코더 설정을 확인한 뒤 다시 켜 주세요.</translation>
+    </message>
+    <message>
       <location filename="../src/VideoManager/VideoManager.cc" line="347"/>
       <source>Invalid video format defined.</source>
       <translation>잘못된 비디오 형식입니다.</translation>

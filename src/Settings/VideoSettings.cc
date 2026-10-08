@@ -82,6 +82,13 @@ void VideoSettings::_setDefaults()
     } else {
         _nameToMetaDataMap[videoSourceName]->setRawDefaultValue(videoDisabled);
     }
+
+#ifdef Q_OS_WIN
+    // AeroResearch: on Windows default to the software decoder and the CPU frame path. Hardware
+    // decode plus GPU frame import crashed on field laptops; both can still be switched on in settings.
+    _nameToMetaDataMap[forceVideoDecoderName]->setRawDefaultValue(1 /* Force software decoder */);
+    _nameToMetaDataMap[forceCpuVideoPathName]->setRawDefaultValue(true);
+#endif
 }
 
 DECLARE_SETTINGSFACT(VideoSettings, aspectRatio)

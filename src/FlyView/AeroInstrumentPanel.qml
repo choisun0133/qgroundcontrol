@@ -55,6 +55,11 @@ Rectangle {
     property real _speed:       _activeVehicle ? _num(_activeVehicle.groundSpeed) : NaN
     property real _alt:         _activeVehicle ? _num(_activeVehicle.altitudeRelative) : NaN
     property real _climb:       _activeVehicle ? _num(_activeVehicle.climbRate) : NaN
+    property real _homeDist:    _activeVehicle ? _num(_activeVehicle.distanceToHome) : NaN
+    property real _flightDist:  _activeVehicle ? _num(_activeVehicle.flightDistance) : NaN
+    // flightTime has no Q_PROPERTY on Vehicle; look it up by name
+    property var  _flightTimeFact: _activeVehicle ? _activeVehicle.getFact("flightTime") : null
+    property string _flightTimeText: _flightTimeFact ? _flightTimeFact.valueString : "—"
 
     function _fmt(v, d)     { return isNaN(v) ? "—" : v.toFixed(d) }
     function _signed(v, d)  { return isNaN(v) ? "—" : (v > 0.05 ? "+" : (v < -0.05 ? "−" : "")) + Math.abs(v).toFixed(d) }
@@ -384,9 +389,9 @@ Rectangle {
             Repeater {
                 model: [
                     { k: qsTr("상승/하강"), v: control._signed(control._climb, 1) + " m/s" },
-                    { k: qsTr("홈 거리"),   v: control._activeVehicle ? control._fmt(control._num(control._activeVehicle.distanceToHome), 0) + " m" : "—" },
-                    { k: qsTr("비행 거리"), v: control._activeVehicle ? control._fmt(control._num(control._activeVehicle.flightDistance), 0) + " m" : "—" },
-                    { k: qsTr("비행 시간"), v: control._activeVehicle ? control._activeVehicle.flightTime.valueString : "—" }
+                    { k: qsTr("홈 거리"),   v: control._fmt(control._homeDist, 0) + " m" },
+                    { k: qsTr("비행 거리"), v: control._fmt(control._flightDist, 0) + " m" },
+                    { k: qsTr("비행 시간"), v: control._flightTimeText }
                 ]
                 Rectangle {
                     Layout.fillWidth:       true
