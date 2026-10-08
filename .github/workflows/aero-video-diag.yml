@@ -70,12 +70,21 @@ jobs:
               'sxe -c2 "!analyze -v; ~* kb 40; q" 0xc0000409',
               'g'
             ) | Set-Content -Encoding ascii cdbcmds.txt
-            $p = Start-Process -FilePath $cdb -ArgumentList @('-o','-G','-lines','-cf','cdbcmds.txt','-logo','cdb.log',"`"$env:QGC_EXE`"") -PassThru -WindowStyle Hidden
+            $p = Start-Process -FilePath $cdb -ArgumentList @('-G','-lines','-cf','cdbcmds.txt','-logo','cdb.log',"`"$env:QGC_EXE`"") -PassThru -WindowStyle Hidden
           } else {
             "cdb not found - running without debugger" | Add-Content $out
             $p = Start-Process -FilePath $env:QGC_EXE -PassThru
           }
-          $exited = $p.WaitForExit(90000)
+          $exited = $p.WaitForExit(60000)
+          if (-not $exited) {
+            Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+            $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+            $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            $g = [System.Drawing.Graphics]::FromImage($bmp)
+            $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save((Join-Path $PWD 'screen.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+            $exited = $p.WaitForExit(30000)
+          }
           if ($exited) { "PROCESS EXITED within 90 s, exit code $($p.ExitCode)" | Add-Content $out }
           else {
             "NO CRASH: still running after 90 s" | Add-Content $out
@@ -85,7 +94,7 @@ jobs:
           Start-Sleep -Seconds 2
           if (Test-Path cdb.log) { "----- cdb.log -----" | Add-Content $out; Get-Content cdb.log -Tail 1500 | Add-Content $out }
           "----- settings after run -----" | Add-Content $out
-          Get-Content (Join-Path $env:APPDATA 'AeroResearch\QGroundControl.ini') -ErrorAction SilentlyContinue | Select-String -Pattern 'video|rtsp|Decoder|Cpu|AeroResearch' | Add-Content $out
+          Get-Content (Join-Path $env:APPDATA 'AeroResearch\QGroundControl.ini') -ErrorAction SilentlyContinue | Select-String -Pattern 'video|rtsp|Decoder|Cpu|AeroResearch|Pending' | Add-Content $out
           Get-Content $out -Tail 200
 
       - name: Publish result
@@ -96,10 +105,11 @@ jobs:
           $branch = 'diag-results-${{ matrix.case }}'
           New-Item -ItemType Directory -Force pub | Out-Null
           Copy-Item result.txt pub\result.txt
+          if (Test-Path screen.png) { Copy-Item screen.png pub\screen.png }
           Set-Location pub
           git init -q -b $branch
           git config user.name 'aero-diag'
           git config user.email 'aero-diag@users.noreply.github.com'
-          git add result.txt
+          git add -A
           git commit -q -m "diag ${{ matrix.case }} ${{ github.sha }}"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$branch"
