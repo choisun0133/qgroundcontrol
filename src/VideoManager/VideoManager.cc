@@ -27,12 +27,37 @@
 #include <QtCore/QEventLoop>
 #include <QtCore/QFutureWatcher>
 #include <QtCore/QRunnable>
+#include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtQml/QQmlEngine>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickWindow>
 
 QGC_LOGGING_CATEGORY(VideoManagerLog, "Video.VideoManager")
+
+namespace {
+
+// Set while a receiver is starting and cleared once the stream has decoded for a while, on stop,
+// or on a clean exit. Still set at the next launch means the app died while starting video,
+// so video is disabled instead of crashing again on every launch.
+constexpr const char *kVideoStartGuardKey = "AeroResearch/videoStartPending";
+constexpr int kVideoStartGuardClearMs = 10000;
+
+void setVideoStartGuard(bool pending)
+{
+    QSettings settings;
+    if (settings.value(kVideoStartGuardKey, false).toBool() == pending) {
+        return;
+    }
+    if (pending) {
+        settings.setValue(kVideoStartGuardKey, true);
+    } else {
+        settings.remove(kVideoStartGuardKey);
+    }
+    settings.sync();
+}
+
+} // namespace
 
 static constexpr const char *kFileExtension[VideoReceiver::FILE_FORMAT_MAX + 1] = {
     "mkv",
@@ -172,6 +197,14 @@ void VideoManager::init(QQuickWindow *mainWindow)
     }
     _mainWindow = mainWindow;
 
+    if (QSettings().value(kVideoStartGuardKey, false).toBool()) {
+        qCWarning(VideoManagerLog) << "Previous run ended while video was starting - disabling the video source";
+        setVideoStartGuard(false);
+        _videoSettings->videoSource()->setRawValue(VideoSettings::videoDisabled);
+        QGC::showAppMessage(tr("The application closed while the video stream was starting, so video has been turned off. "
+                               "Check the stream address and decoder in Application Settings > Video, then turn it back on."));
+    }
+
     VideoBackend::onMainWindowReady(mainWindow);
 
     (void) connect(_videoSettings->videoSource(), &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
@@ -307,6 +340,7 @@ void VideoManager::_createVideoReceivers()
 
 void VideoManager::cleanup()
 {
+    setVideoStartGuard(false);
     for (VideoReceiver *receiver : std::as_const(_videoReceivers)) {
         QGCCorePlugin::instance()->releaseVideoSink(receiver->sink());
     }
@@ -819,6 +853,7 @@ void VideoManager::_stopReceiver(VideoReceiver *receiver)
 
 void VideoManager::stopVideo()
 {
+    setVideoStartGuard(false);
     for (VideoReceiver *receiver : std::as_const(_videoReceivers)) {
         _stopReceiver(receiver);
     }
@@ -844,6 +879,7 @@ void VideoManager::_startReceiver(VideoReceiver *receiver)
     const QString source = _videoSettings->videoSource()->rawValue().toString();
     const uint32_t timeout = ((source == VideoSettings::videoSourceRTSP) ? _videoSettings->rtspTimeout()->rawValue().toUInt() : 3);
 
+    setVideoStartGuard(true);
     receiver->start(timeout);
 }
 
@@ -924,6 +960,13 @@ void VideoManager::_initVideoReceiver(VideoReceiver *receiver, QQuickWindow *win
         if (!receiver->isThermal()) {
             _decoding = active;
             emit decodingChanged();
+        }
+        if (active) {
+            QTimer::singleShot(kVideoStartGuardClearMs, this, [this]() {
+                if (_decoding) {
+                    setVideoStartGuard(false);
+                }
+            });
         }
     });
 
