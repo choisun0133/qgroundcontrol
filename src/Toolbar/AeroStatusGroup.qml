@@ -70,7 +70,7 @@ Item {
                             anchors.bottom:         parent.bottom
                             anchors.bottomMargin:   control._u * 0.2
                             spacing:                2
-                            visible:                modelData.state !== "off"
+                            visible:                modelData.state !== "off" && modelData.key !== "bat"
                             Repeater {
                                 model: 4
                                 Rectangle {
@@ -80,6 +80,40 @@ Item {
                                     radius:         1
                                     color:          chip.chipData.state !== "lost" && chip.chipData.pct >= (index + 1) * 22 ? chip.chipData.color : "#33383D"
                                 }
+                            }
+                        }
+
+                        // Battery: classic battery outline filled to the remaining charge
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing:                1
+                            visible:                modelData.key === "bat"
+
+                            Rectangle {
+                                id:             batteryBody
+                                width:          control._u * 1.5
+                                height:         control._u * 0.8
+                                radius:         2
+                                color:          "transparent"
+                                border.width:   Math.max(1, control._u * 0.08)
+                                border.color:   chip.chipData.state === "off" ? "#5A6066" : chip.chipData.color
+
+                                Rectangle {
+                                    x:          batteryBody.border.width + 1
+                                    y:          batteryBody.border.width + 1
+                                    height:     batteryBody.height - (batteryBody.border.width + 1) * 2
+                                    width:      Math.max(0, (batteryBody.width - (batteryBody.border.width + 1) * 2) * Math.min(100, Math.max(0, chip.chipData.pct)) / 100)
+                                    radius:     1
+                                    color:      chip.chipData.color
+                                    visible:    chip.chipData.state !== "off"
+                                }
+                            }
+                            Rectangle {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width:                  Math.max(2, control._u * 0.12)
+                                height:                 batteryBody.height * 0.45
+                                radius:                 1
+                                color:                  chip.chipData.state === "off" ? "#5A6066" : chip.chipData.color
                             }
                         }
 
