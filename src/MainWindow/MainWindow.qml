@@ -85,6 +85,9 @@ ApplicationWindow {
         // Set to a non-empty string to block navigation with a custom reason (e.g. during calibration)
         property string             navigationBlockedReason:        ""
 
+        // AeroResearch: vibration / EKF window, toggled from the toolbar chip
+        property bool               aeroHealthPanelVisible:         false
+
         // Property to manage RemoteID quick access to settings page
         property bool               commingFromRIDIndicator:        false
     }

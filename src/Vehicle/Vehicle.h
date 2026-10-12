@@ -51,6 +51,7 @@ class VehicleRPMFactGroup;
 class VehicleSetpointFactGroup;
 class VehicleTemperatureFactGroup;
 class VehicleVibrationFactGroup;
+class VehicleEKFStatusFactGroup;
 class VehicleWindFactGroup;
 class Autotune;
 class ComponentInformationManager;
@@ -241,6 +242,7 @@ public:
     Q_PROPERTY(FactGroup*           gpsAggregate    READ gpsAggregateFactGroup      CONSTANT)
     Q_PROPERTY(FactGroup*           wind            READ windFactGroup              CONSTANT)
     Q_PROPERTY(FactGroup*           vibration       READ vibrationFactGroup         CONSTANT)
+    Q_PROPERTY(FactGroup*           ekfStatus       READ ekfStatusFactGroup         CONSTANT)
     Q_PROPERTY(FactGroup*           temperature     READ temperatureFactGroup       CONSTANT)
     Q_PROPERTY(FactGroup*           clock           READ clockFactGroup             CONSTANT)
     Q_PROPERTY(FactGroup*           setpoint        READ setpointFactGroup          CONSTANT)
@@ -553,6 +555,7 @@ public:
     FactGroup* gpsAggregateFactGroup        ();
     FactGroup* windFactGroup                ();
     FactGroup* vibrationFactGroup           ();
+    FactGroup* ekfStatusFactGroup           ();
     FactGroup* temperatureFactGroup         ();
     FactGroup* clockFactGroup               ();
     FactGroup* setpointFactGroup            ();
@@ -1076,6 +1079,7 @@ public:
     const QString _gpsAggregateFactGroupName =       QStringLiteral("gpsAggregate");
     const QString _windFactGroupName =               QStringLiteral("wind");
     const QString _vibrationFactGroupName =          QStringLiteral("vibration");
+    const QString _ekfStatusFactGroupName =          QStringLiteral("ekfStatus");
     const QString _temperatureFactGroupName =        QStringLiteral("temperature");
     const QString _clockFactGroupName =              QStringLiteral("clock");
     const QString _setpointFactGroupName =           QStringLiteral("setpoint");
@@ -1096,6 +1100,7 @@ public:
     VehicleGPSAggregateFactGroup*       _gpsAggregateFactGroup      = nullptr;
     VehicleWindFactGroup*               _windFactGroup              = nullptr;
     VehicleVibrationFactGroup*          _vibrationFactGroup         = nullptr;
+    VehicleEKFStatusFactGroup*          _ekfStatusFactGroup         = nullptr;
     VehicleTemperatureFactGroup*        _temperatureFactGroup       = nullptr;
     VehicleClockFactGroup*              _clockFactGroup             = nullptr;
     VehicleSetpointFactGroup*           _setpointFactGroup          = nullptr;

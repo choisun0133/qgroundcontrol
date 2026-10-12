@@ -209,6 +209,122 @@ QtObject {
         ], note)
     }
 
+
+    // ---- Vibration (VIBRATION) ----------------------------------------------------------------
+    property var    _vib:       vehicle ? vehicle.vibration : null
+    property real   _vibX:      _vib ? _vib.xAxis.rawValue : NaN
+    property real   _vibY:      _vib ? _vib.yAxis.rawValue : NaN
+    property real   _vibZ:      _vib ? _vib.zAxis.rawValue : NaN
+    property int    _clip1:     _vib ? _vib.clipCount1.rawValue : 0
+    property int    _clip2:     _vib ? _vib.clipCount2.rawValue : 0
+    property int    _clip3:     _vib ? _vib.clipCount3.rawValue : 0
+
+    function _vibState(v) {
+        return isNaN(v) ? "off" : (v >= 60 ? "lost" : (v >= 30 ? "weak" : "ok"))
+    }
+    function _worst(states) {
+        if (states.indexOf("lost") >= 0) { return "lost" }
+        if (states.indexOf("weak") >= 0) { return "weak" }
+        if (states.indexOf("ok") >= 0) { return "ok" }
+        return "off"
+    }
+    function _stateWord(st) {
+        return st === "ok" ? qsTr("정상") : (st === "weak" ? qsTr("주의") : (st === "lost" ? qsTr("위험") : "—"))
+    }
+
+    property var vibration: {
+        var axes = [[ "X", _vibX ], [ "Y", _vibY ], [ "Z", _vibZ ]].map(function(a) {
+            var st = _vibState(a[1])
+            return { n: a[0], v: isNaN(a[1]) ? "—" : a[1].toFixed(1), frac: isNaN(a[1]) ? 0 : Math.min(1, a[1] / 90), state: st, color: stateColor(st) }
+        })
+        var clipStates = (_clip1 + _clip2 + _clip3) > 0 ? ["weak"] : []
+        var st = (!vehicle || commLost) ? "off" : _worst(axes.map(function(a) { return a.state }).concat(clipStates))
+        return { state: st, word: _stateWord(st), color: stateColor(st), axes: axes,
+                 clips: [_clip1, _clip2, _clip3].map(function(c, i) { return { n: qsTr("가속도계 %1").arg(i + 1), v: String(c), color: c > 0 ? colorWeak : "#ECEDEE" } }) }
+    }
+
+    // ---- EKF (ArduPilot EKF_STATUS_REPORT) ----------------------------------------------------
+    property var    _ekfGroup:  vehicle ? vehicle.ekfStatus : null
+    property real   _ekfVel:    _ekfGroup ? _ekfGroup.velocityVariance.rawValue : NaN
+    property real   _ekfPosH:   _ekfGroup ? _ekfGroup.posHorizVariance.rawValue : NaN
+    property real   _ekfPosV:   _ekfGroup ? _ekfGroup.posVertVariance.rawValue : NaN
+    property real   _ekfMag:    _ekfGroup ? _ekfGroup.compassVariance.rawValue : NaN
+    property real   _ekfTerr:   _ekfGroup ? _ekfGroup.terrainAltVariance.rawValue : NaN
+    property int    _ekfFlags:  _ekfGroup ? _ekfGroup.flags.rawValue : 0
+    property bool   _ekfSeen:   !isNaN(_ekfVel)
+
+    function _ekfVarState(v) {
+        return isNaN(v) ? "off" : (v >= 0.8 ? "lost" : (v >= 0.5 ? "weak" : "ok"))
+    }
+
+    // [bit, label, setIsBad, counts toward the summary when wrong]
+    readonly property var _ekfFlagDefs: [
+        [1,     qsTr("자세"),            false, true],
+        [2,     qsTr("수평 속도"),       false, true],
+        [4,     qsTr("수직 속도"),       false, true],
+        [8,     qsTr("수평 상대 위치"),  false, false],
+        [16,    qsTr("수평 절대 위치"),  false, true],
+        [32,    qsTr("수직 절대 위치"),  false, true],
+        [64,    qsTr("지면 고도"),       false, false],
+        [256,   qsTr("예측 수평 상대"),  false, false],
+        [512,   qsTr("예측 수평 절대"),  false, false],
+        [128,   qsTr("고정 위치 모드"),  true,  true],
+        [32768, qsTr("GPS 글리치"),      true,  true],
+        [1024,  qsTr("미초기화"),        true,  true]
+    ]
+
+    property var ekfFlags: _ekfFlagDefs.map(function(d) {
+        var set = (_ekfFlags & d[0]) !== 0
+        var wrong = _ekfSeen && (d[2] ? set : !set)
+        var important = d[3]
+        return { n: d[1], mark: !_ekfSeen ? "" : (wrong ? "!" : (d[2] ? "" : "✓")), bad: wrong && important,
+                 box: !_ekfSeen ? "#33383D" : (wrong ? (important ? colorWeak : "#5A6066") : (d[2] ? "#33383D" : colorOk)),
+                 color: wrong && important ? "#FFC861" : (d[2] || !set ? "#9BA1A6" : "#ECEDEE") }
+    })
+    property int ekfFlagProblems: ekfFlags.filter(function(f) { return f.bad }).length
+
+    property var ekf: {
+        var rows = [[ qsTr("속도"), _ekfVel ], [ qsTr("수평 위치"), _ekfPosH ], [ qsTr("수직 위치"), _ekfPosV ],
+                    [ qsTr("나침반"), _ekfMag ], [ qsTr("지형"), _ekfTerr ]].map(function(r) {
+            var st = _ekfVarState(r[1])
+            return { n: r[0], v: isNaN(r[1]) ? "—" : r[1].toFixed(2), frac: isNaN(r[1]) ? 0 : Math.min(1, r[1]), state: st, color: stateColor(st) }
+        })
+        var st = (!vehicle || commLost || !_ekfSeen) ? "off"
+                 : _worst(rows.slice(0, 4).map(function(r) { return r.state }).concat(ekfFlagProblems > 0 ? ["weak"] : []))
+        return { state: st, word: _ekfSeen ? _stateWord(st) : qsTr("수신 없음"), color: stateColor(st), rows: rows }
+    }
+
+    // ---- Sensors (SYS_STATUS) -----------------------------------------------------------------
+    property int    _enabled:   vehicle ? vehicle.sensorsEnabledBits : 0
+
+    readonly property var _sensorDefs: [
+        [1,         qsTr("자이로")],    [2,         qsTr("가속도계")],
+        [4,         qsTr("나침반")],    [8,         qsTr("기압계")],
+        [32,        "GPS"],             [2097152,   "AHRS"],
+        [65536,     qsTr("RC 수신기")], [32768,     qsTr("모터 출력")],
+        [33554432,  qsTr("배터리")],    [16777216,  qsTr("로깅")],
+        [256,       qsTr("거리 센서")], [64,        qsTr("광류 센서")],
+        [1048576,   qsTr("지오펜스")],  [268435456, qsTr("사전 점검")]
+    ]
+
+    property var sensors: _sensorDefs.map(function(d) {
+        var present = (_present & d[0]) !== 0
+        var enabled = (_enabled & d[0]) !== 0
+        var healthy = (_health & d[0]) !== 0
+        var st = !vehicle || commLost || !present ? "none" : (!enabled ? "disabled" : (healthy ? "ok" : "bad"))
+        return { n: d[1], state: st,
+                 s: st === "ok" ? qsTr("정상") : (st === "bad" ? qsTr("이상") : (st === "disabled" ? qsTr("꺼짐") : qsTr("없음"))),
+                 dot: st === "ok" ? colorOk : (st === "bad" ? "#FF4D4D" : "#5A6066"),
+                 color: st === "ok" ? "#7BEAB0" : (st === "bad" ? "#FF8A8A" : "#9BA1A6") }
+    })
+    property int sensorProblems: sensors.filter(function(z) { return z.state === "bad" }).length
+
+    property var health: {
+        var st = _worst([vibration.state, ekf.state])
+        return { state: st, color: stateColor(st), vibWord: vibration.word, vibColor: vibration.color,
+                 ekfWord: ekf.word, ekfColor: ekf.color, detailProblems: ekfFlagProblems + sensorProblems }
+    }
+
     property var items: [telemetry, rc, lte, gps, battery]
 
     // ---- Highest-priority alert ---------------------------------------------------------------
@@ -228,6 +344,14 @@ QtObject {
             return { key: "batLost", level: "lost", title: qsTr("배터리 위험 · %1").arg(battery.text),
                      sub: qsTr("배터리 페일세이프가 동작할 수 있습니다 · 바로 복귀하거나 착륙하세요") }
         }
+        if (vibration.state === "lost") {
+            return { key: "vibLost", level: "lost", title: qsTr("진동 위험 · X %1 / Y %2 / Z %3 m/s²").arg(vibration.axes[0].v).arg(vibration.axes[1].v).arg(vibration.axes[2].v),
+                     sub: qsTr("고도·위치 유지가 불안정할 수 있습니다 · 착륙 후 프롭 밸런스와 방진 마운트를 점검하세요") }
+        }
+        if (ekf.state === "lost") {
+            return { key: "ekfLost", level: "lost", title: qsTr("EKF 위험 · 위치/자세 추정 불안정"),
+                     sub: qsTr("자동 비행을 멈추고 수동(AltHold/Loiter) 대기 · 진동·EKF 창에서 원인 확인") }
+        }
         if (telemetry.state === "lost" && lte.state !== "lost" && lte.state !== "off") {
             return { key: "telLost", level: "weak", title: qsTr("텔레메트리 끊김 → LTE로 계속 관제"),
                      sub: qsTr("텔레메트리가 돌아오면 다시 사용합니다") }
@@ -239,6 +363,14 @@ QtObject {
         if (battery.state === "weak") {
             return { key: "batWeak", level: "weak", title: qsTr("배터리 부족 · %1").arg(battery.text),
                      sub: qsTr("남은 비행 %1 · 복귀를 준비하세요").arg(_batTime === "" ? "—" : _batTime) }
+        }
+        if (ekf.state === "weak") {
+            return { key: "ekfWeak", level: "weak", title: qsTr("EKF 주의"),
+                     sub: qsTr("자동 비행 전 나침반 보정과 주변 자기 간섭, GPS 상태를 확인하세요") }
+        }
+        if (vibration.state === "weak") {
+            return { key: "vibWeak", level: "weak", title: qsTr("진동 주의 · 최대 %1 m/s²").arg(Math.max(_vibX || 0, _vibY || 0, _vibZ || 0).toFixed(0)),
+                     sub: qsTr("비행은 가능하지만 진동이 큽니다 · 비행 후 점검을 권장합니다") }
         }
         if (gps.state === "lost" || gps.state === "weak") {
             return { key: "gps", level: "weak", title: qsTr("GPS 약함 · 위성 %1개, HDOP %2").arg(_gpsCount).arg(isNaN(_gpsHdop) ? "—" : _gpsHdop.toFixed(1)),

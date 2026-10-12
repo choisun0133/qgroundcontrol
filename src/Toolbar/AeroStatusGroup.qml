@@ -120,6 +120,45 @@ Item {
                     }
                 }
             }
+
+            // Vibration + EKF chip: opens the 진동 · EKF window
+            Rectangle {
+                id:             healthChip
+                width:          healthContent.width + control._u * 0.8
+                height:         control._u * 2.1
+                radius:         control._u * 0.3
+                color:          _st === "lost" ? Qt.rgba(1, 0.3, 0.3, 0.16)
+                              : (_st === "weak" ? Qt.rgba(1, 0.69, 0.125, 0.10)
+                              : (_st === "ok" ? Qt.rgba(0.24, 0.86, 0.52, 0.08) : "transparent"))
+                border.width:   globals.aeroHealthPanelVisible ? 2 : 1
+                border.color:   globals.aeroHealthPanelVisible ? QGroundControl.globalPalette.brandingBlue
+                              : (_st === "off" ? "#2A2D31" : Qt.rgba(status.health.color.r, status.health.color.g, status.health.color.b, 0.55))
+
+                property string _st: status.health.state
+
+                Column {
+                    id:                 healthContent
+                    anchors.centerIn:   parent
+                    spacing:            0
+                    QGCLabel {
+                        text:           qsTr("진동 · EKF")
+                        color:          "#9BA1A6"
+                        font.pointSize: ScreenTools.smallFontPointSize
+                    }
+                    Row {
+                        spacing: control._u * 0.3
+                        QGCLabel { text: status.health.vibWord; color: status.health.vibColor; font.bold: true }
+                        QGCLabel { text: "·"; color: "#5A6066" }
+                        QGCLabel { text: status.health.ekfWord; color: status.health.ekfColor; font.bold: true }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill:   parent
+                    cursorShape:    Qt.PointingHandCursor
+                    onClicked:      globals.aeroHealthPanelVisible = !globals.aeroHealthPanelVisible
+                }
+            }
         }
     }
 

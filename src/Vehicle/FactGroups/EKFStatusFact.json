@@ -1,0 +1,48 @@
+{
+    "version":      1,
+    "fileType":  "FactMetaData",
+    "QGC.MetaData.Facts":
+[
+{
+    "name":             "velocityVariance",
+    "shortDesc": "EKF velocity variance",
+    "type":             "double",
+    "decimalPlaces":    2
+},
+{
+    "name":             "posHorizVariance",
+    "shortDesc": "EKF horizontal position variance",
+    "type":             "double",
+    "decimalPlaces":    2
+},
+{
+    "name":             "posVertVariance",
+    "shortDesc": "EKF vertical position variance",
+    "type":             "double",
+    "decimalPlaces":    2
+},
+{
+    "name":             "compassVariance",
+    "shortDesc": "EKF compass variance",
+    "type":             "double",
+    "decimalPlaces":    2
+},
+{
+    "name":             "terrainAltVariance",
+    "shortDesc": "EKF terrain altitude variance",
+    "type":             "double",
+    "decimalPlaces":    2
+},
+{
+    "name":             "airspeedVariance",
+    "shortDesc": "EKF airspeed variance",
+    "type":             "double",
+    "decimalPlaces":    2
+},
+{
+    "name":             "flags",
+    "shortDesc": "EKF status flags",
+    "type":             "uint32"
+}
+]
+}
