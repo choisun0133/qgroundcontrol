@@ -368,8 +368,11 @@ GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Con
     // offer UDP and reject TCP with "Could not get/set settings"), rtspt:// forces TCP and
     // rtspu:// forces UDP. The protocols property is set after "location", so it must carry the
     // scheme's choice or it would override the transport an rtspt:// location selects.
+    // Relay servers addressed with a query (e.g. "?DeviceKey=") were seen to stream only over TCP
+    // (VLC log: "no data received in 10s. Switching to TCP"), so plain rtsp:// uses TCP for them.
     const QString scheme = sourceUrl.scheme().toLower();
-    const GstRTSPLowerTrans kRtspProtocols = (scheme == QLatin1String("rtspt"))
+    const bool tcpForRelay = (scheme == QLatin1String("rtsp")) && sourceUrl.hasQuery();
+    const GstRTSPLowerTrans kRtspProtocols = ((scheme == QLatin1String("rtspt")) || tcpForRelay)
         ? GST_RTSP_LOWER_TRANS_TCP
         : ((scheme == QLatin1String("rtspu"))
                ? static_cast<GstRTSPLowerTrans>(GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST)
