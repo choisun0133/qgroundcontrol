@@ -79,7 +79,8 @@ ToolIndicatorPage {
                     { label: qsTr("기체 설정"), sub: qsTr("센서 보정 · 비행 모드 · 안전 · 파라미터"), icon: "/res/GearWithPaperPlane.svg", action: "setup" },
                     { label: qsTr("분석 도구"), sub: qsTr("비행 로그 · 지오태그 · MAVLink 점검"),     icon: "/qmlimages/Analyze.svg",      action: "analyze" },
                     { label: qsTr("앱 설정"),   sub: qsTr("화면 · 지도 · 영상 · 단위 · 언어"),       icon: "/qmlimages/Gears.svg",        action: "settings" },
-                    { label: qsTr("연결 관리"), sub: qsTr("USB · RF · LTE 연결 추가 · 해제"),        icon: "/qmlimages/Connect.svg",      action: "links" }
+                    { label: qsTr("연결 관리"), sub: qsTr("USB · RF · LTE 연결 추가 · 해제"),        icon: "/qmlimages/Connect.svg",      action: "links" },
+                    { label: qsTr("빠른 도구"), sub: qsTr("FC 재부팅 · 근접 센서 창 (Ctrl+F)"),       icon: "/qmlimages/Gears.svg",        action: "quick" }
                 ].filter(function(item) { return !(QGroundControl.aeroUserEdition && item.action === "setup") })
 
                 Rectangle {
@@ -128,6 +129,7 @@ ToolIndicatorPage {
                             case "analyze":  menuLayout._open(mainWindow.showAnalyzeTool); break
                             case "settings": menuLayout._open(function() { mainWindow.showSettingsTool() }); break
                             case "links":    menuLayout._open(function() { mainWindow.showSettingsTool("Comm Links") }); break
+                            case "quick":    menuLayout._open(mainWindow.showQuickTools); break
                             }
                         }
                     }

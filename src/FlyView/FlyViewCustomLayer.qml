@@ -37,6 +37,12 @@ Item {
         defaultY:   aeroMessageWindow.y + aeroMessageWindow.height + _root._panelMargin
     }
 
+    // Proximity (근접 센서) window, toggled from the quick tools (Ctrl+F); starts at the left middle
+    AeroProximityPanel {
+        defaultX:   _root._panelMargin
+        defaultY:   (_root.height - height) / 2
+    }
+
     // Bottom centre, between the video window and the instrument panel (as in the design)
     AeroCameraPanel {
         defaultX:   (_root.width - panelWidth) / 2

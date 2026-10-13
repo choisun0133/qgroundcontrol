@@ -180,7 +180,7 @@ QtObject {
         }
         var hdopText = isNaN(_gpsHdop) ? "—" : _gpsHdop.toFixed(1)
         var st = _gpsLock < 2 ? "lost" : ((_gpsLock === 2 || _gpsCount < 10 || (!isNaN(_gpsHdop) && _gpsHdop > 1.5)) ? "weak" : "ok")
-        return _item("gps", "GPS", st, _lockText(_gpsLock), Math.min(100, _gpsCount * 5), false, [
+        return _item("gps", "GPS", st, _lockText(_gpsLock) + " · " + _gpsCount + qsTr("개"), Math.min(100, _gpsCount * 5), false, [
             _detail(qsTr("고정 상태"), _lockText(_gpsLock), st === "lost" ? "lost" : ""),
             _detail(qsTr("위성 수"), _gpsCount + qsTr("개"), _gpsCount < 10 ? "weak" : ""),
             _detail("HDOP", hdopText, (!isNaN(_gpsHdop) && _gpsHdop > 1.5) ? "weak" : ""),

@@ -8,6 +8,7 @@ qt_add_qml_module(ToolbarModule
         AeroLinkIndicator.qml
         AeroLinkStatus.qml
         AeroMissionSyncNotice.qml
+        AeroQuickTools.qml
         AeroStatusAlert.qml
         AeroStatusGroup.qml
         AeroViewSwitch.qml

@@ -87,6 +87,7 @@ ApplicationWindow {
 
         // AeroResearch: vibration / EKF window, toggled from the toolbar chip
         property bool               aeroHealthPanelVisible:         false
+        property bool               aeroProximityPanelVisible:      false
 
         // Property to manage RemoteID quick access to settings page
         property bool               commingFromRIDIndicator:        false
@@ -368,6 +369,19 @@ ApplicationWindow {
                                     + (aeroStatusAlert.visible ? aeroStatusAlert.height + ScreenTools.defaultFontPixelHeight * 0.5 : 0)
         z:                          100
         onDownloadRequested:        mainWindow.downloadMissionFromVehicle()
+    }
+
+    // AeroResearch quick tools, Mission Planner style Ctrl+F (Cmd+F on macOS)
+    AeroQuickTools { id: aeroQuickTools }
+
+    Shortcut {
+        sequence:   "Ctrl+F"
+        context:    Qt.ApplicationShortcut
+        onActivated: aeroQuickTools.toggle()
+    }
+
+    function showQuickTools() {
+        aeroQuickTools.toggle()
     }
 
     /// Downloads mission, geofence and rally points from the active vehicle into the plan editor (the fly view follows)

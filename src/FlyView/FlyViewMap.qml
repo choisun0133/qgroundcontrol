@@ -270,6 +270,63 @@ FlightMap {
             z:              QGroundControl.zOrderVehicles
         }
     }
+    // Live position of the active vehicle under its icon; click to copy "lat, lon"
+    MapQuickItem {
+        id:             vehiclePositionLabel
+        coordinate:     _activeVehicleCoordinate
+        visible:        !pipMode && _activeVehicle && _activeVehicleCoordinate.isValid
+        anchorPoint.x:  positionChip.width / 2
+        anchorPoint.y:  -ScreenTools.defaultFontPixelHeight * 1.7   // below the vehicle icon
+        z:              QGroundControl.zOrderVehicles + 1
+
+        property string _latLonText: _activeVehicleCoordinate.isValid
+                                     ? _activeVehicleCoordinate.latitude.toFixed(7) + ", " + _activeVehicleCoordinate.longitude.toFixed(7)
+                                     : ""
+
+        sourceItem: Rectangle {
+            id:             positionChip
+            width:          positionRow.width + ScreenTools.defaultFontPixelWidth * 1.4
+            height:         positionRow.height + ScreenTools.defaultFontPixelHeight * 0.3
+            radius:         height / 2
+            color:          positionMouse.containsMouse ? "#E61C1F23" : "#CC0E0F11"
+            border.color:   copiedTimer.running ? "#3DDC84" : (positionMouse.containsMouse ? "#FF7A1A" : "#2A2D31")
+
+            Row {
+                id:                 positionRow
+                anchors.centerIn:   parent
+                spacing:            ScreenTools.defaultFontPixelWidth * 0.6
+
+                QGCLabel {
+                    text:           vehiclePositionLabel._latLonText
+                    font.family:    ScreenTools.fixedFontFamily
+                    font.pointSize: ScreenTools.smallFontPointSize
+                }
+                QGCLabel {
+                    text:           copiedTimer.running ? qsTr("복사됨") : qsTr("복사")
+                    color:          copiedTimer.running ? "#3DDC84" : "#FF9A4D"
+                    font.pointSize: ScreenTools.smallFontPointSize
+                    font.bold:      true
+                }
+            }
+
+            MouseArea {
+                id:             positionMouse
+                anchors.fill:   parent
+                hoverEnabled:   true
+                cursorShape:    Qt.PointingHandCursor
+                onClicked: {
+                    QGroundControl.copyToClipboard(vehiclePositionLabel._latLonText)
+                    copiedTimer.restart()
+                }
+            }
+
+            Timer {
+                id:         copiedTimer
+                interval:   1500
+            }
+        }
+    }
+
     // Add distance sensor view
     MapItemView{
         model: QGroundControl.multiVehicleManager.vehicles
