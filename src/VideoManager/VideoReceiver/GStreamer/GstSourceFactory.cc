@@ -1,8 +1,11 @@
 #include "GstSourceFactory.h"
 
+#include <cstring>
+
 #include <QtCore/QFile>
 #include <QtCore/QUrl>
 #include <gst/gst.h>
+#include <gst/rtsp/gstrtspmessage.h>
 #include <gst/rtsp/gstrtsptransport.h>
 
 #include "GStreamerHelpers.h"
@@ -295,6 +298,38 @@ void linkPad(GstElement* element, GstPad* pad, gpointer data)
 // Each build* helper makes and configures the source element for one scheme family, logs the
 // specific failure, and returns the owning element (or nullptr). create() owns it from here on.
 
+// rtspsrc resolves a relative SDP control ("trackID=v") against the request URL per RFC 3986,
+// which replaces the last path segment and drops the query: "rtsp://h/Path?Key=x" + "trackID=v"
+// becomes "rtsp://h/trackID=v". Relay servers that identify the stream by path and query
+// (e.g. "...?DeviceKey=...") answer that SETUP with 200 but never send media, so the view stays at
+// "waiting for video". VLC/live555 and FFmpeg append the control to the full URL instead
+// ("rtsp://h/Path?Key=x/trackID=v"); do the same for SETUP when the location carries a query.
+static gboolean rtspBeforeSend(GstElement* /*src*/, GstRTSPMessage* msg, gpointer userData)
+{
+    const gchar* base = static_cast<const gchar*>(userData);
+    if (!msg || !base || (msg->type != GST_RTSP_MESSAGE_REQUEST) || (msg->type_data.request.method != GST_RTSP_SETUP)) {
+        return TRUE;
+    }
+    const gchar* uri = msg->type_data.request.uri;
+    if (!uri || g_str_has_prefix(uri, base)) {
+        return TRUE;
+    }
+    const gchar* slash = strrchr(uri, '/');
+    if (!slash || slash[1] == '\0') {
+        return TRUE;
+    }
+    gchar* control = g_strdup(slash + 1);
+    if (gchar* q = strchr(control, '?')) {
+        *q = '\0';
+    }
+    gchar* fixed = g_strdup_printf("%s/%s", base, control);
+    qCDebug(GstSourceFactoryLog) << "RTSP SETUP uri" << uri << "->" << fixed;
+    g_free(msg->type_data.request.uri);
+    msg->type_data.request.uri = fixed;
+    g_free(control);
+    return TRUE;
+}
+
 GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Config& config, guint latencyMs)
 {
     if (!GStreamer::isValidRtspUri(uri.toUtf8().constData())) {
@@ -330,6 +365,11 @@ GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Con
                  "do-retransmission", config.doRetransmission ? TRUE : FALSE, "tcp-timeout", kRtspTcpTimeoutUs,
                  "udp-reconnect", TRUE, "drop-on-latency", dropOnLatency, "retry", kRtspRetry, "protocols",
                  kRtspProtocols, nullptr);
+
+    if (sourceUrl.hasQuery()) {
+        (void) g_signal_connect_data(source, "before-send", G_CALLBACK(rtspBeforeSend), g_strdup(cleanLocation.constData()),
+                                     [](gpointer data, GClosure*) { g_free(data); }, GConnectFlags(0));
+    }
 
     const QString rtspUser = sourceUrl.userName(QUrl::FullyDecoded);
     const QString rtspPassword = sourceUrl.password(QUrl::FullyDecoded);
