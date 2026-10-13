@@ -244,8 +244,29 @@ void diagFileLog(GstDebugCategory* category, GstDebugLevel level, const gchar* f
 
 }  // namespace
 
+namespace {
+GPrintFunc s_prevPrintHandler = nullptr;
+
+// rtspsrc's "debug" property dumps every RTSP request/response with g_print; capture it.
+void diagPrintHandler(const gchar* string)
+{
+    g_rec_mutex_lock(&s_diagMutex);
+    if (s_diagFile && string) {
+        fputs(string, s_diagFile);
+    }
+    g_rec_mutex_unlock(&s_diagMutex);
+}
+}  // namespace
+
+bool GStreamer::fileLogActive()
+{
+    return g_diagFileLogActive.load();
+}
+
 void GStreamer::stopFileLog()
 {
+    (void) g_set_print_handler(s_prevPrintHandler);
+    s_prevPrintHandler = nullptr;
     gst_debug_remove_log_function(diagFileLog);
     g_diagFileLogActive.store(false);
     gst_debug_set_threshold_from_string("*:1", TRUE);
@@ -279,6 +300,7 @@ bool GStreamer::startFileLog(const char* path)
     }
 
     g_diagFileLogActive.store(true);
+    s_prevPrintHandler = g_set_print_handler(diagPrintHandler);
     gst_debug_remove_log_function(diagFileLog);
     gst_debug_add_log_function(diagFileLog, nullptr, nullptr);
     gst_debug_set_threshold_from_string(

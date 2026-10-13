@@ -19,6 +19,7 @@ void logDecoderRanks();
 // path to a text file until stopFileLog(). Returns false if the file cannot be opened.
 bool startFileLog(const char* path);
 void stopFileLog();
+bool fileLogActive();
 
 void qtGstLog(GstDebugCategory* category, GstDebugLevel level, const gchar* file, const gchar* function, gint line,
               GObject* object, GstDebugMessage* message, gpointer data);

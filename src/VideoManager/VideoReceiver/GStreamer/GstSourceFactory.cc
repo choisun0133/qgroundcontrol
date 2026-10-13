@@ -9,6 +9,7 @@
 #include <gst/rtsp/gstrtsptransport.h>
 
 #include "GStreamerHelpers.h"
+#include "GStreamerLogging.h"
 #include "QGCLoggingCategory.h"
 
 QGC_LOGGING_CATEGORY(GstSourceFactoryLog, "Video.GStreamer.GstSourceFactory")
@@ -387,6 +388,10 @@ GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Con
                  kRtspProtocols, nullptr);
 
     GST_DEBUG_CATEGORY_INIT(aero_rtsp_debug, "aerortsp", 0, "AeroResearch RTSP request log");
+    if (GStreamer::fileLogActive()) {
+        // Full RTSP request/response dump (headers incl. Content-Base, Transport) into the diagnostics file
+        g_object_set(source, "debug", TRUE, nullptr);
+    }
     // Always hooked: logs every request for field diagnostics; the SETUP rewrite only applies
     // when the location carries a query (base == nullptr otherwise).
     (void) g_signal_connect_data(source, "before-send", G_CALLBACK(rtspBeforeSend),
