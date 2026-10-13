@@ -25,7 +25,7 @@ jobs:
       - name: Install AeroResearch GCS
         shell: pwsh
         run: |
-          curl.exe -fsSL -o setup.exe https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-1.6.5/AeroResearchGCS-1.6.5-Windows-x64-Setup.exe
+          curl.exe -fsSL -o setup.exe https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-1.6.6/AeroResearchGCS-1.6.6-Windows-x64-Developer-Setup.exe
           Start-Process .\setup.exe -ArgumentList '/S' -Wait
           $exe = Get-ChildItem 'C:\Program Files', 'C:\Program Files (x86)' -Recurse -Filter QGroundControl.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $exe) { throw "QGroundControl.exe not found after install" }
@@ -54,7 +54,8 @@ jobs:
           $dir = Join-Path $env:APPDATA 'AeroResearch'
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
           foreach ($name in @('QGroundControl Daily.ini', 'QGroundControl.ini')) {
-            "[Video]`r`nvideoSource=RTSP Video Stream`r`nrtspUrl=rtsp://127.0.0.1:8554/test`r`n" | Set-Content -Encoding ascii (Join-Path $dir $name)
+            # [General]: skip the first-run preferences dialog so the fly view is reachable
+            "[General]`r`nfirstRunPromptIdsShown=`"1,2,3,4,5,6,7,8,9,10`"`r`n`r`n[Video]`r`nvideoSource=RTSP Video Stream`r`nrtspUrl=rtsp://127.0.0.1:8554/test`r`n" | Set-Content -Encoding ascii (Join-Path $dir $name)
           }
 
       - name: Fake vehicle heartbeat
