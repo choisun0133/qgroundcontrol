@@ -552,7 +552,7 @@ Item {
 
             Loader {
                 Layout.fillWidth:   true
-                source:             _activeVehicle.expandedToolbarIndicatorSource("Battery")
+                source:             QGroundControl.aeroUserEdition ? "" : _activeVehicle.expandedToolbarIndicatorSource("Battery")
             }
 
             SettingsGroupLayout {

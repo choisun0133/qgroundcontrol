@@ -161,15 +161,24 @@ ApplicationWindow {
     }
 
     function showVehicleConfig() {
+        if (QGroundControl.aeroUserEdition) {
+            return  // operator build: no vehicle setup / parameters
+        }
         showTool(qsTr("기체 설정"), "qrc:/qml/QGroundControl/VehicleSetup/VehicleConfigView.qml", "/qmlimages/Gears.svg")
     }
 
     function showVehicleConfigParametersPage() {
+        if (QGroundControl.aeroUserEdition) {
+            return
+        }
         showVehicleConfig()
         toolDrawerLoader.item.showParametersPanel()
     }
 
     function showKnownVehicleComponentConfigPage(knownVehicleComponent) {
+        if (QGroundControl.aeroUserEdition) {
+            return
+        }
         showVehicleConfig()
         let vehicleComponent = globals.activeVehicle.autopilotPlugin.findKnownVehicleComponent(knownVehicleComponent)
         if (vehicleComponent) {

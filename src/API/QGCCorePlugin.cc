@@ -94,11 +94,14 @@ const QVariantList &QGCCorePlugin::analyzePages()
             tr("GeoTag Images"),
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/QGroundControl/AnalyzeView/GeoTag/GeoTagPage.qml")),
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/QGroundControl/AnalyzeView/GeoTag/GeoTagIcon.svg")))),
+#ifndef QGC_AERO_USER_EDITION
+        // Operator edition omits the console: it can change vehicle configuration directly
         QVariant::fromValue(new QmlComponentInfo(
             tr("MAVLink Console"),
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/QGroundControl/AnalyzeView/MAVLinkConsole/MAVLinkConsolePage.qml")),
             QUrl::fromUserInput(QStringLiteral("qrc:/qmlimages/MAVLinkConsoleIcon.svg")),
             nullptr, true /* requiresVehicle */)),
+#endif
         QVariant::fromValue(new QmlComponentInfo(
             tr("MAVLink Inspector"),
             QUrl::fromUserInput(QStringLiteral("qrc:/qml/QGroundControl/AnalyzeView/MAVLinkInspector/MAVLinkInspectorPage.qml")),

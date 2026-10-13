@@ -361,6 +361,9 @@ RowLayout {
 
                         onLinkActivated: (link) => {
                             if (link.startsWith('param://')) {
+                                if (QGroundControl.aeroUserEdition) {
+                                    return
+                                }
                                 var paramName = link.substr(8);
                                 fact = controller.getParameterFact(-1, paramName, true)
                                 if (fact != null) {
@@ -407,7 +410,7 @@ RowLayout {
 
             Loader {
                 Layout.fillWidth:   true
-                source:             _activeVehicle.expandedToolbarIndicatorSource("MainStatus")
+                source:             QGroundControl.aeroUserEdition ? "" : _activeVehicle.expandedToolbarIndicatorSource("MainStatus")
             }
 
             SettingsGroupLayout {
@@ -426,7 +429,7 @@ RowLayout {
 
             SettingsGroupLayout {
                 Layout.fillWidth:   true
-                visible:            QGroundControl.corePlugin.showAdvancedUI
+                visible:            QGroundControl.corePlugin.showAdvancedUI && !QGroundControl.aeroUserEdition
 
                 GridLayout {
                     columns:            2

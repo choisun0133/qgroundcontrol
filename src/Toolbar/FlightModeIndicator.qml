@@ -232,7 +232,7 @@ Item {
 
             Loader {
                 Layout.fillWidth:   true
-                source:             _activeVehicle.expandedToolbarIndicatorSource("FlightMode")
+                source:             QGroundControl.aeroUserEdition ? "" : _activeVehicle.expandedToolbarIndicatorSource("FlightMode")
             }
 
             SettingsGroupLayout {

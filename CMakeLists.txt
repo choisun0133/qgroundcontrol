@@ -355,6 +355,10 @@ if(QGC_BUILD_TESTING)
     add_compile_definitions(QGC_UNITTEST_BUILD)
 endif()
 
+if(QGC_AERO_USER_EDITION)
+    add_compile_definitions(QGC_AERO_USER_EDITION)
+endif()
+
 add_subdirectory(src)
 
 if(QGC_BUILD_TESTING)
