@@ -1,5 +1,6 @@
 #include "GstSourceFactory.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include <QtCore/QFile>
@@ -18,6 +19,7 @@ namespace {
 
 constexpr guint64 kRtspTcpTimeoutUs = G_GUINT64_CONSTANT(5000000);
 constexpr int kRtspRetry = 3;
+constexpr guint kRtspTcpMinLatencyMs = 300;
 constexpr int kUdpBufferSizeBytes = 8 * 1024 * 1024;
 
 void configureH26xParser(GstElement* element)
@@ -381,9 +383,16 @@ GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Con
 
     // do-retransmission forwards to rtspsrc's internal rtpjitterbuffer (added 1.6);
     // drop-on-latency=TRUE unless jitterBuffer==Buffered (opt out of bounded playout).
-    const gboolean dropOnLatency = (config.jitterBuffer == JitterBuffer::Buffered) ? FALSE : TRUE;
+    // Over TCP nothing is lost, packets only arrive in bursts (a 1080p H.265 keyframe through a relay).
+    // Dropping "late" packets then cuts frames apart: only the top of the picture updates and the rest
+    // smears. Never drop on TCP, give bursts at least kRtspTcpMinLatencyMs, and skip retransmission.
+    const bool tcpOnly = (kRtspProtocols == GST_RTSP_LOWER_TRANS_TCP);
+    const gboolean dropOnLatency = (tcpOnly || (config.jitterBuffer == JitterBuffer::Buffered)) ? FALSE : TRUE;
+    if (tcpOnly) {
+        latencyMs = std::max<guint>(latencyMs, kRtspTcpMinLatencyMs);
+    }
     g_object_set(source, "location", cleanLocation.constData(), "latency", latencyMs, "do-rtcp", TRUE,
-                 "do-retransmission", config.doRetransmission ? TRUE : FALSE, "tcp-timeout", kRtspTcpTimeoutUs,
+                 "do-retransmission", (config.doRetransmission && !tcpOnly) ? TRUE : FALSE, "tcp-timeout", kRtspTcpTimeoutUs,
                  "udp-reconnect", TRUE, "drop-on-latency", dropOnLatency, "retry", kRtspRetry, "protocols",
                  kRtspProtocols, nullptr);
 
