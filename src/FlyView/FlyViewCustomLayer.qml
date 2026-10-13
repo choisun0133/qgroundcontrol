@@ -31,6 +31,12 @@ Item {
         defaultY:   _root._panelMargin
     }
 
+    // Vibration / EKF window, opened from the toolbar "진동 · EKF" chip; starts under the message window
+    AeroHealthPanel {
+        defaultX:   _root.width - panelWidth - _root._panelMargin
+        defaultY:   aeroMessageWindow.y + aeroMessageWindow.height + _root._panelMargin
+    }
+
     // Bottom centre, between the video window and the instrument panel (as in the design)
     AeroCameraPanel {
         defaultX:   (_root.width - panelWidth) / 2

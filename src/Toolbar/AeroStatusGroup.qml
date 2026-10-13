@@ -70,7 +70,7 @@ Item {
                             anchors.bottom:         parent.bottom
                             anchors.bottomMargin:   control._u * 0.2
                             spacing:                2
-                            visible:                modelData.state !== "off"
+                            visible:                modelData.state !== "off" && modelData.key !== "bat"
                             Repeater {
                                 model: 4
                                 Rectangle {
@@ -80,6 +80,40 @@ Item {
                                     radius:         1
                                     color:          chip.chipData.state !== "lost" && chip.chipData.pct >= (index + 1) * 22 ? chip.chipData.color : "#33383D"
                                 }
+                            }
+                        }
+
+                        // Battery: classic battery outline filled to the remaining charge
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing:                1
+                            visible:                modelData.key === "bat"
+
+                            Rectangle {
+                                id:             batteryBody
+                                width:          control._u * 1.5
+                                height:         control._u * 0.8
+                                radius:         2
+                                color:          "transparent"
+                                border.width:   Math.max(1, control._u * 0.08)
+                                border.color:   chip.chipData.state === "off" ? "#5A6066" : chip.chipData.color
+
+                                Rectangle {
+                                    x:          batteryBody.border.width + 1
+                                    y:          batteryBody.border.width + 1
+                                    height:     batteryBody.height - (batteryBody.border.width + 1) * 2
+                                    width:      Math.max(0, (batteryBody.width - (batteryBody.border.width + 1) * 2) * Math.min(100, Math.max(0, chip.chipData.pct)) / 100)
+                                    radius:     1
+                                    color:      chip.chipData.color
+                                    visible:    chip.chipData.state !== "off"
+                                }
+                            }
+                            Rectangle {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width:                  Math.max(2, control._u * 0.12)
+                                height:                 batteryBody.height * 0.45
+                                radius:                 1
+                                color:                  chip.chipData.state === "off" ? "#5A6066" : chip.chipData.color
                             }
                         }
 
@@ -118,6 +152,45 @@ Item {
                             detailsPopup.open()
                         }
                     }
+                }
+            }
+
+            // Vibration + EKF chip: opens the 진동 · EKF window
+            Rectangle {
+                id:             healthChip
+                width:          healthContent.width + control._u * 0.8
+                height:         control._u * 2.1
+                radius:         control._u * 0.3
+                color:          _st === "lost" ? Qt.rgba(1, 0.3, 0.3, 0.16)
+                              : (_st === "weak" ? Qt.rgba(1, 0.69, 0.125, 0.10)
+                              : (_st === "ok" ? Qt.rgba(0.24, 0.86, 0.52, 0.08) : "transparent"))
+                border.width:   globals.aeroHealthPanelVisible ? 2 : 1
+                border.color:   globals.aeroHealthPanelVisible ? QGroundControl.globalPalette.brandingBlue
+                              : (_st === "off" ? "#2A2D31" : Qt.rgba(status.health.color.r, status.health.color.g, status.health.color.b, 0.55))
+
+                property string _st: status.health.state
+
+                Column {
+                    id:                 healthContent
+                    anchors.centerIn:   parent
+                    spacing:            0
+                    QGCLabel {
+                        text:           qsTr("진동 · EKF")
+                        color:          "#9BA1A6"
+                        font.pointSize: ScreenTools.smallFontPointSize
+                    }
+                    Row {
+                        spacing: control._u * 0.3
+                        QGCLabel { text: status.health.vibWord; color: status.health.vibColor; font.bold: true }
+                        QGCLabel { text: "·"; color: "#5A6066" }
+                        QGCLabel { text: status.health.ekfWord; color: status.health.ekfColor; font.bold: true }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill:   parent
+                    cursorShape:    Qt.PointingHandCursor
+                    onClicked:      globals.aeroHealthPanelVisible = !globals.aeroHealthPanelVisible
                 }
             }
         }
