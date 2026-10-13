@@ -1,0 +1,33 @@
+plugin dlls: 270
+gstd3d.dll
+gstd3d11.dll
+gstd3d12.dll
+gstid3demux.dll
+gstlibav.dll
+gstnvcodec.dll
+gstplayback.dll
+gstrsrtp.dll
+gstrsrtsp.dll
+gstrtp.dll
+gstrtpmanager.dll
+gstrtpmanagerbad.dll
+gstrtponvif.dll
+gstrtsp.dll
+gstrtspclientsink.dll
+gstsrtp.dll
+gstvideoparsersbad.dll
+still running
+----- stderr (tail) -----
+----- stdout (tail) -----
+----- settings after run -----
+QGroundControl Daily.ini
+QGroundControl.ini
+[Video]
+videoSource=RTSP Video Stream
+rtspUrl=rtsp://127.0.0.1:8554/test
+[AeroInstrumentPanel]
+[AeroPanel3_CameraPanel]
+[AeroPanel3_HealthWindow]
+[AeroPanel3_MessageWindow]
+[AeroPanel3_ProximityWindow]
+[AeroPanel3_VideoPanel]
