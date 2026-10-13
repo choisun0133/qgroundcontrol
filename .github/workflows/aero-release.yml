@@ -25,9 +25,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.4-ffmpeg' || 'aerogcs-1.6.4' }}
+      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.5-ffmpeg' || 'aerogcs-1.6.5' }}
       SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
-      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.4 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.4' }}
+      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.5 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.5' }}
     steps:
       - name: Download build artifacts (only builds of the current aero-gcs head)
         run: |
@@ -57,11 +57,11 @@ jobs:
         run: |
           set -euo pipefail
           win=$(find dl -path 'dl/win/*' -iname '*.exe' | head -1)
-          [ -n "$win" ] && cp "$win" "out/AeroResearchGCS-1.6.4-Windows-x64${SUFFIX}-Setup.exe"
+          [ -n "$win" ] && cp "$win" "out/AeroResearchGCS-1.6.5-Windows-x64${SUFFIX}-Setup.exe"
           apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
-          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.4-Android.apk"
+          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.5-Android.apk"
           dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
-          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.4-macOS.dmg"
+          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.5-macOS.dmg"
           ls -l out
           [ -n "$(ls out)" ]
 
