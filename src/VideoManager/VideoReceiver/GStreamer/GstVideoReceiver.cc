@@ -1439,8 +1439,15 @@ gboolean GstVideoReceiver::_onBusMessage(GstBus * /* bus */, GstMessage *msg, gp
         gst_message_parse_error(msg, &error, &debug);
         const bool recoverableH265PaciError = isRecoverableH265PaciError(msg, error, debug);
 
+        // Last line of the debug detail (e.g. "Could not receive any UDP packets ...") is what
+        // tells a field user why; keep it for the on-screen error before freeing.
+        QString debugDetail;
         if (debug) {
             qCDebug(GstVideoReceiverLog) << "GStreamer debug:" << debug;
+            debugDetail = QString::fromUtf8(debug).trimmed().section(QLatin1Char('\n'), -1).trimmed();
+            if (debugDetail.contains(QLatin1String("):"))) {
+                debugDetail = debugDetail.section(QLatin1String("):"), -1).trimmed();
+            }
             g_clear_pointer(&debug, g_free);
         }
 
@@ -1451,8 +1458,11 @@ gboolean GstVideoReceiver::_onBusMessage(GstBus * /* bus */, GstMessage *msg, gp
             } else {
                 qCCritical(GstVideoReceiverLog) << "GStreamer error:" << error->message;
                 const QString source = GST_MESSAGE_SRC(msg) ? QString::fromUtf8(GST_OBJECT_NAME(GST_MESSAGE_SRC(msg))) : QString();
-                const QString text = source.isEmpty() ? QString::fromUtf8(error->message)
-                                                      : QStringLiteral("%1: %2").arg(source, QString::fromUtf8(error->message));
+                QString text = source.isEmpty() ? QString::fromUtf8(error->message)
+                                                : QStringLiteral("%1: %2").arg(source, QString::fromUtf8(error->message));
+                if (!debugDetail.isEmpty()) {
+                    text += QStringLiteral("\n") + debugDetail.left(240);
+                }
                 (void) QMetaObject::invokeMethod(pThis, [pThis, text]() { emit pThis->streamError(text); }, Qt::QueuedConnection);
             }
             g_clear_error(&error);
