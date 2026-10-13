@@ -37,7 +37,9 @@ jobs:
           echo "aero-gcs head: $head"
           fetch() {  # workflow, artifact, dir
             # The run may still be going (other matrix legs); the artifact is enough
-            run=$(gh run list -R "$REPO" -c "$head" -w "$1" -L 5 --json databaseId,headSha -q "[.[] | select(.headSha==\"$head\")][0].databaseId")
+            # Normal builds come from pushes; the FFmpeg test build is a manual (workflow_dispatch) run
+            ev=$([ -n "$SUFFIX" ] && echo workflow_dispatch || echo push)
+            run=$(gh run list -R "$REPO" -c "$head" -w "$1" -L 10 --json databaseId,headSha,event -q "[.[] | select(.headSha==\"$head\" and .event==\"$ev\")][0].databaseId")
             if [ -n "$run" ] && gh run download "$run" -R "$REPO" -n "$2" -D "$3"; then
               echo "$1: run $run"
             else
