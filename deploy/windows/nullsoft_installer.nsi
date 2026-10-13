@@ -115,6 +115,11 @@ doInstall:
         WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayVersion" "${APPVERSION}"
     !endif
 
+    ; Allow inbound traffic (RTP video over UDP, MAVLink UDP) for the app on all network profiles.
+    ; Without it a dismissed/denied first-run firewall prompt silently drops RTSP/UDP video.
+    nsExec::Exec 'netsh advfirewall firewall delete rule name="${APPNAME}"'
+    nsExec::Exec 'netsh advfirewall firewall add rule name="${APPNAME}" dir=in action=allow program="$INSTDIR\bin\${EXENAME}.exe" enable=yes profile=any'
+
     ; WER dumps for crash triage
     WriteRegDWORD    HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\${EXENAME}.exe" "DumpCount" 5
     WriteRegDWORD    HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\${EXENAME}.exe" "DumpType" 1
@@ -139,6 +144,8 @@ Section "Uninstall"
     ${If} $R1 != 1
         RMDir /r /REBOOTOK "$APPDATA\${ORGNAME}\"
     ${EndIf}
+
+    nsExec::Exec 'netsh advfirewall firewall delete rule name="${APPNAME}"'
 
     ; Remove ARP + WER
     DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"

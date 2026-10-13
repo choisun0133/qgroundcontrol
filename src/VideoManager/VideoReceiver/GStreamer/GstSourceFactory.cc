@@ -312,16 +312,16 @@ GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Con
     cleanUrl.setUserInfo(QString());
     const QByteArray cleanLocation = cleanUrl.toEncoded();
 
-    // Transport: rtsp:// and rtspt:// use TCP-interleaved RTP, rtspu:// uses UDP.
-    // UDP-first with TCP fallback is unusable through NAT / relay servers: the UDP attempt times
-    // out, and by the time rtspsrc retries over TCP the source watchdog has already restarted the
-    // pipeline, so the stream never starts ("no data received"). TCP works everywhere VLC does.
-    // (The protocols property must not be left at UDP|TCP either: setting it after "location"
-    // overrides the transport an rtspt:// location selects.)
+    // Transport: rtsp:// tries UDP and falls back to TCP-interleaved (some relay servers only
+    // offer UDP and reject TCP with "Could not get/set settings"), rtspt:// forces TCP and
+    // rtspu:// forces UDP. The protocols property is set after "location", so it must carry the
+    // scheme's choice or it would override the transport an rtspt:// location selects.
     const QString scheme = sourceUrl.scheme().toLower();
-    const GstRTSPLowerTrans kRtspProtocols = (scheme == QLatin1String("rtspu"))
-        ? static_cast<GstRTSPLowerTrans>(GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST)
-        : GST_RTSP_LOWER_TRANS_TCP;
+    const GstRTSPLowerTrans kRtspProtocols = (scheme == QLatin1String("rtspt"))
+        ? GST_RTSP_LOWER_TRANS_TCP
+        : ((scheme == QLatin1String("rtspu"))
+               ? static_cast<GstRTSPLowerTrans>(GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST)
+               : static_cast<GstRTSPLowerTrans>(GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP));
 
     // do-retransmission forwards to rtspsrc's internal rtpjitterbuffer (added 1.6);
     // drop-on-latency=TRUE unless jitterBuffer==Buffered (opt out of bounded playout).
