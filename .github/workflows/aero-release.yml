@@ -5,6 +5,15 @@ on:
     branches:
       - 'publish-aero'
   workflow_dispatch:   # GitHub currently skips push-triggered runs on this fork; run it by hand
+    inputs:
+      variant:
+        description: 'Release variant: normal, or FFmpeg (Windows build made with video_player=FFmpeg)'
+        required: false
+        default: 'normal'
+        type: choice
+        options:
+          - normal
+          - FFmpeg
 
 permissions:
   contents: write
@@ -16,7 +25,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TAG: aerogcs-1.6.4
+      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.4-ffmpeg' || 'aerogcs-1.6.4' }}
+      SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
+      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.4 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.4' }}
     steps:
       - name: Download build artifacts (only builds of the current aero-gcs head)
         run: |
@@ -34,15 +45,17 @@ jobs:
             fi
           }
           fetch Windows QGroundControl-installer-AMD64 dl/win
-          fetch Android QGroundControl-linux dl/android
-          fetch MacOS QGroundControl dl/mac
+          if [ -z "$SUFFIX" ]; then
+            fetch Android QGroundControl-linux dl/android
+            fetch MacOS QGroundControl dl/mac
+          fi
           find dl -type f -exec ls -l {} \;
 
       - name: Rename files
         run: |
           set -euo pipefail
           win=$(find dl -path 'dl/win/*' -iname '*.exe' | head -1)
-          [ -n "$win" ] && cp "$win" "out/AeroResearchGCS-1.6.4-Windows-x64-Setup.exe"
+          [ -n "$win" ] && cp "$win" "out/AeroResearchGCS-1.6.4-Windows-x64${SUFFIX}-Setup.exe"
           apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
           [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.4-Android.apk"
           dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
@@ -55,6 +68,6 @@ jobs:
           set -euo pipefail
           gh release delete "$TAG" -R "$REPO" -y --cleanup-tag || true
           gh release create "$TAG" -R "$REPO" --target "${{ github.sha }}" \
-            --title "AeroResearch GCS 1.6.4" \
+            --title "$TITLE" \
             --notes "AeroResearch GCS 설치 파일 (Windows / Android / macOS). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." \
             out/*
