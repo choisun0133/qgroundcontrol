@@ -20,6 +20,9 @@ QGC_LOGGING_CATEGORY(GStreamerDecoderRanksLog, "Video.GStreamer.DecoderRanks")
 namespace {
 
 std::atomic_bool g_externalPluginLoaderFailed = false;
+// True while the field-diagnostics file log runs: verbose levels go to the file only, not to the
+// Qt log (hundreds of messages a second would swamp the in-app log model and stall the UI).
+std::atomic_bool g_diagFileLogActive = false;
 
 void glib_print_handler(const gchar* string)
 {
@@ -92,6 +95,9 @@ void qtGstLog(GstDebugCategory* category, GstDebugLevel level, const gchar* file
     Q_UNUSED(data);
 
     if (level > gst_debug_category_get_threshold(category)) {
+        return;
+    }
+    if ((level >= GST_LEVEL_INFO) && g_diagFileLogActive.load(std::memory_order_relaxed)) {
         return;
     }
 
@@ -211,24 +217,29 @@ void logDecoderRanks()
 namespace {
 
 FILE* s_diagFile = nullptr;
-GMutex s_diagMutex;
+GRecMutex s_diagMutex;
+thread_local bool t_inDiagLog = false;
 
 void diagFileLog(GstDebugCategory* category, GstDebugLevel level, const gchar* file, const gchar* function, gint line,
                  GObject* object, GstDebugMessage* message, gpointer /*data*/)
 {
-    if (level > gst_debug_category_get_threshold(category)) {
+    // Never re-enter: formatting can itself emit debug output, which would recurse into this
+    // function (and used to deadlock on the mutex, freezing the app).
+    if (t_inDiagLog || level > gst_debug_category_get_threshold(category)) {
         return;
     }
-    g_mutex_lock(&s_diagMutex);
+    t_inDiagLog = true;
+    const gchar* objName = (object && GST_IS_OBJECT(object)) ? GST_OBJECT_NAME(object) : nullptr;
+    const gchar* text = gst_debug_message_get(message);
+    g_rec_mutex_lock(&s_diagMutex);
     if (s_diagFile) {
-        gchar* obj = object ? gst_info_strdup_printf("%" GST_PTR_FORMAT, object) : g_strdup("");
         const GstClockTime t = gst_util_get_timestamp();
-        fprintf(s_diagFile, "%" GST_TIME_FORMAT " %-7s %-20s %s:%d:%s: %s %s\n", GST_TIME_ARGS(t),
+        fprintf(s_diagFile, "%" GST_TIME_FORMAT " %-7s %-18s %s:%d:%s <%s> %s\n", GST_TIME_ARGS(t),
                 gst_debug_level_get_name(level), gst_debug_category_get_name(category), file ? file : "", line,
-                function ? function : "", obj, gst_debug_message_get(message));
-        g_free(obj);
+                function ? function : "", objName ? objName : "", text ? text : "");
     }
-    g_mutex_unlock(&s_diagMutex);
+    g_rec_mutex_unlock(&s_diagMutex);
+    t_inDiagLog = false;
 }
 
 }  // namespace
@@ -236,14 +247,15 @@ void diagFileLog(GstDebugCategory* category, GstDebugLevel level, const gchar* f
 void GStreamer::stopFileLog()
 {
     gst_debug_remove_log_function(diagFileLog);
+    g_diagFileLogActive.store(false);
     gst_debug_set_threshold_from_string("*:1", TRUE);
-    g_mutex_lock(&s_diagMutex);
+    g_rec_mutex_lock(&s_diagMutex);
     if (s_diagFile) {
         fprintf(s_diagFile, "===== end of AeroResearch video diagnostics =====\n");
         fclose(s_diagFile);
         s_diagFile = nullptr;
     }
-    g_mutex_unlock(&s_diagMutex);
+    g_rec_mutex_unlock(&s_diagMutex);
 }
 
 bool GStreamer::startFileLog(const char* path)
@@ -251,7 +263,7 @@ bool GStreamer::startFileLog(const char* path)
     if (!gst_is_initialized() || !path) {
         return false;
     }
-    g_mutex_lock(&s_diagMutex);
+    g_rec_mutex_lock(&s_diagMutex);
     if (s_diagFile) {
         fclose(s_diagFile);
     }
@@ -261,16 +273,17 @@ bool GStreamer::startFileLog(const char* path)
         fprintf(s_diagFile, "===== AeroResearch video diagnostics =====\n");
         fflush(s_diagFile);
     }
-    g_mutex_unlock(&s_diagMutex);
+    g_rec_mutex_unlock(&s_diagMutex);
     if (!ok) {
         return false;
     }
 
+    g_diagFileLogActive.store(true);
     gst_debug_remove_log_function(diagFileLog);
     gst_debug_add_log_function(diagFileLog, nullptr, nullptr);
     gst_debug_set_threshold_from_string(
-        "*:3,rtspsrc:6,rtspconnection:5,rtspsrc2:5,rtpbin:4,rtpsession:4,rtpjitterbuffer:4,rtph265depay:6,"
-        "rtph264depay:5,rtpbasedepayload:5,h265parse:5,h264parse:5,parsebin:5,decodebin3:5,"
+        "*:3,rtspsrc:5,rtspconnection:5,rtspsrc2:5,rtpbin:4,rtpsession:4,rtpjitterbuffer:4,rtph265depay:5,"
+        "rtph264depay:5,rtpbasedepayload:4,h265parse:5,h264parse:5,parsebin:5,decodebin3:5,"
         "videodecoder:4,avdec_h265:4,nvh265dec:4,d3d11h265dec:4,d3d12h265dec:4",
         TRUE);
     return true;

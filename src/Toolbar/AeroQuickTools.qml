@@ -187,6 +187,42 @@ Popup {
             }
         }
 
+        // ---- Video diagnostics ----
+        Rectangle {
+            Layout.fillWidth:       true
+            Layout.preferredHeight: diagRow.implicitHeight + control._u * 0.6
+            radius:                 control._u * 0.35
+            color:                  "#15181B"
+            border.color:           "#2A2D31"
+
+            RowLayout {
+                id:                     diagRow
+                anchors.left:           parent.left
+                anchors.right:          parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins:        control._u * 0.5
+
+                ColumnLayout {
+                    Layout.fillWidth:   true
+                    spacing:            0
+                    QGCLabel { text: qsTr("영상 진단 로그"); font.bold: true }
+                    QGCLabel {
+                        Layout.fillWidth:   true
+                        text:               QGroundControl.videoManager.diagnosticsRunning ? qsTr("기록 중… 60초 뒤 바탕화면에 저장")
+                                                                                          : qsTr("영상을 다시 연결하며 60초 동안 기록")
+                        color:              "#9BA1A6"
+                        font.pointSize:     ScreenTools.smallFontPointSize
+                        wrapMode:           Text.WordWrap
+                    }
+                }
+                QGCButton {
+                    text:       qsTr("기록 시작")
+                    enabled:    !QGroundControl.videoManager.diagnosticsRunning
+                    onClicked:  QGroundControl.videoManager.startVideoDiagnostics()
+                }
+            }
+        }
+
         QGCLabel {
             Layout.fillWidth:   true
             text:               qsTr("Esc 또는 바깥을 누르면 닫힙니다")
