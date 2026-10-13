@@ -32,6 +32,8 @@ QGC_LOGGING_CATEGORY(GstVideoReceiverLog, "Video.GStreamer.GstVideoReceiver")
 namespace {
 // kEosTimeoutNs: bus wait budget for EOS/ERROR during stop(); 3 s covers slow hw decoders.
 constexpr GstClockTime kEosTimeoutNs = 3 * GST_SECOND;
+// kStartupGraceSecs: extra wait for the first data after a (re)start before the source watchdog counts.
+constexpr qint64 kStartupGraceSecs = 12;
 
 // Refs the element's first src pad into *userData and stops iterating. Resync is handled
 // internally by gst_element_foreach_src_pad (unlike a bare gst_iterator_next loop).
@@ -712,8 +714,10 @@ void GstVideoReceiver::_watchdog()
         const qint64 now = QDateTime::currentSecsSinceEpoch();
         qint64 lastSourceFrameTime = _lastSourceFrameTime.load(std::memory_order_relaxed);
         if (lastSourceFrameTime == 0) {
-            lastSourceFrameTime = now;
-            _lastSourceFrameTime.store(now, std::memory_order_relaxed);
+            // First tick after (re)start: allow extra time for connection setup (RTSP over the
+            // internet: TCP connect, auth, DESCRIBE/SETUP/PLAY) before the timeout counts.
+            lastSourceFrameTime = now + kStartupGraceSecs;
+            _lastSourceFrameTime.store(lastSourceFrameTime, std::memory_order_relaxed);
         }
 
         if (++_statsTickCounter >= 10) {
