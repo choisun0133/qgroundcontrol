@@ -1,6 +1,8 @@
 #include "GStreamerLogging.h"
 
 #include <QtCore/QSettings>
+#include <glib/gstdio.h>
+#include <cstdio>
 #include <QtCore/QString>
 #include <algorithm>
 #include <atomic>
@@ -205,3 +207,71 @@ void logDecoderRanks()
 }
 
 }  // namespace GStreamer
+
+namespace {
+
+FILE* s_diagFile = nullptr;
+GMutex s_diagMutex;
+
+void diagFileLog(GstDebugCategory* category, GstDebugLevel level, const gchar* file, const gchar* function, gint line,
+                 GObject* object, GstDebugMessage* message, gpointer /*data*/)
+{
+    if (level > gst_debug_category_get_threshold(category)) {
+        return;
+    }
+    g_mutex_lock(&s_diagMutex);
+    if (s_diagFile) {
+        gchar* obj = object ? gst_info_strdup_printf("%" GST_PTR_FORMAT, object) : g_strdup("");
+        const GstClockTime t = gst_util_get_timestamp();
+        fprintf(s_diagFile, "%" GST_TIME_FORMAT " %-7s %-20s %s:%d:%s: %s %s\n", GST_TIME_ARGS(t),
+                gst_debug_level_get_name(level), gst_debug_category_get_name(category), file ? file : "", line,
+                function ? function : "", obj, gst_debug_message_get(message));
+        g_free(obj);
+    }
+    g_mutex_unlock(&s_diagMutex);
+}
+
+}  // namespace
+
+void GStreamer::stopFileLog()
+{
+    gst_debug_remove_log_function(diagFileLog);
+    gst_debug_set_threshold_from_string("*:1", TRUE);
+    g_mutex_lock(&s_diagMutex);
+    if (s_diagFile) {
+        fprintf(s_diagFile, "===== end of AeroResearch video diagnostics =====\n");
+        fclose(s_diagFile);
+        s_diagFile = nullptr;
+    }
+    g_mutex_unlock(&s_diagMutex);
+}
+
+bool GStreamer::startFileLog(const char* path)
+{
+    if (!gst_is_initialized() || !path) {
+        return false;
+    }
+    g_mutex_lock(&s_diagMutex);
+    if (s_diagFile) {
+        fclose(s_diagFile);
+    }
+    s_diagFile = g_fopen(path, "w");
+    const bool ok = (s_diagFile != nullptr);
+    if (ok) {
+        fprintf(s_diagFile, "===== AeroResearch video diagnostics =====\n");
+        fflush(s_diagFile);
+    }
+    g_mutex_unlock(&s_diagMutex);
+    if (!ok) {
+        return false;
+    }
+
+    gst_debug_remove_log_function(diagFileLog);
+    gst_debug_add_log_function(diagFileLog, nullptr, nullptr);
+    gst_debug_set_threshold_from_string(
+        "*:3,rtspsrc:6,rtspconnection:5,rtspsrc2:5,rtpbin:4,rtpsession:4,rtpjitterbuffer:4,rtph265depay:6,"
+        "rtph264depay:5,rtpbasedepayload:5,h265parse:5,h264parse:5,parsebin:5,decodebin3:5,"
+        "videodecoder:4,avdec_h265:4,nvh265dec:4,d3d11h265dec:4,d3d12h265dec:4",
+        TRUE);
+    return true;
+}

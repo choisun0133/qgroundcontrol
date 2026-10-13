@@ -44,6 +44,8 @@ class VideoManager : public QObject
     Q_PROPERTY(QString  imageFile               READ imageFile                                  NOTIFY imageFileChanged)
     Q_PROPERTY(QString  uvcVideoSourceID        READ uvcVideoSourceID                           NOTIFY uvcVideoSourceIDChanged)
     Q_PROPERTY(QString  streamError             READ streamError                                NOTIFY streamErrorChanged)
+    Q_PROPERTY(bool     diagnosticsRunning      READ diagnosticsRunning                         NOTIFY diagnosticsChanged)
+    Q_PROPERTY(QString  diagnosticsPath         READ diagnosticsPath                            NOTIFY diagnosticsChanged)
 
     friend class VideoManagerInitTest;
 
@@ -58,6 +60,8 @@ public:
     Q_INVOKABLE void startVideo();
     Q_INVOKABLE void stopRecording();
     Q_INVOKABLE void stopVideo();
+    /// Field diagnostics: restart the video and write a verbose video log (60 s) to the Desktop.
+    Q_INVOKABLE void startVideoDiagnostics();
 
     void init(QQuickWindow *mainWindow);
     void startVideoBackendInit();
@@ -80,6 +84,8 @@ public:
     QString imageFile() const { return _imageFile; }
     QString uvcVideoSourceID() const { return _uvcVideoSourceID; }
     QString streamError() const { return _streamError; }
+    bool diagnosticsRunning() const { return _diagnosticsRunning; }
+    QString diagnosticsPath() const { return _diagnosticsPath; }
     void setfullScreen(bool on);
 
 signals:
@@ -98,6 +104,7 @@ signals:
     void uvcVideoSourceIDChanged();
     void videoSizeChanged();
     void streamErrorChanged();
+    void diagnosticsChanged();
 
 private slots:
     void _communicationLostChanged(bool communicationLost);
@@ -149,6 +156,8 @@ private:
     QSize _videoSize;
     QString _imageFile;
     QString _uvcVideoSourceID;
+    bool _diagnosticsRunning = false;
+    QString _diagnosticsPath;
     QString _streamError;   ///< Last reason the primary stream is not playing; cleared once frames decode.
 
 #ifdef QGC_UNITTEST_BUILD

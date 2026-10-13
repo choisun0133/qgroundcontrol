@@ -21769,6 +21769,16 @@ If a vehicle still has this key configured, you will no longer be able to commun
     </message>
     <message>
       <location filename="../src/VideoManager/VideoManager.cc" line="347"/>
+      <source>Video diagnostics are not available (cannot write %1).</source>
+      <translation>영상 진단 로그를 만들 수 없습니다 (%1 에 쓸 수 없음).</translation>
+    </message>
+    <message>
+      <location filename="../src/VideoManager/VideoManager.cc" line="1"/>
+      <source>Video diagnostics saved: %1</source>
+      <translation>영상 진단 로그를 저장했습니다: %1</translation>
+    </message>
+    <message>
+      <location filename="../src/VideoManager/VideoManager.cc" line="1"/>
       <source>Invalid video format defined.</source>
       <translation>잘못된 비디오 형식입니다.</translation>
     </message>

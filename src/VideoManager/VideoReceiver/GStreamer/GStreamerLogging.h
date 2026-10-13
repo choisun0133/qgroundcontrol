@@ -15,6 +15,11 @@ void configureDebugLogging();
 // HW/SW classification. No-op once the registry is empty.
 void logDecoderRanks();
 
+// AeroResearch field diagnostics: write verbose GStreamer logging for the RTSP/RTP/parse/decode
+// path to a text file until stopFileLog(). Returns false if the file cannot be opened.
+bool startFileLog(const char* path);
+void stopFileLog();
+
 void qtGstLog(GstDebugCategory* category, GstDebugLevel level, const gchar* file, const gchar* function, gint line,
               GObject* object, GstDebugMessage* message, gpointer data);
 }  // namespace GStreamer

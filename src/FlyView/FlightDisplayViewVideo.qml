@@ -81,6 +81,15 @@ Item {
                     horizontalAlignment:        Text.AlignHCenter
                     font.pointSize:             ScreenTools.smallFontPointSize
                 }
+
+                // Field diagnostics: restart the stream and save a verbose video log to the Desktop
+                QGCButton {
+                    anchors.horizontalCenter:   parent.horizontalCenter
+                    visible:                    !useSmallFont && QGroundControl.settingsManager.videoSettings.streamEnabled.rawValue
+                    enabled:                    !QGroundControl.videoManager.diagnosticsRunning
+                    text:                       QGroundControl.videoManager.diagnosticsRunning ? qsTr("진단 로그 기록 중… (60초)") : qsTr("영상 진단 로그 저장")
+                    onClicked:                  QGroundControl.videoManager.startVideoDiagnostics()
+                }
             }
         }
 

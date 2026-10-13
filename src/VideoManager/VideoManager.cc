@@ -23,7 +23,9 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QDateTime>
 #include <QtCore/QDir>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QEventLoop>
 #include <QtCore/QFutureWatcher>
 #include <QtCore/QRunnable>
@@ -1047,4 +1049,38 @@ void VideoManager::_setStreamError(const QString &message)
     }
     _streamError = message;
     emit streamErrorChanged();
+}
+
+void VideoManager::startVideoDiagnostics()
+{
+    if (_diagnosticsRunning) {
+        return;
+    }
+
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    if (dir.isEmpty()) {
+        dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    }
+    const QString path = QDir(dir).filePath(
+        QStringLiteral("AeroGCS-video-log-%1.txt").arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss"))));
+
+    if (!VideoBackend::startDiagnosticLog(path)) {
+        QGC::showAppMessage(tr("Video diagnostics are not available (cannot write %1).").arg(path));
+        return;
+    }
+
+    _diagnosticsPath = path;
+    _diagnosticsRunning = true;
+    emit diagnosticsChanged();
+
+    // Restart so the log covers the whole connection setup
+    stopVideo();
+    QTimer::singleShot(1500, this, [this]() { startVideo(); });
+
+    QTimer::singleShot(60000, this, [this]() {
+        VideoBackend::stopDiagnosticLog();
+        _diagnosticsRunning = false;
+        emit diagnosticsChanged();
+        QGC::showAppMessage(tr("Video diagnostics saved: %1").arg(_diagnosticsPath));
+    });
 }

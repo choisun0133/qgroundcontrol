@@ -9,6 +9,7 @@
 #ifdef QGC_GST_STREAMING
 #include "GStreamer.h"
 #include "GStreamerHelpers.h"
+#include "GStreamerLogging.h"
 #include "SettingsManager.h"
 #include "VideoSettings.h"
 #include "Fact.h"
@@ -143,5 +144,22 @@ void VideoBackend::attachSink(QObject *receiver, void *sink, QQuickItem *widget)
     Q_UNUSED(receiver);
     Q_UNUSED(sink);
     Q_UNUSED(widget);
+#endif
+}
+
+bool VideoBackend::startDiagnosticLog(const QString &path)
+{
+#ifdef QGC_GST_STREAMING
+    return GStreamer::startFileLog(path.toUtf8().constData());
+#else
+    Q_UNUSED(path);
+    return false;
+#endif
+}
+
+void VideoBackend::stopDiagnosticLog()
+{
+#ifdef QGC_GST_STREAMING
+    GStreamer::stopFileLog();
 #endif
 }

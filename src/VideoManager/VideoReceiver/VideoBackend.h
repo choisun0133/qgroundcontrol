@@ -50,4 +50,8 @@ void onMainWindowReady(QQuickWindow *window);
 void bindDebugLevelFact(Fact *fact, QObject *context);
 void attachSink(QObject *receiver, void *sink, QQuickItem *widget);
 
+/// Field diagnostics: verbose backend log to a text file (GStreamer only; false otherwise).
+bool startDiagnosticLog(const QString &path);
+void stopDiagnosticLog();
+
 } // namespace VideoBackend
