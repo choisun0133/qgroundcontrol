@@ -32,6 +32,7 @@
    gh workflow run aero-release.yml -R choisun0133/qgroundcontrol --ref publish-aero -f variant=normal   # 또는 -f variant=FFmpeg
    ```
    - aero-gcs **최신 커밋**의 아티팩트를 받아 이름을 바꾸고 `aerogcs-<버전>` 태그로 릴리스(같은 태그면 지우고 다시 만듦)
+   - **주의**: aero-gcs 최신 커밋이 `[skip ci]` 문서 커밋이면 그 커밋엔 빌드가 없어 릴리스가 아무것도 못 찾음 → 다음 코드 변경을 push해서 빌드한 뒤 릴리스할 것
    - 사용자용 아티팩트가 있으면 `...-Developer-Setup.exe` / `...-User-Setup.exe`, 없으면 `...-Setup.exe` 하나
 3. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.8`)을 sed로 바꿔 `[skip ci]` 커밋
 4. 링크 형식: `https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-<ver>/AeroResearchGCS-<ver>-Windows-x64-Setup.exe`
