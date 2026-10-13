@@ -84,10 +84,12 @@ void VideoSettings::_setDefaults()
     }
 
 #ifdef Q_OS_WIN
-    // AeroResearch: on Windows default to the software decoder and the CPU frame path. Hardware
-    // decode plus GPU frame import crashed on field laptops; both can still be switched on in settings.
-    _nameToMetaDataMap[forceVideoDecoderName]->setRawDefaultValue(1 /* Force software decoder */);
+    // AeroResearch: on Windows decode with Direct3D 11 (what VLC uses on the field PCs) but keep
+    // the CPU frame path: GPU frame import crashed on field laptops. Software H.265 at 1080p could
+    // not keep up (heavy latency, smeared frames). Low-latency mode: no clock sync in the sink.
+    _nameToMetaDataMap[forceVideoDecoderName]->setRawDefaultValue(4 /* Force DirectX3D 11 decoder */);
     _nameToMetaDataMap[forceCpuVideoPathName]->setRawDefaultValue(true);
+    _nameToMetaDataMap[lowLatencyModeName]->setRawDefaultValue(true);
 #endif
 }
 
