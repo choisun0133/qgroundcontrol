@@ -304,14 +304,30 @@ void linkPad(GstElement* element, GstPad* pad, gpointer data)
 // (e.g. "...?DeviceKey=...") answer that SETUP with 200 but never send media, so the view stays at
 // "waiting for video". VLC/live555 and FFmpeg append the control to the full URL instead
 // ("rtsp://h/Path?Key=x/trackID=v"); do the same for SETUP when the location carries a query.
+GST_DEBUG_CATEGORY_STATIC(aero_rtsp_debug);
+
+static void logRtspRequest(const GstRTSPMessage* msg)
+{
+    gchar* transport = nullptr;
+    (void) gst_rtsp_message_get_header(msg, GST_RTSP_HDR_TRANSPORT, &transport, 0);
+    GST_CAT_INFO(aero_rtsp_debug, "-> %s %s%s%s", gst_rtsp_method_as_text(msg->type_data.request.method),
+                 msg->type_data.request.uri ? msg->type_data.request.uri : "", transport ? "  Transport: " : "",
+                 transport ? transport : "");
+}
+
 static gboolean rtspBeforeSend(GstElement* /*src*/, GstRTSPMessage* msg, gpointer userData)
 {
     const gchar* base = static_cast<const gchar*>(userData);
-    if (!msg || !base || (msg->type != GST_RTSP_MESSAGE_REQUEST) || (msg->type_data.request.method != GST_RTSP_SETUP)) {
+    if (!msg || (msg->type != GST_RTSP_MESSAGE_REQUEST)) {
+        return TRUE;
+    }
+    if (!base || (msg->type_data.request.method != GST_RTSP_SETUP)) {
+        logRtspRequest(msg);
         return TRUE;
     }
     const gchar* uri = msg->type_data.request.uri;
     if (!uri || g_str_has_prefix(uri, base)) {
+        logRtspRequest(msg);
         return TRUE;
     }
     const gchar* slash = strrchr(uri, '/');
@@ -327,6 +343,7 @@ static gboolean rtspBeforeSend(GstElement* /*src*/, GstRTSPMessage* msg, gpointe
     g_free(msg->type_data.request.uri);
     msg->type_data.request.uri = fixed;
     g_free(control);
+    logRtspRequest(msg);
     return TRUE;
 }
 
@@ -366,10 +383,12 @@ GstElement* buildRtspSource(const QString& uri, const QUrl& sourceUrl, const Con
                  "udp-reconnect", TRUE, "drop-on-latency", dropOnLatency, "retry", kRtspRetry, "protocols",
                  kRtspProtocols, nullptr);
 
-    if (sourceUrl.hasQuery()) {
-        (void) g_signal_connect_data(source, "before-send", G_CALLBACK(rtspBeforeSend), g_strdup(cleanLocation.constData()),
-                                     [](gpointer data, GClosure*) { g_free(data); }, GConnectFlags(0));
-    }
+    GST_DEBUG_CATEGORY_INIT(aero_rtsp_debug, "aerortsp", 0, "AeroResearch RTSP request log");
+    // Always hooked: logs every request for field diagnostics; the SETUP rewrite only applies
+    // when the location carries a query (base == nullptr otherwise).
+    (void) g_signal_connect_data(source, "before-send", G_CALLBACK(rtspBeforeSend),
+                                 sourceUrl.hasQuery() ? g_strdup(cleanLocation.constData()) : nullptr,
+                                 [](gpointer data, GClosure*) { g_free(data); }, GConnectFlags(0));
 
     const QString rtspUser = sourceUrl.userName(QUrl::FullyDecoded);
     const QString rtspPassword = sourceUrl.password(QUrl::FullyDecoded);

@@ -282,7 +282,7 @@ bool GStreamer::startFileLog(const char* path)
     gst_debug_remove_log_function(diagFileLog);
     gst_debug_add_log_function(diagFileLog, nullptr, nullptr);
     gst_debug_set_threshold_from_string(
-        "*:3,rtspsrc:5,rtspconnection:5,rtspsrc2:5,rtpbin:4,rtpsession:4,rtpjitterbuffer:4,rtph265depay:5,"
+        "*:3,aerortsp:5,rtspsrc:5,rtspconnection:5,rtspsrc2:5,rtpbin:4,rtpsession:4,rtpjitterbuffer:4,rtph265depay:5,"
         "rtph264depay:5,rtpbasedepayload:4,h265parse:5,h264parse:5,parsebin:5,decodebin3:5,"
         "videodecoder:4,avdec_h265:4,nvh265dec:4,d3d11h265dec:4,d3d12h265dec:4",
         TRUE);
