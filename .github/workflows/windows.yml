@@ -22,9 +22,17 @@ on:
         options:
           - Release
           - Debug
+      video_player:
+        description: 'Video player (AeroResearch): GStreamer (default) or FFmpeg via Qt Multimedia'
+        required: false
+        default: 'GStreamer'
+        type: choice
+        options:
+          - GStreamer
+          - FFmpeg
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.video_player }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 permissions:
@@ -66,7 +74,7 @@ jobs:
             host: windows
             arch: win64_msvc2022_64
             package: QGroundControl-installer-AMD64
-            gstreamer: true
+            gstreamer: ${{ inputs.video_player != 'FFmpeg' }}
 
     defaults:
       run:
