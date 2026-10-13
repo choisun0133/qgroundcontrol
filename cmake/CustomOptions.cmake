@@ -118,6 +118,7 @@ option(QGC_NO_SERIAL_LINK "Disable serial port communication" OFF)
 # ============================================================================
 
 option(QGC_ENABLE_GST_VIDEOSTREAMING "Enable GStreamer video backend" ON)
+option(QGC_GST_BUNDLE_ALL_PLUGINS "Windows: ship every GStreamer plugin from the SDK, not only the configured list" ON)
 
 # ============================================================================
 # MAVLink Configuration

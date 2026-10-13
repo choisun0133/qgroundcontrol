@@ -49,20 +49,38 @@ Item {
 
             Rectangle {
                 anchors.centerIn:   parent
-                width:              noVideoLabel.contentWidth + ScreenTools.defaultFontPixelHeight
-                height:             noVideoLabel.contentHeight + ScreenTools.defaultFontPixelHeight
+                width:              noVideoColumn.width + ScreenTools.defaultFontPixelHeight
+                height:             noVideoColumn.height + ScreenTools.defaultFontPixelHeight
                 radius:             ScreenTools.defaultFontPixelWidth / 2
                 color:              "black"
                 opacity:            0.5
             }
 
-            QGCLabel {
-                id:                 noVideoLabel
-                text:               QGroundControl.settingsManager.videoSettings.streamEnabled.rawValue ? qsTr("WAITING FOR VIDEO") : qsTr("VIDEO DISABLED")
-                font.bold:          true
-                color:              "white"
-                font.pointSize:     useSmallFont ? ScreenTools.smallFontPointSize : ScreenTools.largeFontPointSize
+            Column {
+                id:                 noVideoColumn
                 anchors.centerIn:   parent
+                spacing:            ScreenTools.defaultFontPixelHeight * 0.25
+
+                QGCLabel {
+                    id:                         noVideoLabel
+                    anchors.horizontalCenter:   parent.horizontalCenter
+                    text:                       QGroundControl.settingsManager.videoSettings.streamEnabled.rawValue ? qsTr("WAITING FOR VIDEO") : qsTr("VIDEO DISABLED")
+                    font.bold:                  true
+                    color:                      "white"
+                    font.pointSize:             useSmallFont ? ScreenTools.smallFontPointSize : ScreenTools.largeFontPointSize
+                }
+
+                // Last reason the stream is not playing, so field users can report it
+                QGCLabel {
+                    anchors.horizontalCenter:   parent.horizontalCenter
+                    width:                      Math.min(implicitWidth, noVideo.width * 0.8)
+                    visible:                    !useSmallFont && text !== "" && QGroundControl.settingsManager.videoSettings.streamEnabled.rawValue
+                    text:                       QGroundControl.videoManager.streamError
+                    color:                      "#FFB020"
+                    wrapMode:                   Text.WordWrap
+                    horizontalAlignment:        Text.AlignHCenter
+                    font.pointSize:             ScreenTools.smallFontPointSize
+                }
             }
         }
 

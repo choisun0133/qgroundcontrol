@@ -731,6 +731,7 @@ void GstVideoReceiver::_watchdog()
         qint64 elapsed = now - lastSourceFrameTime;
         if (elapsed > _timeout) {
             qCDebug(GstVideoReceiverLog) << "Stream timeout, no frames for" << elapsed << _uri;
+            emit streamError(tr("No data received from the stream for %1 s").arg(elapsed));
             GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(_pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline-watchdog-timeout");
             emit timeout();
             _scheduleReconnect("source watchdog");
@@ -747,6 +748,7 @@ void GstVideoReceiver::_watchdog()
             elapsed = now - lastVideoFrameTime;
             if (elapsed > (_timeout * 2)) {
                 qCDebug(GstVideoReceiverLog) << "Video decoder timeout, no frames for" << elapsed << _uri;
+                emit streamError(tr("Stream received but no frames decoded for %1 s").arg(elapsed));
                 GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(_pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline-watchdog-timeout");
                 emit timeout();
                 _scheduleReconnect("decoder watchdog");
@@ -1444,6 +1446,10 @@ gboolean GstVideoReceiver::_onBusMessage(GstBus * /* bus */, GstMessage *msg, gp
                     << "Ignoring unsupported H.265 RTP PACI packet from rtph265depay:" << error->message;
             } else {
                 qCCritical(GstVideoReceiverLog) << "GStreamer error:" << error->message;
+                const QString source = GST_MESSAGE_SRC(msg) ? QString::fromUtf8(GST_OBJECT_NAME(GST_MESSAGE_SRC(msg))) : QString();
+                const QString text = source.isEmpty() ? QString::fromUtf8(error->message)
+                                                      : QStringLiteral("%1: %2").arg(source, QString::fromUtf8(error->message));
+                (void) QMetaObject::invokeMethod(pThis, [pThis, text]() { emit pThis->streamError(text); }, Qt::QueuedConnection);
             }
             g_clear_error(&error);
         }

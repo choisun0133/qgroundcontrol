@@ -955,11 +955,20 @@ void VideoManager::_initVideoReceiver(VideoReceiver *receiver, QQuickWindow *win
         }
     });
 
+    (void) connect(receiver, &VideoReceiver::streamError, this, [this, receiver](const QString &message) {
+        if (!receiver->isThermal()) {
+            _setStreamError(message);
+        }
+    });
+
     (void) connect(receiver, &VideoReceiver::decodingChanged, this, [this, receiver](bool active) {
         qCDebug(VideoManagerLog) << "Video" << receiver->name() << "decoding changed, active:" << (active ? "yes" : "no");
         if (!receiver->isThermal()) {
             _decoding = active;
             emit decodingChanged();
+            if (active) {
+                _setStreamError(QString());
+            }
         }
         if (active) {
             QTimer::singleShot(kVideoStartGuardClearMs, this, [this]() {
@@ -1029,4 +1038,13 @@ void VideoManager::startVideo()
     }
 
     _restartAllVideos();
+}
+
+void VideoManager::_setStreamError(const QString &message)
+{
+    if (_streamError == message) {
+        return;
+    }
+    _streamError = message;
+    emit streamErrorChanged();
 }

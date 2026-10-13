@@ -71,6 +71,8 @@ public:
 
 signals:
     void timeout();
+    /// Human-readable reason the stream is not playing (pipeline error, timeout).
+    void streamError(const QString &message);
     void streamingChanged(bool active);
     void decodingChanged(bool active);
     void recordingChanged(bool active);

@@ -21748,6 +21748,19 @@ If a vehicle still has this key configured, you will no longer be able to commun
     </message>
   </context>
   <context>
+    <name>GstVideoReceiver</name>
+    <message>
+      <location filename="../src/VideoManager/VideoReceiver/GStreamer/GstVideoReceiver.cc" line="1"/>
+      <source>No data received from the stream for %1 s</source>
+      <translation>스트림에서 %1초 동안 데이터가 들어오지 않습니다</translation>
+    </message>
+    <message>
+      <location filename="../src/VideoManager/VideoReceiver/GStreamer/GstVideoReceiver.cc" line="1"/>
+      <source>Stream received but no frames decoded for %1 s</source>
+      <translation>데이터는 수신되지만 %1초 동안 영상을 디코딩하지 못했습니다</translation>
+    </message>
+  </context>
+  <context>
     <name>VideoManager</name>
     <message>
       <location filename="../src/VideoManager/VideoManager.cc" line="1"/>

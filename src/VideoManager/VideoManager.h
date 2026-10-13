@@ -43,6 +43,7 @@ class VideoManager : public QObject
     Q_PROPERTY(QSize    videoSize               READ videoSize                                  NOTIFY videoSizeChanged)
     Q_PROPERTY(QString  imageFile               READ imageFile                                  NOTIFY imageFileChanged)
     Q_PROPERTY(QString  uvcVideoSourceID        READ uvcVideoSourceID                           NOTIFY uvcVideoSourceIDChanged)
+    Q_PROPERTY(QString  streamError             READ streamError                                NOTIFY streamErrorChanged)
 
     friend class VideoManagerInitTest;
 
@@ -78,6 +79,7 @@ public:
     QSize videoSize() const { return _videoSize; }
     QString imageFile() const { return _imageFile; }
     QString uvcVideoSourceID() const { return _uvcVideoSourceID; }
+    QString streamError() const { return _streamError; }
     void setfullScreen(bool on);
 
 signals:
@@ -95,6 +97,7 @@ signals:
     void streamingChanged();
     void uvcVideoSourceIDChanged();
     void videoSizeChanged();
+    void streamErrorChanged();
 
 private slots:
     void _communicationLostChanged(bool communicationLost);
@@ -123,6 +126,7 @@ private:
     void _restartVideo(VideoReceiver *receiver);
     void _startReceiver(VideoReceiver *receiver);
     void _stopReceiver(VideoReceiver *receiver);
+    void _setStreamError(const QString &message);
     static void _cleanupOldVideos();
 
     QList<VideoReceiver*> _videoReceivers;
@@ -145,6 +149,7 @@ private:
     QSize _videoSize;
     QString _imageFile;
     QString _uvcVideoSourceID;
+    QString _streamError;   ///< Last reason the primary stream is not playing; cleared once frames decode.
 
 #ifdef QGC_UNITTEST_BUILD
     std::function<void()> _createVideoReceiversForTest;

@@ -59,8 +59,21 @@ function(gstreamer_install_gio_modules)
         GLOB_PATTERN "*.${ARG_EXTENSION}")
 endfunction()
 
+# ALL: ship every plugin in the SDK instead of only those in GSTREAMER_PLUGINS
+# (matches a developer build against a full GStreamer install).
 function(gstreamer_install_plugins)
-    cmake_parse_arguments(ARG "" "SOURCE_DIR;DEST_DIR;EXTENSION;PREFIX" "" ${ARGN})
+    cmake_parse_arguments(ARG "ALL" "SOURCE_DIR;DEST_DIR;EXTENSION;PREFIX" "" ${ARGN})
+    if(ARG_ALL)
+        # Qt-binding plugins (qml6glsink etc.) are built against a different Qt than the app
+        # and would clash with QGC's own sink; python needs an interpreter we don't ship.
+        file(GLOB _all_plugins "${ARG_SOURCE_DIR}/${ARG_PREFIX}*.${ARG_EXTENSION}")
+        list(FILTER _all_plugins EXCLUDE REGEX "/${ARG_PREFIX}(qml6|qt|qt6|python)[^/]*$")
+        if(NOT _all_plugins)
+            message(FATAL_ERROR "gstreamer_install_plugins: no plugins found in '${ARG_SOURCE_DIR}'.")
+        endif()
+        install(FILES ${_all_plugins} DESTINATION "${ARG_DEST_DIR}")
+        return()
+    endif()
     _gstreamer_install_glob("gstreamer_install_plugins"
         SOURCE_DIR "${ARG_SOURCE_DIR}" DEST_DIR "${ARG_DEST_DIR}"
         GLOB_PATTERN "${ARG_PREFIX}*.${ARG_EXTENSION}"
@@ -234,11 +247,17 @@ function(gstreamer_install_windows_sdk)
         DEST_DIR "${CMAKE_INSTALL_LIBDIR}/gio/modules"
         EXTENSION "dll"
     )
+    if(QGC_GST_BUNDLE_ALL_PLUGINS)
+        set(_gst_bundle_all ALL)
+    else()
+        set(_gst_bundle_all "")
+    endif()
     gstreamer_install_plugins(
         SOURCE_DIR "${GSTREAMER_PLUGIN_PATH}"
         DEST_DIR "${CMAKE_INSTALL_LIBDIR}/gstreamer-1.0"
         EXTENSION "dll"
         PREFIX "gst"
+        ${_gst_bundle_all}
     )
     install(
         DIRECTORY "${GStreamer_ROOT_DIR}/libexec/gstreamer-1.0/"
