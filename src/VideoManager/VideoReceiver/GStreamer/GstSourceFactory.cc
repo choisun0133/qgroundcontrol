@@ -212,8 +212,11 @@ void linkPad(GstElement* element, GstPad* pad, gpointer data)
                 isVideo = true;
             } else if (g_str_equal(sname, "application/x-rtp")) {
                 isRtp = true;
-                // RTP carries video; the depayloader/parsebin downstream classifies the payload.
-                isVideo = true;
+                // rtspsrc exposes one RTP pad per SDP media. Only link the video one: a server that
+                // lists audio first would otherwise take the single parser slot and leave video
+                // unlinked ("waiting for video" forever). Caps without a media field stay accepted.
+                const gchar* media = gst_structure_get_string(st, "media");
+                isVideo = isVideo || !media || g_str_equal(media, "video");
             }
         }
         gst_clear_caps(&caps);
