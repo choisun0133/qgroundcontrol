@@ -198,13 +198,11 @@ Item {
                     platformFontPointSize = 14;
                 }
             } else {
-                // AeroResearch: desktop OS default fonts (e.g. 9pt on Windows) make the UI tiny on
-                // large monitors, so grow the base size with the screen height (capped at 2.4x).
-                // 1080p -> ~13.5pt, 1440p and up -> 18pt+; small/laptop screens keep the OS default.
-                var basePointSize = _defaultFont.font.pointSize
-                var screenHeight = Screen.height > 0 ? Screen.height :
-                                       (Qt.application.screens.length > 0 ? Qt.application.screens[0].height : 0)
-                platformFontPointSize = Math.max(basePointSize, Math.min(basePointSize * 2.4, screenHeight / 80))
+                // AeroResearch: follow the OS display scaling (Windows 100/125/150%...). Qt already scales
+                // point sizes by the screen's device pixel ratio, so a fixed multiple of the OS default
+                // font makes the whole UI grow and shrink with that setting. The desktop default (9pt on
+                // Windows) is small for a flight UI, hence the 1.4x. Fine-tune with Settings > UI Scaling.
+                platformFontPointSize = _defaultFont.font.pointSize * 1.4
             }
             //-- See if we are using a custom size
             var _uiScalePercentFact = QGroundControl.settingsManager.appSettings.uiScalePercent
