@@ -25,9 +25,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.5-ffmpeg' || 'aerogcs-1.6.5' }}
+      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.6-ffmpeg' || 'aerogcs-1.6.6' }}
       SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
-      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.5 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.5' }}
+      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.6 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.6' }}
     steps:
       - name: Download build artifacts (only builds of the current aero-gcs head)
         run: |
@@ -47,6 +47,7 @@ jobs:
             fi
           }
           fetch Windows QGroundControl-installer-AMD64 dl/win
+          fetch Windows QGroundControl-installer-AMD64-User dl/winuser
           if [ -z "$SUFFIX" ]; then
             fetch Android QGroundControl-linux dl/android
             fetch MacOS QGroundControl dl/mac
@@ -56,12 +57,21 @@ jobs:
       - name: Rename files
         run: |
           set -euo pipefail
+          # Developer edition: full vehicle setup / parameters. User edition: operators, no parameter editing
           win=$(find dl -path 'dl/win/*' -iname '*.exe' | head -1)
-          [ -n "$win" ] && cp "$win" "out/AeroResearchGCS-1.6.5-Windows-x64${SUFFIX}-Setup.exe"
+          winuser=$(find dl -path 'dl/winuser/*' -iname '*.exe' | head -1)
+          if [ -n "$win" ]; then
+            if [ -n "$winuser" ]; then
+              cp "$win" "out/AeroResearchGCS-1.6.6-Windows-x64${SUFFIX}-Developer-Setup.exe"
+            else
+              cp "$win" "out/AeroResearchGCS-1.6.6-Windows-x64${SUFFIX}-Setup.exe"
+            fi
+          fi
+          [ -n "$winuser" ] && cp "$winuser" "out/AeroResearchGCS-1.6.6-Windows-x64${SUFFIX}-User-Setup.exe"
           apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
-          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.5-Android.apk"
+          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.6-Android.apk"
           dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
-          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.5-macOS.dmg"
+          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.6-macOS.dmg"
           ls -l out
           [ -n "$(ls out)" ]
 
@@ -71,5 +81,5 @@ jobs:
           gh release delete "$TAG" -R "$REPO" -y --cleanup-tag || true
           gh release create "$TAG" -R "$REPO" --target "${{ github.sha }}" \
             --title "$TITLE" \
-            --notes "AeroResearch GCS 설치 파일 (Windows / Android / macOS). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." \
+            --notes "AeroResearch GCS 설치 파일. Windows: Developer = 개발자용(기체 설정·파라미터 포함), User = 사용자용(파라미터 수정 불가). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." \
             out/*
