@@ -35,7 +35,7 @@
    - aero-gcs의 **가장 최근 성공한 push 빌드**의 아티팩트를 받아 이름을 바꾸고 `aerogcs-<버전>` 태그로 릴리스(같은 태그면 지우고 다시 만듦)
    - **주의**: Windows 워크플로는 `paths-ignore`가 있어 **빈 커밋(`--allow-empty`)은 빌드를 시작하지 않음**. 빌드를 시작하려면 파일이 바뀐 커밋(`[skip ci]` 없이)을 push할 것 (예: 이 문서 갱신)
    - 사용자용 아티팩트가 있으면 `...-Developer-Setup.exe` / `...-User-Setup.exe`, 없으면 `...-Setup.exe` 하나
-3. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.14`)을 sed로 바꿔 `[skip ci]` 커밋
+3. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.15`)을 sed로 바꿔 `[skip ci]` 커밋
 4. 링크 형식: `https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-<ver>/AeroResearchGCS-<ver>-Windows-x64-Setup.exe`
 - 환경 메모: 이 세션 환경에서는 Actions 로그·아티팩트 직접 다운로드, 저장소 Secrets 설정이 프록시로 막혀 있었음 → 상태는 `gh api .../actions/runs/<id>/jobs`, 결과물은 릴리스로 확인
 
@@ -50,6 +50,7 @@
 | 1.6.8 | 진단 로그 중 앱 멈춤 수정, Ctrl+F에 진단 로그, 오류 상세 2번째 줄 표시 |
 | 1.6.9~1.6.13 | RTSP 영상 문제 해결(6장), 설치 시 바탕화면 바로가기 |
 | 1.6.14 | 최소화한 카메라/메시지 창 드래그 이동, 배터리 %·V 동시 표시와 최대/최소 전압 입력, 계기판 모서리 드래그 크기 조절·최소화, 임무 계획 첫 포인트에서 이륙 추가 여부 팝업(비행 중이면 이륙 없음), RC 미연결 표시, 시작 화면 저장된 연결 설정 불일치 버그 수정 |
+| 1.6.15 | 키보드 수동 조종(모드2: W/S 상승·하강, A/D 회전, 방향키 이동, Shift ×2, Space 정지, Esc 해제) — 일시 정지 중 도구 막대 "수동 조종" 버튼·상단 버튼·Ctrl+F로 시작, GUIDED 속도 명령 10Hz, 반투명 키 표시(투명도 조절). 영상 진단 버튼은 Ctrl+F에만 |
 
 ## 5. 기능별 주요 파일
 
@@ -63,7 +64,8 @@
 - 웨이포인트 마우스오버: `src/FlightMap/MapItems/PlanMapItems.qml` / 기체 위경도 칩: `src/FlyView/FlyViewMap.qml`
 - 다른 GCS 미션 변경 감지·다운로드: `src/MissionManager/MissionManager.*`, `src/Toolbar/AeroMissionSyncNotice.qml`
 - 임무 계획 첫 항목 이륙 고정: `src/PlanView/PlanView.qml`
-- 계기판(크기·투명도): `src/FlyView/AeroInstrumentPanel.qml`
+- 계기판(크기·투명도·최소화): `src/FlyView/AeroInstrumentPanel.qml`
+- 키보드 수동 조종: `src/FlyView/AeroKeyboardControl.qml`, 도구 막대 버튼 `AeroManualControlAction.qml`, 명령은 `FirmwarePlugin::guidedModeSetBodyVelocity`(APM 구현)
 - 크래시 보고서: `src/Utilities/Platform/Platform.cc` (`%LOCALAPPDATA%\AeroResearch\last_crash.txt`)
 - 영상 크래시 루프 방지: `src/VideoManager/VideoManager.cc` (`AeroResearch/videoStartPending`)
 - 한국어 번역: `translations/qgc_source_ko_KR.ts`
