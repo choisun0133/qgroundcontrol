@@ -67,21 +67,14 @@
 - 한국어 번역: `translations/qgc_source_ko_KR.ts`
 - 설정 파일 위치(윈도우, 브랜치 빌드=daily): `%APPDATA%\AeroResearch\QGroundControl Daily.ini`
 
-## 6. 진행 중: RTSP 영상이 안 나오는 문제 (최우선)
+## 6. RTSP 영상 문제 — 해결됨 (1.6.12, 2026-10-14 사용자 확인)
 
-- 영상: 사용자의 중계 서버를 거치는 **H.265 1920×1080 29.97fps, 스트림 1개(음성 없음)**. 주소·계정은 사용자에게 받을 것(공개 저장소이므로 여기 적지 않음).
-- **VLC에서는 같은 PC에서 정상 재생**(DX11 하드웨어 디코딩).
-- 확인된 사실
-  - TCP 전용(1.6.6)으로 하면: `source: Could not get/set settings from/on resource.` → **서버가 TCP 인터리브를 거부**
-  - UDP(+폴백, 1.6.7)로 하면: `source: Could not read from resource.` 또는 "스트림에서 N초 동안 데이터가 들어오지 않습니다"
-  - 방화벽 허용 후에도 증상 동일(1.6.5 기준, 사용자 보고)
-  - FFmpeg 시험판(1.6.4)도 영상 안 나옴(당시 UDP 기본)
-- 지금까지 한 것: 플러그인 전부 포함, 비디오 RTP 패드만 연결, 시작 유예 12초, UDP→TCP 폴백, 방화벽 규칙, 진단 로그
-- **다음 단계**
-  1. 사용자에게 1.6.8에서 **주황 글씨 2번째 줄**(GStreamer 상세 원인) 사진과 **Ctrl+F → 영상 진단 로그 「기록 시작」** 으로 만든 바탕화면 `AeroGCS-video-log-*.txt` 받기
-  2. 로그에서 RTSP DESCRIBE/SETUP/PLAY 응답, Transport 헤더, UDP 수신 여부, rtph265depay/h265parse 출력 확인
-  3. 의심 후보: SETUP 시 제어 URL에 쿼리(`?DeviceKey=`) 위치 문제, 서버가 요구하는 Transport 형식, NAT 너머 UDP 수신, H.265 파라미터셋(VPS/SPS/PPS) 처리
-- CI 영상 시험(`diag-video`): 1.6.6 설치 + 로컬 mediamtx H.264/H.265 + pymavlink 하트비트 + 스크린샷. 아직 시작 화면(기체 연결 대기)에서 넘어가지 못해 결과 미확정 → 기체 연결 또는 시작 화면 "건너뛰기" 처리 필요
+원인이 세 가지였고 모두 고침:
+1. **SETUP URL**: 중계 서버 SDP의 상대 control(`trackID=v`)을 rtspsrc가 RFC 3986대로 풀어 경로·`?DeviceKey=`가 빠짐 → `GstSourceFactory.cc`의 `rtspBeforeSend`에서 VLC처럼 원래 URL 뒤에 붙임
+2. **전송 방식**: 이 서버는 UDP로 데이터가 안 옴(VLC도 10초 뒤 TCP로 전환) → `?`가 있는 rtsp:// 주소는 TCP 기본, TCP에서는 drop-on-latency 끄고 지연 최소 300ms
+3. **데스크톱 충돌**: GIO libproxy(`giolibproxy`→`pxbackend`)가 데스크톱의 프록시 설정에서 크래시 → 윈도우에서 `GIO_USE_PROXY_RESOLVER=dummy` (`GStreamerEnvironment.cc`)
+- 윈도우 기본값: D3D11 디코더 + CPU 프레임 경로 + 저지연 모드 (`VideoSettings.cc`)
+- 진단 도구: Ctrl+F → 영상 진단 로그(바탕화면 txt, RTSP 요청/응답 전체 포함), 오류 상세 2줄 화면 표시, 충돌 보고서(`last_crash.txt`)
 
 ## 7. 기타 자료
 
