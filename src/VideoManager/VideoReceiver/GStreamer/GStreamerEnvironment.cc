@@ -254,6 +254,14 @@ void _applyGstEnvVars(const QString& pluginDir, const QString& gioModDir, const 
     _setGstEnv("GST_REGISTRY_REUSE_PLUGIN_SCANNER", QStringLiteral("no"));
     _setGstEnv("GST_REGISTRY_FORK", QStringLiteral("no"));
     _setGstEnvIfExists("GIO_EXTRA_MODULES", gioModDir);
+#ifdef Q_OS_WIN
+    // AeroResearch field crash: opening an RTSP stream crashed in giolibproxy -> pxbackend (libproxy)
+    // on a desktop whose system proxy settings libproxy could not handle (laptop unaffected). RTSP
+    // to a drone/relay never goes through an HTTP proxy, so use GIO's no-op resolver.
+    if (qEnvironmentVariableIsEmpty("GIO_USE_PROXY_RESOLVER")) {
+        qputenv("GIO_USE_PROXY_RESOLVER", QByteArrayLiteral("dummy"));
+    }
+#endif
     _setGstEnvIfExecutable("GST_PTP_HELPER_1_0", ptpPath);
     _setGstEnvIfExecutable("GST_PTP_HELPER", ptpPath);
     _setGstEnvIfExecutable("GST_PLUGIN_SCANNER_1_0", scannerPath);
