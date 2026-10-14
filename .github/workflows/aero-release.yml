@@ -29,28 +29,34 @@ jobs:
       SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
       TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.13 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.13' }}
     steps:
-      - name: Download build artifacts (only builds of the current aero-gcs head)
+      - name: Download build artifacts (newest successful aero-gcs build)
         run: |
           set -euo pipefail
           mkdir -p dl out
-          head=$(gh api "repos/$REPO/commits/aero-gcs" -q .sha)
-          echo "aero-gcs head: $head"
-          fetch() {  # workflow, artifact, dir
-            # The run may still be going (other matrix legs); the artifact is enough
-            # Normal builds come from pushes; the FFmpeg test build is a manual (workflow_dispatch) run
+          # Newest successful build of aero-gcs (docs-only [skip ci] commits have no build, so do not
+          # require the branch head itself). Normal builds come from pushes; the FFmpeg test build is
+          # a manual (workflow_dispatch) run.
+          fetch() {  # workflow, artifact, dir, [commit sha to match]
             ev=$([ -n "$SUFFIX" ] && echo workflow_dispatch || echo push)
-            run=$(gh run list -R "$REPO" -c "$head" -w "$1" -L 10 --json databaseId,headSha,event -q "[.[] | select(.headSha==\"$head\" and .event==\"$ev\")][0].databaseId")
+            if [ -n "${4:-}" ]; then
+              run=$(gh run list -R "$REPO" -c "$4" -w "$1" -s success -L 1 --json databaseId -q '.[0].databaseId')
+            else
+              run=$(gh run list -R "$REPO" -b aero-gcs -w "$1" -e "$ev" -s success -L 1 --json databaseId -q '.[0].databaseId')
+            fi
             if [ -n "$run" ] && gh run download "$run" -R "$REPO" -n "$2" -D "$3"; then
               echo "$1: run $run"
             else
-              echo "$1: no artifact for $head yet - skipped"
+              echo "$1: no successful build found - skipped"
             fi
           }
           fetch Windows QGroundControl-installer-AMD64 dl/win
           fetch Windows QGroundControl-installer-AMD64-User dl/winuser
           if [ -z "$SUFFIX" ]; then
-            fetch Android QGroundControl-linux dl/android
-            fetch MacOS QGroundControl dl/mac
+            # Android/macOS only when built from the same commit as the Windows build (never stale ones)
+            ev=push
+            winsha=$(gh run list -R "$REPO" -b aero-gcs -w Windows -e push -s success -L 1 --json headSha -q '.[0].headSha')
+            fetch Android QGroundControl-linux dl/android "$winsha"
+            fetch MacOS QGroundControl dl/mac "$winsha"
           fi
           find dl -type f -exec ls -l {} \;
 
