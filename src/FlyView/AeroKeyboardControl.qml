@@ -118,6 +118,7 @@ Item {
             _activate()
         } else {
             _clearKeys()
+            _sendStop()
             guidedWaitTimer.stop()
         }
     }

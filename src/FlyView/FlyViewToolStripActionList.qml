@@ -16,6 +16,7 @@ ToolStripActionList {
         GuidedActionTakeoff { },
         AeroGuidedActionStartMission { },
         GuidedActionPause { },
+        AeroManualControlAction { },
         GuidedActionRTL { },
         GuidedActionLand { },
         AeroPlanViewAction { },
