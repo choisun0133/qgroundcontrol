@@ -76,7 +76,7 @@
 2. **전송 방식**: 이 서버는 UDP로 데이터가 안 옴(VLC도 10초 뒤 TCP로 전환) → `?`가 있는 rtsp:// 주소는 TCP 기본, TCP에서는 drop-on-latency 끄고 지연 최소 300ms
 3. **데스크톱 충돌**: GIO libproxy(`giolibproxy`→`pxbackend`)가 데스크톱의 프록시 설정에서 크래시 → 윈도우에서 `GIO_USE_PROXY_RESOLVER=dummy` (`GStreamerEnvironment.cc`)
 - 윈도우 기본값: D3D11 디코더 + CPU 프레임 경로 + 저지연 모드 (`VideoSettings.cc`)
-- 진단 도구: Ctrl+F → 영상 진단 로그(바탕화면 txt, RTSP 요청/응답 전체 포함), 오류 상세 2줄 화면 표시, 충돌 보고서(`last_crash.txt`)
+- 진단 도구: Ctrl+F → 영상 진단 로그(바탕화면 txt, RTSP 요청/응답 전체 포함, 1.6.15부터 영상 화면 버튼은 제거하고 Ctrl+F에만 있음), 오류 상세 2줄 화면 표시, 충돌 보고서(`last_crash.txt`)
 
 ## 7. 기타 자료
 
