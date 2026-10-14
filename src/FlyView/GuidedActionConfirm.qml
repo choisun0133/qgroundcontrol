@@ -30,7 +30,19 @@ Item {
 
     // AeroResearch: pause only holds the vehicle in place, so it uses plain 확인/취소 buttons
     // instead of hold-to-confirm, and skips the altitude slider (holds the current altitude)
-    property bool _quickConfirm:    action === guidedController.actionPause
+    // Change altitude: typed target altitude + 확인/취소 (no slider, no hold)
+    property bool _altInput:        action === guidedController.actionChangeAlt
+    property bool _quickConfirm:    action === guidedController.actionPause || _altInput
+    property real _altMin:          0
+    property real _altMax:          120
+    property real _altCurrent:      NaN
+    readonly property real _altEntered: parseFloat(altField.text)
+    readonly property bool _altValid:   !isNaN(_altEntered) && _altEntered >= _altMin && _altEntered <= _altMax
+
+    function _stepAlt(d) {
+        var v = isNaN(_altEntered) ? (isNaN(_altCurrent) ? _altMin : _altCurrent) : _altEntered
+        altField.text = Math.round(Math.max(_altMin, Math.min(_altMax, v + d)))
+    }
 
     // Takeoff altitude is picked inside the card instead of the right-edge slider
     property bool _takeoffPicker:   false
@@ -170,10 +182,20 @@ Item {
             _takeoffPicker = true
             guidedValueSlider.visible = false
         }
+        if (_altInput) {
+            _altMin = guidedValueSlider._sliderMinVal
+            _altMax = guidedValueSlider._sliderMaxVal
+            _altCurrent = _activeVehicle ? _activeVehicle.altitudeRelative.value : NaN
+            altField.text = isNaN(_altCurrent) ? "" : Math.round(_altCurrent)
+        }
         if (_quickConfirm) {
             guidedValueSlider.visible = false
         }
         visible = true
+        if (_altInput) {
+            altField.forceActiveFocus()
+            altField.selectAll()
+        }
     }
 
     function _setPicker(v) {
@@ -184,6 +206,11 @@ Item {
         var sliderOutputValue = 0
         if (_takeoffPicker) {
             sliderOutputValue = _pickerValue
+        } else if (_altInput) {
+            if (!_altValid) {
+                return
+            }
+            sliderOutputValue = _altEntered
         } else if (_quickConfirm) {
             sliderOutputValue = NaN     // executeAction: pause at the current altitude
         } else if (guidedValueSlider.visible) {
@@ -300,6 +327,65 @@ Item {
                 wrapMode:           Text.WordWrap
                 color:              "#C9CDD1"
                 visible:            text !== ""
+            }
+
+            // Change altitude: type the target altitude
+            Rectangle {
+                Layout.fillWidth:       true
+                Layout.preferredHeight: altColumn.implicitHeight + control._u
+                visible:                control._altInput
+                color:                  "#15181B"
+                border.color:           "#2A2D31"
+                radius:                 control._u * 0.4
+
+                ColumnLayout {
+                    id:         altColumn
+                    x:          control._u * 0.5
+                    y:          control._u * 0.5
+                    width:      parent.width - control._u
+                    spacing:    control._u * 0.4
+
+                    QGCLabel {
+                        text:           qsTr("목표 고도 (이륙 지점 기준) · 현재 %1 %2")
+                                            .arg(isNaN(control._altCurrent) ? "—" : control._altCurrent.toFixed(1))
+                                            .arg(QGroundControl.unitsConversion.appSettingsVerticalDistanceUnitsString)
+                        color:          "#9BA1A6"
+                        font.pointSize: ScreenTools.smallFontPointSize
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        QGCButton {
+                            text:                   "−5"
+                            Layout.preferredWidth:  control._u * 2.8
+                            onClicked:              control._stepAlt(-5)
+                        }
+                        QGCTextField {
+                            id:                     altField
+                            Layout.fillWidth:       true
+                            horizontalAlignment:    Text.AlignHCenter
+                            inputMethodHints:       Qt.ImhFormattedNumbersOnly
+                            font.pointSize:         ScreenTools.largeFontPointSize
+                            font.bold:              true
+                            onAccepted:             control._execute()
+                        }
+                        QGCLabel {
+                            text:   QGroundControl.unitsConversion.appSettingsVerticalDistanceUnitsString
+                        }
+                        QGCButton {
+                            text:                   "+5"
+                            Layout.preferredWidth:  control._u * 2.8
+                            onClicked:              control._stepAlt(5)
+                        }
+                    }
+                    QGCLabel {
+                        Layout.fillWidth:   true
+                        text:               control._altValid ? qsTr("입력 후 Enter 또는 확인")
+                                                              : qsTr("%1 ~ %2 사이 숫자를 입력하세요").arg(control._altMin.toFixed(0)).arg(control._altMax.toFixed(0))
+                        color:              control._altValid ? "#6E757B" : control._yellow
+                        font.pointSize:     ScreenTools.smallFontPointSize
+                        wrapMode:           Text.WordWrap
+                    }
+                }
             }
 
             // Takeoff altitude picker
@@ -438,6 +524,8 @@ Item {
                     Layout.fillWidth:       true
                     Layout.preferredHeight: control._u * 2.6
                     text:                   qsTr("확인 · %1").arg(control.title)
+                    enabled:                !control._altInput || control._altValid
+                    opacity:                enabled ? 1 : 0.4
                     onClicked:              control._execute()
 
                     background: Rectangle {
