@@ -84,12 +84,12 @@ Item {
     function _activate() {
         if (!_vehicle || !_supported) {
             control._notify(qsTr("이 기체는 키보드 조종을 지원하지 않습니다 (멀티콥터 ArduPilot 전용)."))
-            globals.aeroKeyboardControlActive = false
+            Qt.callLater(function() { globals.aeroKeyboardControlActive = false })
             return
         }
         if (!_flying) {
             control._notify(qsTr("비행 중일 때만 키보드 조종을 켤 수 있습니다."))
-            globals.aeroKeyboardControlActive = false
+            Qt.callLater(function() { globals.aeroKeyboardControlActive = false })
             return
         }
         _clearKeys()
@@ -127,10 +127,11 @@ Item {
     // Leave keyboard control if the mode changes (RC / other GCS / RTL), the vehicle lands or disconnects
     Connections {
         target: control._vehicle
-        function onGuidedModeChanged(guided) {
+        function onGuidedModeChanged() {
             if (!control._active) {
                 return
             }
+            var guided = control._vehicle && control._vehicle.guidedMode
             if (guided) {
                 control._seenGuided = true
                 guidedWaitTimer.stop()
@@ -139,8 +140,8 @@ Item {
                 control._notify(qsTr("비행 모드가 바뀌어 키보드 조종을 껐습니다."))
             }
         }
-        function onFlyingChanged(flying) {
-            if (control._active && !flying) {
+        function onFlyingChanged() {
+            if (control._active && !(control._vehicle && control._vehicle.flying)) {
                 control._deactivate(false)
             }
         }
@@ -352,24 +353,36 @@ Item {
     }
 
     component StickPad: Column {
+        id:     pad
         property string title
-        property alias  up:     upKey
-        property alias  down:   downKey
-        property alias  left:   leftKey
-        property alias  right:  rightKey
+        property string upGlyph
+        property string upCaption
+        property bool   upPressed
+        property string downGlyph
+        property string downCaption
+        property bool   downPressed
+        property string leftGlyph
+        property string leftCaption
+        property bool   leftPressed
+        property string rightGlyph
+        property string rightCaption
+        property bool   rightPressed
         spacing: control._u * 0.2
         QGCLabel {
             anchors.horizontalCenter: parent.horizontalCenter
-            text:           title
+            text:           pad.title
             color:          Qt.rgba(1, 1, 1, 0.7)
             font.pointSize: ScreenTools.smallFontPointSize
         }
-        KeyCap { id: upKey; anchors.horizontalCenter: parent.horizontalCenter }
+        KeyCap {
+            anchors.horizontalCenter: parent.horizontalCenter
+            glyph: pad.upGlyph; caption: pad.upCaption; pressed: pad.upPressed
+        }
         Row {
             spacing: control._u * 0.2
-            KeyCap { id: leftKey }
-            KeyCap { id: downKey }
-            KeyCap { id: rightKey }
+            KeyCap { glyph: pad.leftGlyph;  caption: pad.leftCaption;  pressed: pad.leftPressed }
+            KeyCap { glyph: pad.downGlyph;  caption: pad.downCaption;  pressed: pad.downPressed }
+            KeyCap { glyph: pad.rightGlyph; caption: pad.rightCaption; pressed: pad.rightPressed }
         }
     }
 
@@ -396,10 +409,10 @@ Item {
 
                 StickPad {
                     title:          qsTr("왼쪽 · 고도/회전")
-                    up.glyph:       "W";    up.caption:     qsTr("상승");   up.pressed:     control._kUp
-                    down.glyph:     "S";    down.caption:   qsTr("하강");   down.pressed:   control._kDown
-                    left.glyph:     "A";    left.caption:   qsTr("좌회전"); left.pressed:   control._kYawL
-                    right.glyph:    "D";    right.caption:  qsTr("우회전"); right.pressed:  control._kYawR
+                    upGlyph:       "W";    upCaption:     qsTr("상승");   upPressed:     control._kUp
+                    downGlyph:     "S";    downCaption:   qsTr("하강");   downPressed:   control._kDown
+                    leftGlyph:     "A";    leftCaption:   qsTr("좌회전"); leftPressed:   control._kYawL
+                    rightGlyph:    "D";    rightCaption:  qsTr("우회전"); rightPressed:  control._kYawR
                 }
 
                 // Shift / Space
@@ -421,10 +434,10 @@ Item {
 
                 StickPad {
                     title:          qsTr("오른쪽 · 이동")
-                    up.glyph:       "↑";    up.caption:     qsTr("전진");   up.pressed:     control._kFwd
-                    down.glyph:     "↓";    down.caption:   qsTr("후진");   down.pressed:   control._kBack
-                    left.glyph:     "←";    left.caption:   qsTr("좌");     left.pressed:   control._kLeft
-                    right.glyph:    "→";    right.caption:  qsTr("우");     right.pressed:  control._kRight
+                    upGlyph:       "↑";    upCaption:     qsTr("전진");   upPressed:     control._kFwd
+                    downGlyph:     "↓";    downCaption:   qsTr("후진");   downPressed:   control._kBack
+                    leftGlyph:     "←";    leftCaption:   qsTr("좌");     leftPressed:   control._kLeft
+                    rightGlyph:    "→";    rightCaption:  qsTr("우");     rightPressed:  control._kRight
                 }
             }
 
