@@ -78,15 +78,37 @@ Rectangle {
             return
         }
 
+        var host = hostField.text.trim()
+        var port = parseInt(portField.text)
+        var tcp = protocolCombo.currentIndex === 0
         var name = nameField.text.trim()
         if (name === "") {
-            name = _mode === 1 ? qsTr("RF %1").arg(rfPortCombo.currentText) : qsTr("LTE %1").arg(hostField.text.trim())
+            name = _mode === 1 ? qsTr("RF %1").arg(rfPortCombo.currentText)
+                               : qsTr("LTE %1 %2:%3").arg(tcp ? "TCP" : "UDP").arg(host).arg(portField.text.trim())
         }
 
+        // Reuse a saved link only if its settings match what is entered now; otherwise replace it
+        // (previously a saved link with the same name kept its old protocol/port silently).
         var existing = _findConfig(name)
         if (existing) {
-            _connectConfig(existing)
-            return
+            var same = false
+            if (_mode === 1) {
+                same = existing.linkType === LinkConfiguration.TypeSerial
+                        && existing.portName === _linkManager.serialPorts[Math.max(0, rfPortCombo.currentIndex)]
+                        && existing.baud === parseInt(rfBaudCombo.currentText)
+            } else if (tcp) {
+                same = existing.linkType === LinkConfiguration.TypeTcp && existing.host === host && existing.port === port
+            } else {
+                same = existing.linkType === LinkConfiguration.TypeUdp && existing.hostList.indexOf(host + ":" + port) >= 0
+            }
+            if (same) {
+                _connectConfig(existing)
+                return
+            }
+            if (existing.link) {
+                _linkManager.disconnectLinkConfiguration(existing)
+            }
+            _linkManager.removeConfiguration(existing)
         }
 
         var cfg
@@ -99,13 +121,11 @@ Rectangle {
             cfg.portName = _linkManager.serialPorts[Math.max(0, rfPortCombo.currentIndex)]
             cfg.baud = parseInt(rfBaudCombo.currentText)
         } else {
-            var host = hostField.text.trim()
-            var port = parseInt(portField.text)
             if (host === "" || isNaN(port)) {
                 _errorText = qsTr("서버 주소와 포트를 입력해 주세요.")
                 return
             }
-            if (protocolCombo.currentIndex === 0) {
+            if (tcp) {
                 cfg = _linkManager.createConfiguration(LinkConfiguration.TypeTcp, name)
                 cfg.host = host
                 cfg.port = port
