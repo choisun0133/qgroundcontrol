@@ -193,18 +193,30 @@ QtObject {
     property real   _batPct:    _battery ? _battery.percentRemaining.rawValue : NaN
     property real   _batVolt:   _battery ? _battery.voltage.rawValue : NaN
     property string _batTime:   _battery ? _battery.timeRemainingStr.valueString : ""
+    // User-set pack voltage range (battery details popup). Both set -> % from voltage.
+    property real   batMaxVolt: (typeof globals !== "undefined" && globals) ? globals.aeroBatteryMaxVolt : 0
+    property real   batMinVolt: (typeof globals !== "undefined" && globals) ? globals.aeroBatteryMinVolt : 0
+    readonly property bool batVoltRangeSet: batMaxVolt > 0 && batMinVolt > 0 && batMaxVolt > batMinVolt
+    property real   _batVoltPct: (batVoltRangeSet && !isNaN(_batVolt) && _batVolt > 0)
+                                 ? Math.max(0, Math.min(100, (_batVolt - batMinVolt) / (batMaxVolt - batMinVolt) * 100))
+                                 : NaN
 
     property var battery: {
         var note = qsTr("30% 이하면 노란색, 15% 이하면 빨간색입니다. 실제 복귀 시점은 FC의 배터리 페일세이프 설정을 따릅니다.")
         if (!vehicle || commLost || !_battery) {
             return _item("bat", qsTr("배터리"), "off", qsTr("알 수 없음"), -1, false, [], note)
         }
-        var hasPct = !isNaN(_batPct) && _batPct >= 0
+        var fcHasPct = !isNaN(_batPct) && _batPct >= 0
+        var useVolt = !isNaN(_batVoltPct)
+        var pct = useVolt ? _batVoltPct : (fcHasPct ? _batPct : NaN)
+        var hasPct = !isNaN(pct)
         var voltText = isNaN(_batVolt) ? "—" : _batVolt.toFixed(1) + "V"
-        var st = !hasPct ? "ok" : (_batPct <= 15 ? "lost" : (_batPct <= 30 ? "weak" : "ok"))
-        return _item("bat", qsTr("배터리"), st, hasPct ? Math.round(_batPct) + "%" : voltText, hasPct ? _batPct : 100, false, [
-            _detail(qsTr("잔량"), hasPct ? Math.round(_batPct) + "%" : "—", st === "ok" ? "" : st),
+        var st = !hasPct ? "ok" : (pct <= 15 ? "lost" : (pct <= 30 ? "weak" : "ok"))
+        var chipText = hasPct ? (Math.round(pct) + "% · " + voltText) : voltText
+        return _item("bat", qsTr("배터리"), st, chipText, hasPct ? pct : 100, false, [
+            _detail(useVolt ? qsTr("잔량 (전압 기준)") : qsTr("잔량 (FC)"), hasPct ? Math.round(pct) + "%" : "—", st === "ok" ? "" : st),
             _detail(qsTr("전압"), voltText),
+            _detail(qsTr("FC 잔량"), fcHasPct ? Math.round(_batPct) + "%" : "—"),
             _detail(qsTr("남은 비행"), _batTime === "" ? "—" : _batTime)
         ], note)
     }

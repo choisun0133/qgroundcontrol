@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
@@ -89,8 +90,20 @@ ApplicationWindow {
         property bool               aeroHealthPanelVisible:         false
         property bool               aeroProximityPanelVisible:      false
 
+        // AeroResearch: pack voltage range set by the user (0 = not set). When both are set the
+        // battery percentage is computed from voltage instead of using the FC's estimate.
+        property alias              aeroBatteryMaxVolt:             aeroBatterySettings.maxVolt
+        property alias              aeroBatteryMinVolt:             aeroBatterySettings.minVolt
+
         // Property to manage RemoteID quick access to settings page
         property bool               commingFromRIDIndicator:        false
+    }
+
+    Settings {
+        id:         aeroBatterySettings
+        category:   "AeroBattery"
+        property real maxVolt: 0
+        property real minVolt: 0
     }
 
     /// Default color palette used throughout the UI

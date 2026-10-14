@@ -266,6 +266,90 @@ Item {
                 }
             }
 
+            // Battery: user-set pack voltage range -> percentage from voltage
+            ColumnLayout {
+                Layout.fillWidth:   true
+                visible:            detailsPopup.itemKey === "bat"
+                spacing:            control._u * 0.3
+
+                QGCLabel {
+                    text:           qsTr("배터리 전압 범위 (팩 전체 전압)")
+                    font.bold:      true
+                }
+                RowLayout {
+                    Layout.fillWidth:   true
+                    spacing:            control._u * 0.4
+                    QGCLabel { text: qsTr("최대(만충)"); color: "#9BA1A6" }
+                    QGCTextField {
+                        id:                     batMaxField
+                        Layout.fillWidth:       true
+                        text:                   globals.aeroBatteryMaxVolt > 0 ? globals.aeroBatteryMaxVolt.toFixed(2) : ""
+                        placeholderText:        qsTr("예: 25.2")
+                        inputMethodHints:       Qt.ImhFormattedNumbersOnly
+                    }
+                    QGCLabel { text: "V" }
+                }
+                RowLayout {
+                    Layout.fillWidth:   true
+                    spacing:            control._u * 0.4
+                    QGCLabel { text: qsTr("최소(방전)"); color: "#9BA1A6" }
+                    QGCTextField {
+                        id:                     batMinField
+                        Layout.fillWidth:       true
+                        text:                   globals.aeroBatteryMinVolt > 0 ? globals.aeroBatteryMinVolt.toFixed(2) : ""
+                        placeholderText:        qsTr("예: 21.0")
+                        inputMethodHints:       Qt.ImhFormattedNumbersOnly
+                    }
+                    QGCLabel { text: "V" }
+                }
+                QGCLabel {
+                    id:                 batRangeError
+                    Layout.fillWidth:   true
+                    visible:            text !== ""
+                    color:              "#FF8A8A"
+                    font.pointSize:     ScreenTools.smallFontPointSize
+                    wrapMode:           Text.WordWrap
+                }
+                RowLayout {
+                    Layout.fillWidth:   true
+                    spacing:            control._u * 0.4
+                    QGCLabel {
+                        Layout.fillWidth:   true
+                        text:               status.batVoltRangeSet ? qsTr("전압 기준으로 % 계산 중") : qsTr("미설정 · FC 잔량 사용")
+                        color:              status.batVoltRangeSet ? "#3DDC84" : "#9BA1A6"
+                        font.pointSize:     ScreenTools.smallFontPointSize
+                    }
+                    QGCButton {
+                        text:       qsTr("초기화")
+                        onClicked: {
+                            globals.aeroBatteryMaxVolt = 0
+                            globals.aeroBatteryMinVolt = 0
+                            batMaxField.text = ""
+                            batMinField.text = ""
+                            batRangeError.text = ""
+                        }
+                    }
+                    QGCButton {
+                        text:       qsTr("저장")
+                        onClicked: {
+                            const maxV = parseFloat(batMaxField.text.replace(",", "."))
+                            const minV = parseFloat(batMinField.text.replace(",", "."))
+                            if (isNaN(maxV) || isNaN(minV) || maxV <= 0 || minV <= 0) {
+                                batRangeError.text = qsTr("최대·최소 전압을 숫자로 입력하세요.")
+                                return
+                            }
+                            if (maxV <= minV) {
+                                batRangeError.text = qsTr("최대 전압이 최소 전압보다 커야 합니다.")
+                                return
+                            }
+                            batRangeError.text = ""
+                            globals.aeroBatteryMaxVolt = maxV
+                            globals.aeroBatteryMinVolt = minV
+                        }
+                    }
+                }
+            }
+
             QGCLabel {
                 Layout.fillWidth:   true
                 text:               detailsPopup.item ? detailsPopup.item.note : ""

@@ -9,19 +9,20 @@ import QGroundControl.Controls
 // pitch ladder and roll scale, altitude tape with climb-rate bar, heading strip and summary chips.
 Rectangle {
     id:             control
-    implicitWidth:  _u * 30
-    implicitHeight: mainColumn.implicitHeight + _pad * 2
+    implicitWidth:  _collapsed ? collapsedPill.width : _u * 30
+    implicitHeight: _collapsed ? collapsedPill.height : mainColumn.implicitHeight + _pad * 2
     radius:         _u * 0.5
-    color:          Qt.rgba(0.055, 0.059, 0.067, 0.94 * _userOpacity)
+    color:          _collapsed ? "transparent" : Qt.rgba(0.055, 0.059, 0.067, 0.94 * _userOpacity)
     border.color:   Qt.rgba(0.165, 0.176, 0.192, _userOpacity)
-    border.width:   1
+    border.width:   _collapsed ? 0 : 1
 
-    // AeroResearch: user size / transparency (gear button, saved between runs)
-    scale:              _userScale
+    // AeroResearch: user size / transparency / minimize (saved between runs)
+    scale:              _collapsed ? 1 : _userScale
     transformOrigin:    Item.BottomRight
 
     property real _userScale:   prefs.panelScale
     property real _userOpacity: prefs.panelOpacity
+    property bool _collapsed:   prefs.collapsed
     property bool _showPrefs:   false
 
     Settings {
@@ -29,9 +30,11 @@ Rectangle {
         category:   "AeroInstrumentPanel"
         property real panelScale:   1.0
         property real panelOpacity: 1.0
+        property bool collapsed:    false
     }
 
-    function _stepScale(d)      { prefs.panelScale = Math.round(Math.max(0.6, Math.min(1.6, prefs.panelScale + d)) * 10) / 10 }
+    function _clampScale(s)     { return Math.max(0.6, Math.min(1.6, s)) }
+    function _stepScale(d)      { prefs.panelScale = Math.round(_clampScale(prefs.panelScale + d) * 10) / 10 }
     function _stepOpacity(d)    { prefs.panelOpacity = Math.round(Math.max(0.3, Math.min(1.0, prefs.panelOpacity + d)) * 10) / 10 }
 
     property var    _activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
@@ -155,6 +158,7 @@ Rectangle {
         width:      control.width - control._pad * 2
         spacing:    control._pad
         opacity:    control._userOpacity
+        visible:    !control._collapsed
 
         RowLayout {
             Layout.fillWidth:       true
@@ -421,6 +425,7 @@ Rectangle {
         height:         width
         radius:         width / 2
         z:              10
+        visible:        !control._collapsed
         color:          control._showPrefs ? control._accent : "#1C1F23"
         border.color:   "#2A2D31"
         QGCLabel {
@@ -435,16 +440,141 @@ Rectangle {
         }
     }
 
+    // Minimize button (left of the gear)
+    Rectangle {
+        id:             minimizeButton
+        anchors.right:  gearButton.left
+        anchors.top:    parent.top
+        anchors.margins: control._u * 0.15
+        width:          control._u * 1.4
+        height:         width
+        radius:         width / 2
+        z:              10
+        visible:        !control._collapsed
+        color:          minimizeMouse.containsMouse ? "#2A2D31" : "#1C1F23"
+        border.color:   "#2A2D31"
+        QGCLabel {
+            anchors.centerIn:   parent
+            text:               "−"
+            font.bold:          true
+            color:              "#C9CDD1"
+        }
+        MouseArea {
+            id:             minimizeMouse
+            anchors.fill:   parent
+            hoverEnabled:   true
+            cursorShape:    Qt.PointingHandCursor
+            onClicked: {
+                control._showPrefs = false
+                prefs.collapsed = true
+            }
+        }
+    }
+
+    // Resize grip (top-left corner): drag up/left to enlarge, down/right to shrink.
+    // The panel scales around its bottom-right corner, so the grip follows the mouse.
+    Rectangle {
+        id:             resizeGrip
+        anchors.left:   parent.left
+        anchors.top:    parent.top
+        width:          control._u * 1.3
+        height:         width
+        radius:         control._u * 0.25
+        z:              10
+        visible:        !control._collapsed
+        color:          resizeMouse.containsMouse || resizeMouse.pressed ? Qt.rgba(1, 0.48, 0.1, 0.35) : "transparent"
+
+        // diagonal grip lines
+        Repeater {
+            model: 3
+            Rectangle {
+                x:          control._u * 0.15 + index * control._u * 0.28
+                y:          control._u * 0.15
+                width:      2
+                height:     control._u * 0.9 - index * control._u * 0.28
+                color:      "#9BA1A6"
+                rotation:   45
+                transformOrigin: Item.Top
+            }
+        }
+
+        MouseArea {
+            id:             resizeMouse
+            anchors.fill:   parent
+            hoverEnabled:   true
+            cursorShape:    Qt.SizeFDiagCursor
+            preventStealing: true
+
+            property point _startPos
+            property real  _startScale: 1
+
+            onPressed: (mouse) => {
+                _startPos = mapToGlobal(mouse.x, mouse.y)
+                _startScale = prefs.panelScale
+            }
+            onPositionChanged: (mouse) => {
+                if (!pressed) {
+                    return
+                }
+                var p = mapToGlobal(mouse.x, mouse.y)
+                // average of left/up movement, relative to the unscaled panel size
+                var grow = ((_startPos.x - p.x) / control.width + (_startPos.y - p.y) / control.height) / 2
+                prefs.panelScale = Math.round(control._clampScale(_startScale + grow) * 20) / 20
+            }
+        }
+    }
+
+    // Collapsed state: small pill at the bottom-right, click to restore
+    Rectangle {
+        id:             collapsedPill
+        anchors.right:  parent.right
+        anchors.bottom: parent.bottom
+        width:          pillRow.implicitWidth + control._u * 1.2
+        height:         control._u * 1.8
+        radius:         height / 2
+        visible:        control._collapsed
+        color:          pillMouse.containsMouse ? "#1C1F23" : "#0E0F11"
+        border.color:   control._accent
+
+        RowLayout {
+            id:                 pillRow
+            anchors.centerIn:   parent
+            spacing:            control._u * 0.4
+            QGCLabel {
+                text:           qsTr("계기판")
+                font.bold:      true
+            }
+            QGCLabel {
+                text:           control._fmt(control._alt, 0) + " m · " + control._hdgText(control._heading) + "°"
+                color:          control._muted
+                font.family:    ScreenTools.fixedFontFamily
+                font.pointSize: ScreenTools.smallFontPointSize
+            }
+            QGCLabel {
+                text:           "▴"
+                color:          control._accent
+            }
+        }
+
+        MouseArea {
+            id:             pillMouse
+            anchors.fill:   parent
+            hoverEnabled:   true
+            cursorShape:    Qt.PointingHandCursor
+            onClicked:      prefs.collapsed = false
+        }
+    }
+
     // Size / transparency controls
     Rectangle {
-        anchors.right:      gearButton.left
+        anchors.right:      minimizeButton.left
         anchors.top:        parent.top
         anchors.margins:    control._u * 0.15
         width:              prefsRow.implicitWidth + control._u
         height:             prefsRow.implicitHeight + control._u * 0.5
         radius:             control._u * 0.3
         z:                  10
-        visible:            control._showPrefs
+        visible:            control._showPrefs && !control._collapsed
         color:              "#0E0F11"
         border.color:       "#2A2D31"
 
