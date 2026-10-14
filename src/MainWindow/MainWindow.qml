@@ -89,6 +89,7 @@ ApplicationWindow {
         // AeroResearch: vibration / EKF window, toggled from the toolbar chip
         property bool               aeroHealthPanelVisible:         false
         property bool               aeroProximityPanelVisible:      false
+        property bool               aeroKeyboardControlActive:      false   // keyboard flight control (AeroKeyboardControl)
 
         // AeroResearch: pack voltage range set by the user (0 = not set). When both are set the
         // battery percentage is computed from voltage instead of using the FC's estimate.

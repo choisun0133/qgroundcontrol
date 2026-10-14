@@ -27,6 +27,7 @@
 
 #include <QtCore/QRegularExpression>
 #include <QtCore/QRegularExpressionMatch>
+#include <QtCore/QtMath>
 
 QGC_LOGGING_CATEGORY(APMFirmwarePluginLog, "FirmwarePlugin.APMFirmwarePlugin")
 
@@ -969,6 +970,49 @@ void APMFirmwarePlugin::guidedModeChangeHeading(Vehicle *vehicle, const QGeoCoor
         direction,
         true
     );
+}
+
+bool APMFirmwarePlugin::guidedModeBodyVelocitySupported(Vehicle *vehicle) const
+{
+    // ArduCopter GUIDED accepts body-frame velocity targets (stops after GUID_TIMEOUT without updates)
+    return vehicle && vehicle->multiRotor();
+}
+
+void APMFirmwarePlugin::guidedModeSetBodyVelocity(Vehicle *vehicle, double forward, double right, double down, double yawRateDegS) const
+{
+    if (!guidedModeBodyVelocitySupported(vehicle)) {
+        return;
+    }
+
+    const SharedLinkInterfacePtr sharedLink = vehicle->vehicleLinkManager()->primaryLink().lock();
+    if (!sharedLink) {
+        return;
+    }
+
+    mavlink_set_position_target_local_ned_t cmd{};
+    cmd.target_system = static_cast<uint8_t>(vehicle->id());
+    cmd.target_component = static_cast<uint8_t>(vehicle->defaultComponentId());
+    cmd.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
+    // Velocity and yaw rate only
+    cmd.type_mask = static_cast<uint16_t>(
+        POSITION_TARGET_TYPEMASK_X_IGNORE | POSITION_TARGET_TYPEMASK_Y_IGNORE | POSITION_TARGET_TYPEMASK_Z_IGNORE |
+        POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+        POSITION_TARGET_TYPEMASK_YAW_IGNORE);
+    cmd.vx = static_cast<float>(forward);
+    cmd.vy = static_cast<float>(right);
+    cmd.vz = static_cast<float>(down);
+    cmd.yaw_rate = static_cast<float>(qDegreesToRadians(yawRateDegS));
+
+    mavlink_message_t msg;
+    mavlink_msg_set_position_target_local_ned_encode_chan(
+        static_cast<uint8_t>(MAVLinkProtocol::instance()->getSystemId()),
+        static_cast<uint8_t>(MAVLinkProtocol::getComponentId()),
+        sharedLink->mavlinkChannel(),
+        &msg,
+        &cmd
+    );
+
+    (void) vehicle->sendMessageOnLinkThreadSafe(sharedLink.get(), msg);
 }
 
 double APMFirmwarePlugin::minimumTakeoffAltitudeMeters(Vehicle* vehicle) const

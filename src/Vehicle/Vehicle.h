@@ -314,6 +314,12 @@ public:
     ///     @param coordinate to rotate towards
     Q_INVOKABLE void guidedModeChangeHeading(const QGeoCoordinate &headingCoord);
 
+    /// AeroResearch keyboard control: true if live body-velocity control is supported
+    Q_INVOKABLE bool guidedModeBodyVelocitySupported();
+
+    /// AeroResearch keyboard control: body-frame velocity (m/s, down positive) and yaw rate (deg/s)
+    Q_INVOKABLE void guidedModeSetBodyVelocity(double forward, double right, double down, double yawRateDegS);
+
     /// Command vehicle to change groundspeed
     ///     @param groundspeed Target horizontal groundspeed
     Q_INVOKABLE void guidedModeChangeGroundSpeedMetersSecond(double groundspeed);

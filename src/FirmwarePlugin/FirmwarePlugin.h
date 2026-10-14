@@ -200,6 +200,15 @@ public:
     /// Command vehicle to rotate towards specified location.
     virtual void guidedModeChangeHeading(Vehicle *vehicle, const QGeoCoordinate &headingCoord) const;
 
+    /// @return true if the vehicle can be flown live with body-frame velocity commands (keyboard control)
+    virtual bool guidedModeBodyVelocitySupported(Vehicle* /*vehicle*/) const { return false; }
+
+    /// Command a body-frame velocity in guided mode. Meant to be streamed (~10 Hz) while the operator
+    /// holds a key; the vehicle stops on its own if the stream stops.
+    ///     @param forward/right/down Velocity in m/s (body frame, down positive)
+    ///     @param yawRateDegS Yaw rate in deg/s (clockwise positive)
+    virtual void guidedModeSetBodyVelocity(Vehicle* /*vehicle*/, double /*forward*/, double /*right*/, double /*down*/, double /*yawRateDegS*/) const {}
+
     /// @return The minimum takeoff altitude (relative) for guided takeoff.
     virtual double minimumTakeoffAltitudeMeters(Vehicle* /*vehicle*/) const { return 3.048; }
 

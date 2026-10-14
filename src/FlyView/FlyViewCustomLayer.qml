@@ -55,6 +55,9 @@ Item {
         defaultY:   _root.height - height - _root._panelMargin
     }
 
+    // Keyboard flight control (mode 2) with on-screen key display; started from the top pill or Ctrl+F
+    AeroKeyboardControl { }
+
     // since this file is a placeholder for the custom layer in a standard build, we will just pass through the parent insets
     QGCToolInsets {
         id:                     _toolInsets

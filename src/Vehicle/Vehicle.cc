@@ -2048,6 +2048,20 @@ void Vehicle::guidedModeChangeHeading(const QGeoCoordinate &headingCoord)
     _firmwarePlugin->guidedModeChangeHeading(this, headingCoord);
 }
 
+bool Vehicle::guidedModeBodyVelocitySupported()
+{
+    return _firmwarePlugin && _firmwarePlugin->guidedModeBodyVelocitySupported(this);
+}
+
+void Vehicle::guidedModeSetBodyVelocity(double forward, double right, double down, double yawRateDegS)
+{
+    // Only while in guided mode, so a stale command can never move the vehicle in another mode
+    if (!_firmwarePlugin || !guidedMode()) {
+        return;
+    }
+    _firmwarePlugin->guidedModeSetBodyVelocity(this, forward, right, down, yawRateDegS);
+}
+
 void Vehicle::pauseVehicle()
 {
     if (!_vehicleSupports->pauseVehicle()) {
