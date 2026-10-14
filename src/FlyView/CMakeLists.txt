@@ -13,7 +13,6 @@ qt_add_qml_module(FlyViewModule
         AeroCameraPanel.qml
         AeroFloatingPanel.qml
         AeroGuidedActionArm.qml
-        AeroGuidedActionPause.qml
         AeroGuidedActionStartMission.qml
         AeroHealthPanel.qml
         AeroProximityPanel.qml

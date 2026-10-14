@@ -642,6 +642,11 @@ Item {
             _activeVehicle.abortLanding(50)     // hardcoded value for climbOutAltitude that is currently ignored
             break
         case actionPause:
+            if (isNaN(sliderOutputValue)) {
+                // AeroResearch quick pause (확인/취소 card): hold at the current altitude
+                _activeVehicle.pauseVehicle()
+                break
+            }
             var valueInMeters = _unitsConversion.appSettingsVerticalDistanceUnitsToMeters(sliderOutputValue)
             var altitudeChangeInMeters = valueInMeters - _activeVehicle.altitudeRelative.rawValue
             _activeVehicle.guidedModeChangeAltitude(altitudeChangeInMeters, true /* pauseVehicle */)

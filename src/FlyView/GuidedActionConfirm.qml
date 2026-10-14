@@ -28,6 +28,10 @@ Item {
 
     property bool _emergencyAction: action === guidedController.actionEmergencyStop
 
+    // AeroResearch: pause only holds the vehicle in place, so it uses plain 확인/취소 buttons
+    // instead of hold-to-confirm, and skips the altitude slider (holds the current altitude)
+    property bool _quickConfirm:    action === guidedController.actionPause
+
     // Takeoff altitude is picked inside the card instead of the right-edge slider
     property bool _takeoffPicker:   false
     property real _pickerValue:     0
@@ -166,6 +170,9 @@ Item {
             _takeoffPicker = true
             guidedValueSlider.visible = false
         }
+        if (_quickConfirm) {
+            guidedValueSlider.visible = false
+        }
         visible = true
     }
 
@@ -177,6 +184,8 @@ Item {
         var sliderOutputValue = 0
         if (_takeoffPicker) {
             sliderOutputValue = _pickerValue
+        } else if (_quickConfirm) {
+            sliderOutputValue = NaN     // executeAction: pause at the current altitude
         } else if (guidedValueSlider.visible) {
             sliderOutputValue = guidedValueSlider.getOutputValue()
         }
@@ -382,6 +391,7 @@ Item {
             // Hold-to-confirm: the bar fills while held, the action runs when it is full
             DelayButton {
                 id:                     holdButton
+                visible:                !control._quickConfirm
                 Layout.fillWidth:       true
                 Layout.preferredHeight: control._u * 2.6
                 delay:                  1500
@@ -411,8 +421,42 @@ Item {
                 }
             }
 
+            // Pause: plain confirm / cancel
+            RowLayout {
+                Layout.fillWidth:   true
+                visible:            control._quickConfirm
+                spacing:            control._u * 0.5
+
+                QGCButton {
+                    Layout.fillWidth:       true
+                    Layout.preferredHeight: control._u * 2.6
+                    text:                   qsTr("취소")
+                    onClicked:              control.confirmCancelled()
+                }
+                Button {
+                    id:                     quickConfirmButton
+                    Layout.fillWidth:       true
+                    Layout.preferredHeight: control._u * 2.6
+                    text:                   qsTr("확인 · %1").arg(control.title)
+                    onClicked:              control._execute()
+
+                    background: Rectangle {
+                        radius:         control._u * 0.4
+                        color:          quickConfirmButton.pressed ? Qt.darker(control._tone, 1.2) : control._tone
+                    }
+                    contentItem: QGCLabel {
+                        text:                   quickConfirmButton.text
+                        horizontalAlignment:    Text.AlignHCenter
+                        verticalAlignment:      Text.AlignVCenter
+                        font.bold:              true
+                        color:                  "#0E0F11"
+                    }
+                }
+            }
+
             QGCLabel {
                 Layout.fillWidth:       true
+                visible:                !control._quickConfirm
                 horizontalAlignment:    Text.AlignHCenter
                 text:                   holdButton.pressed ? qsTr("계속 누르고 있으세요 · 손을 떼면 취소됩니다") : qsTr("버튼을 누르고 있으면 바가 차오르고, 끝까지 차면 실행됩니다")
                 color:                  "#6E757B"
