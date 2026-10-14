@@ -166,11 +166,61 @@ Item {
     }
 
     // ---- Collapsed pill ----
-    QGCButton {
+    // Drag to move (same as the title bar); a click without moving opens the panel again.
+    Rectangle {
         id:             pill
         visible:        control.collapsed
-        text:           control.title + (control.badgeText !== "" ? "  " + control.badgeText : "") + "  ▴"
-        heightFactor:   0.6
-        onClicked:      control.collapsed = false
+        width:          pillRow.width + control._margin * 2
+        height:         ScreenTools.defaultFontPixelHeight * 1.9
+        radius:         height / 2
+        color:          Qt.rgba(qgcPal.window.r, qgcPal.window.g, qgcPal.window.b, 0.92)
+        border.color:   pillMouse.containsMouse ? qgcPal.buttonHighlight : qgcPal.groupBorder
+        border.width:   1
+
+        Row {
+            id:                 pillRow
+            anchors.centerIn:   parent
+            spacing:            control._margin * 0.6
+
+            QGCLabel { text: "≡"; opacity: 0.6; anchors.verticalCenter: parent.verticalCenter }
+            QGCLabel { text: control.title; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
+            QGCLabel {
+                visible:                control.badgeText !== ""
+                text:                   control.badgeText
+                color:                  control.badgeColor
+                font.bold:              true
+                font.pointSize:         ScreenTools.smallFontPointSize
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            QGCLabel { text: "▴"; anchors.verticalCenter: parent.verticalCenter }
+        }
+
+        MouseArea {
+            id:             pillMouse
+            anchors.fill:   parent
+            hoverEnabled:   true
+            cursorShape:    pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            drag.target:    control
+            drag.minimumX:  0
+            drag.minimumY:  control.minY
+            drag.maximumX:  control.parent ? control.parent.width - control.width : 0
+            drag.maximumY:  control.parent ? control.parent.height - control.height : 0
+
+            property real _pressX: 0
+            property real _pressY: 0
+
+            onPressed: {
+                _pressX = control.x
+                _pressY = control.y
+            }
+            onReleased: {
+                const moved = Math.abs(control.x - _pressX) + Math.abs(control.y - _pressY)
+                if (moved < ScreenTools.defaultFontPixelWidth) {
+                    control.collapsed = false
+                } else {
+                    control._save()
+                }
+            }
+        }
     }
 }
