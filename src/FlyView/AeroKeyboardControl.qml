@@ -44,6 +44,7 @@ Item {
         property real horizSpeed:   2.0     // m/s
         property real vertSpeed:    1.0     // m/s
         property real yawRate:      30      // deg/s
+        property real displayOpacity: 0.8   // key display transparency (0.2 - 1.0)
     }
 
     readonly property real _boost:      _kFast ? 2 : 1
@@ -377,6 +378,7 @@ Item {
         anchors.horizontalCenter:   parent.horizontalCenter
         y:                          parent.height * 0.58
         visible:                    control._active
+        opacity:                    prefs.displayOpacity
         width:                      displayColumn.implicitWidth + control._u * 1.6
         height:                     displayColumn.implicitHeight + control._u * 1.2
         radius:                     control._u * 0.6
@@ -457,6 +459,26 @@ Item {
                     heightFactor:   0.2
                     focusPolicy:    Qt.NoFocus
                     onClicked:      prefs.horizSpeed = Math.min(5, Math.round((prefs.horizSpeed + 0.5) * 10) / 10)
+                }
+
+                Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: control._u; color: Qt.rgba(1, 1, 1, 0.25) }
+                QGCLabel { text: qsTr("투명도"); color: Qt.rgba(1, 1, 1, 0.7); font.pointSize: ScreenTools.smallFontPointSize }
+                QGCButton {
+                    text:           "−"
+                    heightFactor:   0.2
+                    focusPolicy:    Qt.NoFocus
+                    onClicked:      prefs.displayOpacity = Math.max(0.2, Math.round((prefs.displayOpacity - 0.1) * 10) / 10)
+                }
+                QGCLabel {
+                    text:           Math.round(prefs.displayOpacity * 100) + "%"
+                    font.family:    ScreenTools.fixedFontFamily
+                    color:          "#ECEDEE"
+                }
+                QGCButton {
+                    text:           "+"
+                    heightFactor:   0.2
+                    focusPolicy:    Qt.NoFocus
+                    onClicked:      prefs.displayOpacity = Math.min(1.0, Math.round((prefs.displayOpacity + 0.1) * 10) / 10)
                 }
             }
 
