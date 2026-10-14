@@ -84,8 +84,15 @@ jobs:
       - name: Publish release
         run: |
           set -euo pipefail
+          # Release notes come from RELEASE_NOTES.md on this branch (normal variant); fall back to a short line
+          if [ -z "$SUFFIX" ] && gh api "repos/$REPO/contents/RELEASE_NOTES.md?ref=${{ github.sha }}" \
+               -H "Accept: application/vnd.github.raw" > notes.md 2>/dev/null && [ -s notes.md ]; then
+            :
+          else
+            echo "AeroResearch GCS 설치 파일. Windows: Developer = 개발자용(기체 설정·파라미터 포함), User = 사용자용(파라미터 수정 불가). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." > notes.md
+          fi
           gh release delete "$TAG" -R "$REPO" -y --cleanup-tag || true
           gh release create "$TAG" -R "$REPO" --target "${{ github.sha }}" \
             --title "$TITLE" \
-            --notes "AeroResearch GCS 설치 파일. Windows: Developer = 개발자용(기체 설정·파라미터 포함), User = 사용자용(파라미터 수정 불가). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." \
+            --notes-file notes.md \
             out/*
