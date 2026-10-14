@@ -25,9 +25,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.12-ffmpeg' || 'aerogcs-1.6.12' }}
+      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.13-ffmpeg' || 'aerogcs-1.6.13' }}
       SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
-      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.12 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.12' }}
+      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.13 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.13' }}
     steps:
       - name: Download build artifacts (only builds of the current aero-gcs head)
         run: |
@@ -62,16 +62,16 @@ jobs:
           winuser=$(find dl -path 'dl/winuser/*' -iname '*.exe' | head -1)
           if [ -n "$win" ]; then
             if [ -n "$winuser" ]; then
-              cp "$win" "out/AeroResearchGCS-1.6.12-Windows-x64${SUFFIX}-Developer-Setup.exe"
+              cp "$win" "out/AeroResearchGCS-1.6.13-Windows-x64${SUFFIX}-Developer-Setup.exe"
             else
-              cp "$win" "out/AeroResearchGCS-1.6.12-Windows-x64${SUFFIX}-Setup.exe"
+              cp "$win" "out/AeroResearchGCS-1.6.13-Windows-x64${SUFFIX}-Setup.exe"
             fi
           fi
-          [ -n "$winuser" ] && cp "$winuser" "out/AeroResearchGCS-1.6.12-Windows-x64${SUFFIX}-User-Setup.exe"
+          [ -n "$winuser" ] && cp "$winuser" "out/AeroResearchGCS-1.6.13-Windows-x64${SUFFIX}-User-Setup.exe"
           apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
-          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.12-Android.apk"
+          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.13-Android.apk"
           dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
-          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.12-macOS.dmg"
+          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.13-macOS.dmg"
           ls -l out
           [ -n "$(ls out)" ]
 
