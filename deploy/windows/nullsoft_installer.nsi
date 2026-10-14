@@ -147,6 +147,10 @@ Section "Uninstall"
 
     nsExec::Exec 'netsh advfirewall firewall delete rule name="${APPNAME}"'
 
+    SetShellVarContext all
+    Delete "$DESKTOP\${APPNAME}.lnk"
+    SetShellVarContext current
+
     ; Remove ARP + WER
     DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
     DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\${EXENAME}.exe"
@@ -162,4 +166,10 @@ Section "Create Start Menu Shortcuts"
         CreateShortCut "$SMPROGRAMS\$StartMenuFolder\${APPNAME} (GPU Safe Mode).lnk" "$INSTDIR\bin\${EXENAME}.exe" "-swrast" "$INSTDIR\bin\${EXENAME}.exe" 0
         !insertmacro DemoteShortCut "$SMPROGRAMS\$StartMenuFolder\${APPNAME} (GPU Safe Mode).lnk"
     !insertmacro MUI_STARTMENU_WRITE_END
+SectionEnd
+
+Section "Create Desktop Shortcut"
+    ; AeroResearch: desktop icon for all users (removed again on uninstall)
+    SetShellVarContext all
+    CreateShortCut "$DESKTOP\${APPNAME}.lnk" "$INSTDIR\bin\${EXENAME}.exe" "" "$INSTDIR\bin\${EXENAME}.exe" 0
 SectionEnd
