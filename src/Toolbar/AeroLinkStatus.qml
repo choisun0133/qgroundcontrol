@@ -122,7 +122,14 @@ QtObject {
         var rcPresent = (_present & _rcReceiverBit) !== 0
         var rcHealthy = (_health & _rcReceiverBit) !== 0
         var p = (_rcRssi >= 0 && _rcRssi <= 100) ? _rcRssi : -1
-        if (rcPresent && !rcHealthy) {
+        // FC has never seen an RC receiver signal (no transmitter): not "normal"
+        if (!rcPresent) {
+            return _item("rc", qsTr("RC 조종기"), "off", qsTr("미연결"), 0, false, [
+                _detail(qsTr("신호 (RSSI)"), "—"),
+                _detail(qsTr("상태"), qsTr("FC가 조종기 신호를 받은 적 없음"))
+            ], note)
+        }
+        if (!rcHealthy || p === 0) {
             return _item("rc", qsTr("RC 조종기"), "lost", qsTr("끊김"), 0, false, [
                 _detail(qsTr("신호 (RSSI)"), "—", "lost"),
                 _detail(qsTr("페일세이프"), qsTr("동작 중"), "lost")

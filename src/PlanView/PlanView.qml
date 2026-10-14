@@ -182,16 +182,37 @@ Item {
         return Math.max(_missionController.currentPlanViewVIIndex + 1, _takeoffIndex() + 1, 1)
     }
 
-    function _ensureTakeoffItem() {
-        if (_takeoffIndex() < 0 && _missionController.isInsertTakeoffValid && !_planMasterController.controllerVehicle.rover) {
+    // AeroResearch: when the first item of an empty mission is added, ask whether a takeoff item
+    // should go in front of it. Missions written while the vehicle is flying get no takeoff.
+    function _vehicleFlying() {
+        var vehicle = QGroundControl.multiVehicleManager.activeVehicle
+        return vehicle ? vehicle.flying : false
+    }
+
+    function _shouldAskForTakeoff() {
+        return _visualItems.count <= 1 && _takeoffIndex() < 0 && !_vehicleFlying()
+                && _missionController.isInsertTakeoffValid && !_planMasterController.controllerVehicle.rover
+    }
+
+    function _withTakeoffChoice(insertFunction) {
+        if (_shouldAskForTakeoff()) {
+            takeoffPromptPopup.pendingInsert = insertFunction
+            takeoffPromptPopup.open()
+        } else {
+            insertFunction()
+        }
+    }
+
+    function _insertTakeoffFirst() {
+        if (_takeoffIndex() < 0 && _missionController.isInsertTakeoffValid) {
             _missionController.insertTakeoffItem(mapCenter(), 1, false /* makeCurrentItem */)
         }
     }
 
     function insertSimpleItemAfterCurrent(coordinate) {
-        _ensureTakeoffItem()
-        var nextIndex = _nextInsertIndex()
-        _missionController.insertSimpleMissionItem(coordinate, nextIndex, true /* makeCurrentItem */)
+        _withTakeoffChoice(function() {
+            _missionController.insertSimpleMissionItem(coordinate, _nextInsertIndex(), true /* makeCurrentItem */)
+        })
     }
 
     function insertROIAfterCurrent(coordinate) {
@@ -205,14 +226,13 @@ Item {
     }
 
     function insertComplexItemAfterCurrent(complexItemName) {
-        _ensureTakeoffItem()
-        var nextIndex = _nextInsertIndex()
-        _missionController.insertComplexMissionItem(complexItemName, mapCenter(), nextIndex, true /* makeCurrentItem */)
+        _withTakeoffChoice(function() {
+            _missionController.insertComplexMissionItem(complexItemName, mapCenter(), _nextInsertIndex(), true /* makeCurrentItem */)
+        })
     }
 
     function insertTakeoffItemAfterCurrent() {
-        var nextIndex = _missionController.currentPlanViewVIIndex + 1
-        _missionController.insertTakeoffItem(mapCenter(), nextIndex, true /* makeCurrentItem */)
+        _missionController.insertTakeoffItem(mapCenter(), 1, true /* makeCurrentItem */)
     }
 
     function insertLandItemAfterCurrent() {
@@ -334,7 +354,7 @@ Item {
                         if (_planMasterController.showCreateFromTemplate) {
                             _planMasterController.userSelectedManualCreation = true
                         }
-                        // Takeoff is added automatically as the first item (see _ensureTakeoffItem)
+                        // First waypoint of an empty plan asks about a takeoff item (see _withTakeoffChoice)
                         insertSimpleItemAfterCurrent(coordinate)
                     }
                     break
@@ -479,8 +499,8 @@ Item {
                         text: qsTr("Takeoff")
                         iconSource: "/res/takeoff.svg"
                         enabled: _missionController.isInsertTakeoffValid
-                        // Takeoff is fixed as the first item and inserted automatically
-                        visible: false
+                        // Shown only when the plan has no takeoff yet; it is always inserted as item 1
+                        visible: _visualItems.count > 0 && _takeoffIndex() < 0
                         onTriggered: {
                             insertTakeoffItemAfterCurrent()
                         }
@@ -912,6 +932,70 @@ Item {
                             insertCancelROIAfterCurrent()
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // AeroResearch: asked when the first waypoint/pattern of an empty plan is added
+    Popup {
+        id:             takeoffPromptPopup
+        parent:         Overlay.overlay
+        x:              Math.round((parent.width - width) / 2)
+        y:              Math.round((parent.height - height) / 3)
+        width:          ScreenTools.defaultFontPixelHeight * 22
+        padding:        ScreenTools.defaultFontPixelHeight * 0.8
+        modal:          true
+        focus:          true
+        closePolicy:    Popup.CloseOnEscape
+
+        property var pendingInsert: null
+
+        function _finish(addTakeoff) {
+            var insertFunction = pendingInsert
+            pendingInsert = null
+            close()
+            if (addTakeoff) {
+                _insertTakeoffFirst()
+            }
+            if (insertFunction) {
+                insertFunction()
+            }
+        }
+
+        // Esc cancels the click entirely
+        onClosed: pendingInsert = null
+
+        background: Rectangle {
+            color:          "#0E0F11"
+            border.color:   "#2A2D31"
+            radius:         ScreenTools.defaultFontPixelHeight * 0.5
+        }
+
+        contentItem: ColumnLayout {
+            spacing: ScreenTools.defaultFontPixelHeight * 0.6
+
+            QGCLabel {
+                text:       qsTr("이륙 항목 추가")
+                font.bold:  true
+            }
+            QGCLabel {
+                Layout.fillWidth:   true
+                text:               qsTr("1번 웨이포인트 앞에 이륙(0번)을 넣을까요?\n비행 중인 기체에 보낼 미션이면 이륙 없이 만드세요.")
+                color:              "#C9CDD1"
+                wrapMode:           Text.WordWrap
+            }
+            RowLayout {
+                Layout.alignment:   Qt.AlignRight
+                spacing:            ScreenTools.defaultFontPixelHeight * 0.4
+                QGCButton {
+                    text:       qsTr("이륙 없이")
+                    onClicked:  takeoffPromptPopup._finish(false)
+                }
+                QGCButton {
+                    text:       qsTr("이륙 넣기")
+                    primary:    true
+                    onClicked:  takeoffPromptPopup._finish(true)
                 }
             }
         }
