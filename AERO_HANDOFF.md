@@ -36,7 +36,7 @@
    - **주의**: Windows 워크플로는 `paths-ignore`가 있어 **빈 커밋(`--allow-empty`)은 빌드를 시작하지 않음**. 빌드를 시작하려면 파일이 바뀐 커밋(`[skip ci]` 없이)을 push할 것 (예: 이 문서 갱신)
    - 사용자용 아티팩트가 있으면 `...-Developer-Setup.exe` / `...-User-Setup.exe`, 없으면 `...-Setup.exe` 하나
 3. **릴리스 노트**: `publish-aero` 브랜치의 `RELEASE_NOTES.md`가 릴리스 설명이 됨 (버전마다 이 파일도 갱신). 이 세션 환경에서는 릴리스 직접 수정(API)이 막혀 있어 워크플로를 다시 돌려 반영
-4. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.16`)을 sed로 바꿔 `[skip ci]` 커밋
+4. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.17`)을 sed로 바꿔 `[skip ci]` 커밋
 5. 링크 형식: `https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-<ver>/AeroResearchGCS-<ver>-Windows-x64-Setup.exe`
 - 환경 메모: 이 세션 환경에서는 Actions 로그·아티팩트 직접 다운로드, 저장소 Secrets 설정이 프록시로 막혀 있었음 → 상태는 `gh api .../actions/runs/<id>/jobs`, 결과물은 릴리스로 확인
 
@@ -53,6 +53,7 @@
 | 1.6.14 | 최소화한 카메라/메시지 창 드래그 이동, 배터리 %·V 동시 표시와 최대/최소 전압 입력, 계기판 모서리 드래그 크기 조절·최소화, 임무 계획 첫 포인트에서 이륙 추가 여부 팝업(비행 중이면 이륙 없음), RC 미연결 표시, 시작 화면 저장된 연결 설정 불일치 버그 수정 |
 | 1.6.15 | 키보드 수동 조종(모드2: W/S 상승·하강, A/D 회전, 방향키 이동, Shift ×2, Space 정지, Esc 해제) — 일시 정지 중 도구 막대 "수동 조종" 버튼·상단 버튼·Ctrl+F로 시작, GUIDED 속도 명령 10Hz, 반투명 키 표시(투명도 조절). 영상 진단 버튼은 Ctrl+F에만 |
 | 1.6.16 | 일시 정지는 확인/취소 버튼(누르고 있기 없음, 현재 고도 유지), 고도 변경은 팝업에 목표 고도 입력 후 확인/Enter (`GuidedActionConfirm.qml`) |
+| 1.6.17 | USB로 연결된 텔레메트리 모뎀(USB 직결로 잡힘)도 RADIO_STATUS가 오면 텔레메트리 칩에 신호 표시 (`AeroLinkStatus.qml`) |
 
 ## 5. 기능별 주요 파일
 
