@@ -83,7 +83,13 @@ QtObject {
     }
 
     // ---- RF telemetry -------------------------------------------------------------------------
-    property var    _rf:        _linkState("RF", _names, _statuses, _primary)
+    // A radio plugged in over USB can be auto-connected as a "USB direct" link (its USB id looks
+    // like a flight controller), so also treat a USB serial link as the telemetry radio once
+    // RADIO_STATUS (radio signal report) has been received.
+    property bool   _radioSeen: vehicle ? vehicle.radioStatus.telemetryAvailable : false
+    property var    _rfLink:    _linkState("RF", _names, _statuses, _primary)
+    property var    _usbLink:   _linkState("USB", _names, _statuses, _primary)
+    property var    _rf:        _rfLink.found ? _rfLink : ((_radioSeen && _usbLink.found) ? _usbLink : _rfLink)
     property real   _lrssi:     vehicle ? vehicle.radioStatus.lrssi.rawValue : 0
     property real   _rrssi:     vehicle ? vehicle.radioStatus.rrssi.rawValue : 0
     property real   _rxErrors:  vehicle ? vehicle.radioStatus.rxErrors.rawValue : 0
