@@ -15,12 +15,31 @@ set(QGC_CUSTOM_DIR "custom" CACHE STRING "Custom build overlay directory, relati
 # ============================================================================
 
 set(QGC_APP_NAME "QGroundControl" CACHE STRING "Application name")
+
+# AeroResearch brand build: "aero" = AeroResearch GCS, "daeyoung" = 대영M&S GCS (customer edition).
+# Selects the name, logo mark/wordmark/icon (resources/brand/<brand>.qrc) and UI accent colour.
+set(QGC_AERO_BRAND "aero" CACHE STRING "Brand build: aero or daeyoung")
+set_property(CACHE QGC_AERO_BRAND PROPERTY STRINGS aero daeyoung)
+string(TIMESTAMP _copyright_year "%Y")
+if(QGC_AERO_BRAND STREQUAL "daeyoung")
+    set(_qgc_brand_name "대영M&S GCS")
+    set(_qgc_brand_copyright "Copyright (c) ${_copyright_year} Daeyoung M&S. Built by AeroResearch Co., Ltd. Based on QGroundControl.")
+    set(_qgc_brand_description "Daeyoung M&S Ground Control Station")
+    set(_qgc_brand_icon "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/daeyoung.ico")
+elseif(QGC_AERO_BRAND STREQUAL "aero")
+    set(_qgc_brand_name "AeroResearch GCS")
+    set(_qgc_brand_copyright "Copyright (c) ${_copyright_year} AeroResearch Co., Ltd. Based on QGroundControl.")
+    set(_qgc_brand_description "AeroResearch Ground Control Station")
+    set(_qgc_brand_icon "${CMAKE_SOURCE_DIR}/deploy/windows/WindowsQGC.ico")
+else()
+    message(FATAL_ERROR "QGC_AERO_BRAND must be aero or daeyoung (got '${QGC_AERO_BRAND}')")
+endif()
+
 # User-visible product name (window title, installer, shortcuts, Android label, macOS bundle name).
 # QGC_APP_NAME stays the internal target/binary name so CI packaging paths keep working.
-set(QGC_APP_DISPLAY_NAME "AeroResearch GCS" CACHE STRING "User-visible application name")
-string(TIMESTAMP _copyright_year "%Y")
-set(QGC_APP_COPYRIGHT "Copyright (c) ${_copyright_year} AeroResearch Co., Ltd. Based on QGroundControl." CACHE STRING "Copyright notice")
-set(QGC_APP_DESCRIPTION "AeroResearch Ground Control Station" CACHE STRING "Application description")
+set(QGC_APP_DISPLAY_NAME "${_qgc_brand_name}" CACHE STRING "User-visible application name")
+set(QGC_APP_COPYRIGHT "${_qgc_brand_copyright}" CACHE STRING "Copyright notice")
+set(QGC_APP_DESCRIPTION "${_qgc_brand_description}" CACHE STRING "Application description")
 set(QGC_ORG_NAME "AeroResearch" CACHE STRING "Organization name")
 set(QGC_ORG_DOMAIN "aeroresearch.co.kr" CACHE STRING "Organization domain")
 set(QGC_PACKAGE_NAME "org.mavlink.qgroundcontrol" CACHE STRING "Package identifier")
@@ -218,7 +237,7 @@ set_property(CACHE QGC_CPACK_GENERATOR PROPERTY STRINGS ${_qgc_cpack_strings})
 # Windows Platform
 # ----------------------------------------------------------------------------
 set(QGC_WINDOWS_INSTALL_HEADER_PATH "${CMAKE_SOURCE_DIR}/deploy/windows/installheader.bmp" CACHE FILEPATH "Windows installer header image")
-set(QGC_WINDOWS_ICON_PATH "${CMAKE_SOURCE_DIR}/deploy/windows/WindowsQGC.ico" CACHE FILEPATH "Windows application icon")
+set(QGC_WINDOWS_ICON_PATH "${_qgc_brand_icon}" CACHE FILEPATH "Windows application icon")
 set(QGC_WINDOWS_RESOURCE_FILE_PATH "${CMAKE_SOURCE_DIR}/deploy/windows/QGroundControl.rc" CACHE FILEPATH "Windows resource file")
 
 # ============================================================================

@@ -482,7 +482,7 @@ Rectangle {
         radius:         control._u * 0.25
         z:              10
         visible:        !control._collapsed
-        color:          resizeMouse.containsMouse || resizeMouse.pressed ? Qt.rgba(1, 0.48, 0.1, 0.35) : "transparent"
+        color:          resizeMouse.containsMouse || resizeMouse.pressed ? Qt.rgba(control._accent.r, control._accent.g, control._accent.b, 0.35) : "transparent"
 
         // diagonal grip lines
         Repeater {

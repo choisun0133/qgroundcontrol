@@ -129,7 +129,7 @@ AeroFloatingPanel {
             }
 
             // vehicle marker (nose up)
-            ctx.fillStyle = "#FF7A1A"
+            ctx.fillStyle = String(QGroundControl.globalPalette.brandingBlue)
             ctx.beginPath()
             ctx.moveTo(cx, cy - r * 0.1)
             ctx.lineTo(cx + r * 0.07, cy + r * 0.07)

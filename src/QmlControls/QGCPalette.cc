@@ -3,6 +3,13 @@
 
 #include <QtCore/QDebug>
 
+// AeroResearch: UI accent colour per brand build (QGC_AERO_BRAND in CMake)
+#ifdef QGC_AERO_BRAND_DAEYOUNG
+#define AERO_ACCENT "#4A8FE7"   // 대영M&S blue, lightened for contrast on the dark theme
+#else
+#define AERO_ACCENT "#FF7A1A"   // AeroResearch orange
+#endif
+
 QList<QGCPalette*>   QGCPalette::_paletteObjects;
 
 QGCPalette::Theme QGCPalette::_theme = QGCPalette::Dark;
@@ -45,15 +52,15 @@ void QGCPalette::_buildMap()
     DECLARE_QGC_COLOR(button,               "#ffffff", "#ffffff", "#2A2D31", "#1C1F23")
     DECLARE_QGC_COLOR(buttonBorder,         "#9d9d9d", "#3A9BDC", "#2A2D31", "#3A3F45")
     DECLARE_QGC_COLOR(buttonText,           "#9d9d9d", "#333333", "#7A7F85", "#ECEDEE")
-    DECLARE_QGC_COLOR(buttonHighlight,      "#e4e4e4", "#3A9BDC", "#3a3a3a", "#FF7A1A")
+    DECLARE_QGC_COLOR(buttonHighlight,      "#e4e4e4", "#3A9BDC", "#3a3a3a", AERO_ACCENT)
     DECLARE_QGC_COLOR(buttonHighlightText,  "#2c2c2c", "#ffffff", "#2c2c2c", "#0E0F11")
-    DECLARE_QGC_COLOR(primaryButton,        "#585858", "#8cb3be", "#585858", "#FF7A1A")
+    DECLARE_QGC_COLOR(primaryButton,        "#585858", "#8cb3be", "#585858", AERO_ACCENT)
     DECLARE_QGC_COLOR(primaryButtonText,    "#2c2c2c", "#333333", "#2c2c2c", "#0E0F11")
     DECLARE_QGC_COLOR(textField,            "#ffffff", "#ffffff", "#707070", "#ffffff")
     DECLARE_QGC_COLOR(textFieldText,        "#808080", "#333333", "#000000", "#000000")
     DECLARE_QGC_COLOR(mapButton,            "#585858", "#333333", "#585858", "#000000")
-    DECLARE_QGC_COLOR(mapButtonHighlight,   "#585858", "#be781c", "#585858", "#FF7A1A")
-    DECLARE_QGC_COLOR(mapIndicator,         "#585858", "#be781c", "#585858", "#FF7A1A")
+    DECLARE_QGC_COLOR(mapButtonHighlight,   "#585858", "#be781c", "#585858", AERO_ACCENT)
+    DECLARE_QGC_COLOR(mapIndicator,         "#585858", "#be781c", "#585858", AERO_ACCENT)
     DECLARE_QGC_COLOR(mapIndicatorChild,    "#585858", "#766043", "#585858", "#9A4A12")
     DECLARE_QGC_COLOR(colorGreen,           "#008f2d", "#008f2d", "#3DDC84", "#3DDC84")
     DECLARE_QGC_COLOR(colorYellow,          "#a2a200", "#a2a200", "#ffff00", "#ffff00")
@@ -77,7 +84,7 @@ void QGCPalette::_buildMap()
     // Colors not affecting by theming
     //                                                      Disabled     Enabled
     DECLARE_QGC_NONTHEMED_COLOR(brandingPurple,             "#0B0C0D", "#0B0C0D")
-    DECLARE_QGC_NONTHEMED_COLOR(brandingBlue,               "#FF7A1A", "#FF7A1A")
+    DECLARE_QGC_NONTHEMED_COLOR(brandingBlue,               AERO_ACCENT, AERO_ACCENT)
     DECLARE_QGC_NONTHEMED_COLOR(toolStripFGColor,           "#707070", "#ffffff")
     DECLARE_QGC_NONTHEMED_COLOR(photoCaptureButtonColor,    "#707070", "#ffffff")
     DECLARE_QGC_NONTHEMED_COLOR(videoCaptureButtonColor,    "#f89a9e", "#f32836")
@@ -85,7 +92,7 @@ void QGCPalette::_buildMap()
     // Colors not affecting by theming or enable/disable
     DECLARE_QGC_SINGLE_COLOR(mapWidgetBorderLight,          "#ffffff")
     DECLARE_QGC_SINGLE_COLOR(mapWidgetBorderDark,           "#000000")
-    DECLARE_QGC_SINGLE_COLOR(mapMissionTrajectory,          "#FF7A1A")
+    DECLARE_QGC_SINGLE_COLOR(mapMissionTrajectory,          AERO_ACCENT)
     DECLARE_QGC_SINGLE_COLOR(surveyPolygonInterior,         "green")
     DECLARE_QGC_SINGLE_COLOR(surveyPolygonTerrainCollision, "red")
 

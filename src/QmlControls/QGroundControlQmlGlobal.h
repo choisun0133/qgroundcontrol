@@ -93,6 +93,12 @@ public:
     Q_PROPERTY(bool    qgcDailyBuild    READ qgcDailyBuild      CONSTANT)
     /// AeroResearch operator build: vehicle setup and parameter editing are not offered
     Q_PROPERTY(bool    aeroUserEdition  READ aeroUserEdition    CONSTANT)
+    /// AeroResearch brand build: "aero" (AeroResearch GCS) or "daeyoung" (대영M&S GCS)
+    Q_PROPERTY(QString aeroBrand            READ aeroBrand              CONSTANT)
+    /// Width / height of /res/AeroWordmark.svg and its height relative to the default font height
+    Q_PROPERTY(qreal   aeroWordmarkAspect   READ aeroWordmarkAspect     CONSTANT)
+    Q_PROPERTY(qreal   aeroWordmarkScale    READ aeroWordmarkScale      CONSTANT)
+    Q_PROPERTY(QString aeroCopyright        READ aeroCopyright          CONSTANT)
 
     Q_PROPERTY(qreal zOrderTopMost              READ zOrderTopMost              CONSTANT) ///< z order for top most items, toolbar, main window sub view
     Q_PROPERTY(qreal zOrderWidgets              READ zOrderWidgets              CONSTANT) ///< z order value to widgets, for example: zoom controls, hud widgetss
@@ -206,6 +212,17 @@ public:
     static bool aeroUserEdition() { return true; }
 #else
     static bool aeroUserEdition() { return false; }
+#endif
+#ifdef QGC_AERO_BRAND_DAEYOUNG
+    static QString aeroBrand() { return QStringLiteral("daeyoung"); }
+    static qreal aeroWordmarkAspect() { return 894.0 / 218.0; }
+    static qreal aeroWordmarkScale() { return 1.1; }
+    static QString aeroCopyright() { return QString(u"\u00A9 \uB300\uC601M&S"); }
+#else
+    static QString aeroBrand() { return QStringLiteral("aero"); }
+    static qreal aeroWordmarkAspect() { return 13.7; }
+    static qreal aeroWordmarkScale() { return 1.0; }
+    static QString aeroCopyright() { return QString(u"\u00A9 AeroResearch Co., Ltd."); }
 #endif
 
 signals:

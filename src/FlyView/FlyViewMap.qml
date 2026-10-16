@@ -289,7 +289,7 @@ FlightMap {
             height:         positionRow.height + ScreenTools.defaultFontPixelHeight * 0.3
             radius:         height / 2
             color:          positionMouse.containsMouse ? "#E61C1F23" : "#CC0E0F11"
-            border.color:   copiedTimer.running ? "#3DDC84" : (positionMouse.containsMouse ? "#FF7A1A" : "#2A2D31")
+            border.color:   copiedTimer.running ? "#3DDC84" : (positionMouse.containsMouse ? QGroundControl.globalPalette.brandingBlue : "#2A2D31")
 
             Row {
                 id:                 positionRow
@@ -303,7 +303,7 @@ FlightMap {
                 }
                 QGCLabel {
                     text:           copiedTimer.running ? qsTr("복사됨") : qsTr("복사")
-                    color:          copiedTimer.running ? "#3DDC84" : "#FF9A4D"
+                    color:          copiedTimer.running ? "#3DDC84" : Qt.lighter(QGroundControl.globalPalette.brandingBlue, 1.25)
                     font.pointSize: ScreenTools.smallFontPointSize
                     font.bold:      true
                 }

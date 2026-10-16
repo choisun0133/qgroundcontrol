@@ -10,10 +10,8 @@
         <file alias="CameraGimbal.png">resources/CameraGimbal.png</file>
         <file alias="chevron-double-right.svg">resources/chevron-double-right.svg</file>
         <file alias="GeoFence.svg">resources/GeoFence.svg</file>
-        <file alias="QGCLogoFull.svg">resources/QGCLogoFull.svg</file>
         <file alias="QGCLogoWhite.svg">resources/QGCLogoWhite.svg</file>
         <file alias="QGCLogoArrow.svg">resources/QGCLogoArrow.svg</file>
-        <file alias="AeroWordmark.svg">resources/AeroWordmark.svg</file>
         <file alias="AeroPower.svg">resources/AeroPower.svg</file>
         <file alias="AeroStartMission.svg">resources/AeroStartMission.svg</file>
         <file alias="AeroManualControl.svg">resources/AeroManualControl.svg</file>
@@ -25,6 +23,5 @@
         <file alias="TrashCan.svg">resources/TrashCan.svg</file>
         <file alias="TrashDelete.svg">resources/TrashDelete.svg</file>
         <file alias="XDelete.svg">resources/XDelete.svg</file>
-        <file alias="qgroundcontrol.ico">resources/icons/qgroundcontrol.ico</file>
     </qresource>
 </RCC>

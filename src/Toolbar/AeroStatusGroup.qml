@@ -123,12 +123,12 @@ Item {
                             width:                  primaryLabel.width + control._u * 0.4
                             height:                 primaryLabel.height + control._u * 0.1
                             radius:                 control._u * 0.15
-                            color:                  Qt.rgba(1, 0.48, 0.1, 0.18)
+                            color:                  Qt.rgba(QGroundControl.globalPalette.brandingBlue.r, QGroundControl.globalPalette.brandingBlue.g, QGroundControl.globalPalette.brandingBlue.b, 0.18)
                             QGCLabel {
                                 id:                 primaryLabel
                                 anchors.centerIn:   parent
                                 text:               qsTr("주")
-                                color:              "#FF9A4D"
+                                color:              Qt.lighter(QGroundControl.globalPalette.brandingBlue, 1.25)
                                 font.pointSize:     ScreenTools.smallFontPointSize
                                 font.bold:          true
                             }

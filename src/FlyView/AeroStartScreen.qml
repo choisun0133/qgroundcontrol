@@ -203,8 +203,8 @@ Rectangle {
             }
             Image {
                 Layout.alignment:       Qt.AlignHCenter
-                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.1
-                Layout.preferredWidth:  Layout.preferredHeight * 13.7
+                Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.1 * QGroundControl.aeroWordmarkScale
+                Layout.preferredWidth:  Layout.preferredHeight * QGroundControl.aeroWordmarkAspect
                 source:                 "/res/AeroWordmark.svg"
                 sourceSize.height:      Layout.preferredHeight * 2
                 fillMode:               Image.PreserveAspectFit
@@ -443,7 +443,7 @@ Rectangle {
         anchors.margins:        control._margin
         visible:                !ScreenTools.isMobile
 
-        QGCLabel { text: "© AeroResearch Co., Ltd."; opacity: 0.6 }
+        QGCLabel { text: QGroundControl.aeroCopyright; opacity: 0.6 }
         Item { Layout.fillWidth: true }
         QGCLabel { text: QGroundControl.qgcVersion; opacity: 0.6 }
     }

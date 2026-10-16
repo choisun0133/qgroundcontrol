@@ -289,6 +289,7 @@ endif()
 # output fails on MSVC ("No data signature found") when large data sections are elided.
 list(APPEND QGC_RESOURCES
     "${CMAKE_SOURCE_DIR}/qgcresources.qrc"
+    "${CMAKE_SOURCE_DIR}/resources/brand/${QGC_AERO_BRAND}.qrc"   # logo mark, wordmark, window icon
 )
 
 # ============================================================================
@@ -357,6 +358,12 @@ endif()
 
 if(QGC_AERO_USER_EDITION)
     add_compile_definitions(QGC_AERO_USER_EDITION)
+endif()
+if(QGC_AERO_BRAND STREQUAL "daeyoung")
+    add_compile_definitions(QGC_AERO_BRAND_DAEYOUNG)
+endif()
+if(MSVC)
+    add_compile_options(/utf-8)     # Korean product name / strings in generated headers
 endif()
 
 add_subdirectory(src)

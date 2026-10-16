@@ -87,7 +87,7 @@ Item {
                     height:         infoColumn.height + ScreenTools.defaultFontPixelHeight * 0.6
                     radius:         ScreenTools.defaultFontPixelHeight * 0.3
                     color:          "#E60E0F11"
-                    border.color:   "#FF7A1A"
+                    border.color:   QGroundControl.globalPalette.brandingBlue
                     visible:        waypointHover.hovered
 
                     Column {
@@ -98,7 +98,7 @@ Item {
                         QGCLabel {
                             text:       (hoverMapItem.missionItem.isTakeoffItem ? qsTr("이륙") : qsTr("WP %1").arg(hoverMapItem.missionItem.sequenceNumber))
                                         + "  " + hoverMapItem.missionItem.commandName
-                            color:      "#FF9A4D"
+                            color:      Qt.lighter(QGroundControl.globalPalette.brandingBlue, 1.25)
                             font.bold:  true
                         }
                         QGCLabel {

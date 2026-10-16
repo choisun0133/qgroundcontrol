@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <!-- AeroResearch brand: logo mark, wordmark and window icon (QGC_AERO_BRAND=aero) -->
+    <qresource prefix="/res">
+        <file alias="QGCLogoFull.svg">../QGCLogoFull.svg</file>
+        <file alias="AeroWordmark.svg">../AeroWordmark.svg</file>
+        <file alias="qgroundcontrol.ico">../icons/qgroundcontrol.ico</file>
+    </qresource>
+</RCC>

@@ -95,8 +95,8 @@ Item {
 
                                 Image {
                                     id:                 aeroWordmark
-                                    height:             ScreenTools.defaultFontPixelHeight * 0.65
-                                    width:              height * 13.7
+                                    height:             ScreenTools.defaultFontPixelHeight * 0.65 * QGroundControl.aeroWordmarkScale
+                                    width:              height * QGroundControl.aeroWordmarkAspect
                                     source:             "/res/AeroWordmark.svg"
                                     sourceSize.height:  height * 2
                                     fillMode:           Image.PreserveAspectFit

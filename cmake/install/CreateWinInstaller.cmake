@@ -44,11 +44,15 @@ find_program(QGC_NSIS_INSTALLER_CMD makensis
 # Build NSIS Command Arguments
 # ----------------------------------------------------------------------------
 
+# "&" in a name is a mnemonic in installer dialogs; NSIS takes a doubled-ampersand copy for those
+string(REPLACE "&" "&&" _qgc_appname_amp "${QGC_APP_DISPLAY_NAME}")
+
 set(_nsis_args
     /NOCD
     /INPUTCHARSET UTF8
     /V4
     "/DAPPNAME=${QGC_APP_DISPLAY_NAME}"
+    "/DAPPNAME_AMP=${_qgc_appname_amp}"
     "/DEXENAME=${CMAKE_PROJECT_NAME}"
     "/DORGNAME=${QGC_ORG_NAME}"
     "/DDESTDIR=${QGC_PAYLOAD_DIR}"

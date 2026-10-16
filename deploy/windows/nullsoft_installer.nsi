@@ -1,3 +1,5 @@
+Unicode true
+
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "Win\COM.nsh"
@@ -38,7 +40,11 @@ RequestExecutionLevel admin
     ${EndIf}
 !macroend
 
+!ifdef APPNAME_AMP
+Name "${APPNAME}" "${APPNAME_AMP}"
+!else
 Name "${APPNAME}"
+!endif
 Var StartMenuFolder
 
 InstallDir "$PROGRAMFILES64\${APPNAME}"

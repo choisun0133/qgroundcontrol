@@ -162,7 +162,7 @@ Popup {
                         Layout.preferredWidth:  control._u * 3.2
                         Layout.preferredHeight: control._u * 1.4
                         radius:                 height / 2
-                        color:                  toggleItem._on ? "#FF7A1A" : "#2A2D31"
+                        color:                  toggleItem._on ? QGroundControl.globalPalette.brandingBlue : "#2A2D31"
                         QGCLabel {
                             anchors.centerIn:   parent
                             text:               toggleItem._on ? "ON" : "OFF"

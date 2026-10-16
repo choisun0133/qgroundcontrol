@@ -18,7 +18,7 @@ Item {
     anchors.fill:   parent
 
     readonly property real  _u:         ScreenTools.defaultFontPixelHeight
-    readonly property color _accent:    "#FF7A1A"
+    readonly property color _accent:    QGroundControl.globalPalette.brandingBlue
 
     property var  _vehicle:     QGroundControl.multiVehicleManager.activeVehicle
     property bool _supported:   _vehicle ? _vehicle.guidedModeBodyVelocitySupported() : false
@@ -272,7 +272,7 @@ Item {
         height:                     control._u * 1.9
         width:                      pillRow.implicitWidth + control._u * 1.4
         radius:                     height / 2
-        color:                      control._active ? Qt.rgba(1, 0.48, 0.1, 0.9) : (pillMouse.containsMouse ? "#1C1F23" : Qt.rgba(0.055, 0.059, 0.067, 0.85))
+        color:                      control._active ? Qt.rgba(control._accent.r, control._accent.g, control._accent.b, 0.9) : (pillMouse.containsMouse ? "#1C1F23" : Qt.rgba(0.055, 0.059, 0.067, 0.85))
         border.color:               control._accent
 
         RowLayout {
@@ -333,7 +333,7 @@ Item {
         width:          control._u * 2.6
         height:         control._u * 2.6
         radius:         control._u * 0.35
-        color:          pressed ? Qt.rgba(1, 0.48, 0.1, 0.85) : Qt.rgba(1, 1, 1, 0.10)
+        color:          pressed ? Qt.rgba(control._accent.r, control._accent.g, control._accent.b, 0.85) : Qt.rgba(1, 1, 1, 0.10)
         border.color:   pressed ? control._accent : Qt.rgba(1, 1, 1, 0.25)
         Column {
             anchors.centerIn: parent

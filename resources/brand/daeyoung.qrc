@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <!-- 대영M&S brand: same aliases as aero.qrc (QGC_AERO_BRAND=daeyoung) -->
+    <qresource prefix="/res">
+        <file alias="QGCLogoFull.svg">daeyoung/DaeyoungMark.svg</file>
+        <file alias="AeroWordmark.svg">daeyoung/DaeyoungWordmark.svg</file>
+        <file alias="qgroundcontrol.ico">daeyoung/daeyoung.ico</file>
+    </qresource>
+</RCC>

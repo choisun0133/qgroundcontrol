@@ -49,7 +49,7 @@ jobs:
       platform: windows
 
   build:
-    name: Build ${{ matrix.arch }} ${{ matrix.build_type }} ${{ matrix.edition }}
+    name: Build ${{ matrix.arch }} ${{ matrix.build_type }} ${{ matrix.edition }} ${{ matrix.brand }}
     needs: changes
     if: needs.changes.outputs.should_build == 'true'
     runs-on: ${{ matrix.runs_on }}
@@ -70,6 +70,8 @@ jobs:
         variant: [amd64]
         # AeroResearch: developer edition (full setup/parameters) and user edition (operators, no parameter editing)
         edition: [dev, user]
+        # AeroResearch: brand builds — AeroResearch GCS and the 대영M&S GCS customer edition
+        brand: [aero, daeyoung]
         include:
           - variant: amd64
             runs_on: ${{ github.repository_owner == 'mavlink' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && format('runs-on={0}/runner=windows-x64-builder', github.run_id) || 'windows-2022' }}
@@ -127,6 +129,7 @@ jobs:
           extra-args: >-
             -DQGC_ENABLE_GST_VIDEOSTREAMING=${{ matrix.gstreamer && 'ON' || 'OFF' }}
             -DQGC_AERO_USER_EDITION=${{ matrix.edition == 'user' && 'ON' || 'OFF' }}
+            -DQGC_AERO_BRAND=${{ matrix.brand }}
             ${{ matrix.arch == 'win64_msvc2022_arm64_cross_compiled' && format('-DQT_HOST_PATH={0}', steps.build-setup.outputs.host_qt_root_dir) || '' }}
 
       - name: Resolve GStreamer root
@@ -226,7 +229,7 @@ jobs:
         uses: ./.github/actions/attest-and-upload
         with:
           artifact-name: ${{ matrix.package }}.exe
-          package-name: ${{ matrix.package }}${{ matrix.edition == 'user' && '-User' || '' }}
+          package-name: ${{ matrix.package }}${{ matrix.brand == 'daeyoung' && '-Daeyoung' || '' }}${{ matrix.edition == 'user' && '-User' || '' }}
           aws-role-arn: ${{ secrets.AWS_ROLE_ARN }}
           aws-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
