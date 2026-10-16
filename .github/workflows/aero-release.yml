@@ -51,6 +51,9 @@ jobs:
           }
           fetch Windows QGroundControl-installer-AMD64 dl/win
           fetch Windows QGroundControl-installer-AMD64-User dl/winuser
+          # 대영M&S GCS customer edition (QGC_AERO_BRAND=daeyoung)
+          fetch Windows QGroundControl-installer-AMD64-Daeyoung dl/dywin
+          fetch Windows QGroundControl-installer-AMD64-Daeyoung-User dl/dywinuser
           if [ -z "$SUFFIX" ]; then
             # Android/macOS only when built from the same commit as the Windows build (never stale ones)
             ev=push
@@ -74,6 +77,10 @@ jobs:
             fi
           fi
           [ -n "$winuser" ] && cp "$winuser" "out/AeroResearchGCS-1.6.17-Windows-x64${SUFFIX}-User-Setup.exe"
+          dywin=$(find dl -path 'dl/dywin/*' -iname '*.exe' | head -1)
+          dywinuser=$(find dl -path 'dl/dywinuser/*' -iname '*.exe' | head -1)
+          if [ -n "$dywin" ]; then cp "$dywin" "out/DaeyoungMS-GCS-1.6.17-Windows-x64${SUFFIX}-Developer-Setup.exe"; fi
+          if [ -n "$dywinuser" ]; then cp "$dywinuser" "out/DaeyoungMS-GCS-1.6.17-Windows-x64${SUFFIX}-User-Setup.exe"; fi
           apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
           [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.17-Android.apk"
           dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
