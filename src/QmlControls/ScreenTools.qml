@@ -191,11 +191,26 @@ Item {
                     } else {
                         platformFontPointSize = 14;
                     }
-                } else if((Screen.width / realPixelDensity) < 120) {
-                    platformFontPointSize = 11;
-                // Other Android
                 } else {
-                    platformFontPointSize = 14;
+                    // AeroResearch: fit the UI to the Android screen. The fly view (toolbar status
+                    // chips, tool strip, instrument panel) needs about 40 font-heights of height and
+                    // 72 of width - what a 1366x768 laptop gives. Pick the font so the screen offers
+                    // that, whatever the device (Herelink 5.5", 8"/10" tablets, phones).
+                    var logicalW = Math.max(Screen.width, Screen.height)
+                    var logicalH = Math.min(Screen.width, Screen.height)
+                    var targetPixelHeight = Math.max(10, Math.min(24, Math.min(logicalH / 40, logicalW / 72)))
+                    var probePointSize = 14
+                    font.pointSize = probePointSize
+                    var measuredPixelHeight = contentHeight > 0 ? contentHeight : 0
+                    if (measuredPixelHeight > 0 && logicalH > 0) {
+                        platformFontPointSize = probePointSize * targetPixelHeight / measuredPixelHeight
+                    } else if ((Screen.width / realPixelDensity) < 120) {
+                        platformFontPointSize = 11
+                    } else {
+                        platformFontPointSize = 14
+                    }
+                    console.log("ScreenTools: Android auto size", Screen.width, "x", Screen.height,
+                                "target font px", targetPixelHeight.toFixed(1), "-> pt", platformFontPointSize.toFixed(1))
                 }
             } else {
                 // AeroResearch: follow the OS display scaling (Windows 100/125/150%...). Qt already scales
