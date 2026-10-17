@@ -10,7 +10,7 @@
   - `aero-gcs` : 작업 브랜치 (모든 기능 커밋은 여기)
   - `publish-aero` : 릴리스 워크플로(`.github/workflows/aero-release.yml`)만 있는 브랜치
   - `diag-video` : 영상 진단용 CI 워크플로(`aero-video-diag.yml`), 결과는 `diag-results-<case>` 브랜치에 push됨
-  - `aero-final` / `aero-mac` : 안드로이드·맥 빌드 트리거용
+  - `aero-final` / `aero-mac` : 안드로이드·맥 빌드 트리거용 (aero-final에 push하면 Windows·Mac도 돌아가니 필요 없으면 취소). 안드로이드는 `gh workflow run android.yml --ref aero-gcs -f brand=aero|daeyoung`로 돌리는 게 간단 — 릴리즈는 윈도우 빌드와 같은 커밋의 APK만 붙임
 
 ## 2. 사용자 작업 규칙 (꼭 지킬 것)
 
@@ -36,7 +36,7 @@
    - **주의**: Windows 워크플로는 `paths-ignore`가 있어 **빈 커밋(`--allow-empty`)은 빌드를 시작하지 않음**. 빌드를 시작하려면 파일이 바뀐 커밋(`[skip ci]` 없이)을 push할 것 (예: 이 문서 갱신)
    - 사용자용 아티팩트가 있으면 `...-Developer-Setup.exe` / `...-User-Setup.exe`, 없으면 `...-Setup.exe` 하나
 3. **릴리스 노트**: `publish-aero` 브랜치의 `RELEASE_NOTES.md`가 릴리스 설명이 됨 (버전마다 이 파일도 갱신). 이 세션 환경에서는 릴리스 직접 수정(API)이 막혀 있어 워크플로를 다시 돌려 반영
-4. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.18`)을 sed로 바꿔 `[skip ci]` 커밋
+4. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.20`)을 sed로 바꿔 `[skip ci]` 커밋
 5. 링크 형식: `https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-<ver>/AeroResearchGCS-<ver>-Windows-x64-Setup.exe`
 - 환경 메모: 이 세션 환경에서는 Actions 로그·아티팩트 직접 다운로드, 저장소 Secrets 설정이 프록시로 막혀 있었음 → 상태는 `gh api .../actions/runs/<id>/jobs`, 결과물은 릴리스로 확인
 
@@ -55,6 +55,8 @@
 | 1.6.16 | 일시 정지는 확인/취소 버튼(누르고 있기 없음, 현재 고도 유지), 고도 변경은 팝업에 목표 고도 입력 후 확인/Enter (`GuidedActionConfirm.qml`) |
 | 1.6.17 | USB로 연결된 텔레메트리 모뎀(USB 직결로 잡힘)도 RADIO_STATUS가 오면 텔레메트리 칩에 신호 표시 (`AeroLinkStatus.qml`) |
 | 1.6.18 | 대영M&S GCS 고객사 판: CMake `QGC_AERO_BRAND=daeyoung` (이름·로고·아이콘·강조색), Windows CI가 aero/daeyoung × dev/user 4개 빌드, 릴리즈 파일 `DaeyoungMS-GCS-…` |
+| 1.6.19 | 안드로이드 화면 크기 자동 맞춤 (`ScreenTools.qml`, 약 40×72 글자 크기 기준) + 안드로이드 APK 릴리즈 |
+| 1.6.20 | 대영M&S 안드로이드 (패키지 kr.co.aeroresearch.daeyoung, 아이콘 `resources/brand/daeyoung/android/res`) |
 
 ## 5. 기능별 주요 파일
 

@@ -22,9 +22,17 @@ on:
         options:
           - Release
           - Debug
+      brand:
+        description: 'AeroResearch brand build: aero (AeroResearch GCS) or daeyoung (대영M&S GCS)'
+        required: false
+        default: 'aero'
+        type: choice
+        options:
+          - aero
+          - daeyoung
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.brand }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 permissions:
@@ -92,6 +100,7 @@ jobs:
     env:
       BUILD_TYPE: ${{ inputs.build_type || 'Release' }}
       PACKAGE: QGroundControl
+      AERO_BRAND: ${{ inputs.brand || 'aero' }}
       QT_ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/deploy/android/android_release.keystore
       QT_ANDROID_KEYSTORE_ALIAS: QGCAndroidKeyStore
       QT_ANDROID_KEYSTORE_STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -180,6 +189,7 @@ jobs:
             -DQT_ANDROID_ABIS=${{ env.QT_ANDROID_ABIS }}
             -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
             -DQT_ANDROID_SIGN_APK=ON
+            -DQGC_AERO_BRAND=${{ env.AERO_BRAND }}
 
       - name: Build
         id: build
@@ -253,7 +263,7 @@ jobs:
         uses: ./.github/actions/android-emulator-test
         with:
           apk-path: ${{ runner.temp }}/build/${{ env.PACKAGE }}.apk
-          package: kr.co.aeroresearch.gcs
+          package: ${{ env.AERO_BRAND == 'daeyoung' && 'kr.co.aeroresearch.daeyoung' || 'kr.co.aeroresearch.gcs' }}
           android-platform: ${{ steps.setup.outputs.android_platform }}
           qt-version: ${{ steps.setup.outputs.qt_version }}
           ndk-version: ${{ steps.setup.outputs.android_ndk_full_version }}
@@ -264,7 +274,7 @@ jobs:
         uses: ./.github/actions/attest-and-upload
         with:
           artifact-name: ${{ env.PACKAGE }}.apk
-          package-name: ${{ format('{0}-{1}', env.PACKAGE, matrix.host) }}
+          package-name: ${{ format('{0}{1}-{2}', env.PACKAGE, env.AERO_BRAND == 'daeyoung' && '-Daeyoung' || '', matrix.host) }}
           subject-name: ${{ env.PACKAGE }}-${{ matrix.host }}
           aws-role-arn: ${{ secrets.AWS_ROLE_ARN }}
           aws-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}

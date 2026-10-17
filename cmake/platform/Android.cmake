@@ -87,6 +87,18 @@ message(STATUS "QGC: Android version code: ${ANDROID_VERSION_CODE}")
 # derives the same location as the sibling 'extra_java_sources' of its project dir.
 set(QGC_ANDROID_EXTRA_JAVA_SOURCES_DIR "${CMAKE_BINARY_DIR}/extra_java_sources")
 
+# AeroResearch brand: the 대영M&S build uses a copy of android/ with its launcher/splash icons
+# (resources/brand/daeyoung/android/res overlaid; the vector AR foreground replaced by PNGs)
+if(QGC_AERO_BRAND STREQUAL "daeyoung")
+    set(_qgc_brand_android_dir "${CMAKE_BINARY_DIR}/android-daeyoung")
+    file(REMOVE_RECURSE "${_qgc_brand_android_dir}")
+    file(COPY "${QGC_ANDROID_PACKAGE_SOURCE_DIR}/" DESTINATION "${_qgc_brand_android_dir}")
+    file(REMOVE "${_qgc_brand_android_dir}/res/drawable/ic_launcher_foreground.xml")
+    file(COPY "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/android/res" DESTINATION "${_qgc_brand_android_dir}")
+    set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${_qgc_brand_android_dir}")
+    message(STATUS "QGC: Android package sources for brand daeyoung: ${_qgc_brand_android_dir}")
+endif()
+
 set_target_properties(${CMAKE_PROJECT_NAME}
     PROPERTIES
         # QT_ANDROID_ABIS ${CMAKE_ANDROID_ARCH_ABI}
