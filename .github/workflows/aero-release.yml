@@ -25,9 +25,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.19-ffmpeg' || 'aerogcs-1.6.19' }}
+      TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.20-ffmpeg' || 'aerogcs-1.6.20' }}
       SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
-      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.19 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.19' }}
+      TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.20 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.20' }}
     steps:
       - name: Download build artifacts (newest successful aero-gcs build)
         run: |
@@ -39,10 +39,17 @@ jobs:
           fetch() {  # workflow, artifact, dir, [commit sha to match]
             ev=$([ -n "$SUFFIX" ] && echo workflow_dispatch || echo push)
             if [ -n "${4:-}" ]; then
-              run=$(gh run list -R "$REPO" -c "$4" -w "$1" -s success -L 1 --json databaseId -q '.[0].databaseId')
-            else
-              run=$(gh run list -R "$REPO" -b aero-gcs -w "$1" -e "$ev" -s success -L 1 --json databaseId -q '.[0].databaseId')
+              # several runs can exist for one commit (e.g. Android aero + daeyoung): use the newest that has the artifact
+              for run in $(gh run list -R "$REPO" -c "$4" -w "$1" -s success -L 5 --json databaseId -q '.[].databaseId'); do
+                if gh run download "$run" -R "$REPO" -n "$2" -D "$3" 2>/dev/null; then
+                  echo "$1/$2: run $run"
+                  return 0
+                fi
+              done
+              echo "$1/$2: no successful build found - skipped"
+              return 0
             fi
+            run=$(gh run list -R "$REPO" -b aero-gcs -w "$1" -e "$ev" -s success -L 1 --json databaseId -q '.[0].databaseId')
             if [ -n "$run" ] && gh run download "$run" -R "$REPO" -n "$2" -D "$3"; then
               echo "$1: run $run"
             else
@@ -59,6 +66,7 @@ jobs:
             ev=push
             winsha=$(gh run list -R "$REPO" -b aero-gcs -w Windows -e push -s success -L 1 --json headSha -q '.[0].headSha')
             fetch Android QGroundControl-linux dl/android "$winsha"
+            fetch Android QGroundControl-Daeyoung-linux dl/dyandroid "$winsha"
             fetch MacOS QGroundControl dl/mac "$winsha"
           fi
           find dl -type f -exec ls -l {} \;
@@ -71,20 +79,22 @@ jobs:
           winuser=$(find dl -path 'dl/winuser/*' -iname '*.exe' | head -1)
           if [ -n "$win" ]; then
             if [ -n "$winuser" ]; then
-              cp "$win" "out/AeroResearchGCS-1.6.19-Windows-x64${SUFFIX}-Developer-Setup.exe"
+              cp "$win" "out/AeroResearchGCS-1.6.20-Windows-x64${SUFFIX}-Developer-Setup.exe"
             else
-              cp "$win" "out/AeroResearchGCS-1.6.19-Windows-x64${SUFFIX}-Setup.exe"
+              cp "$win" "out/AeroResearchGCS-1.6.20-Windows-x64${SUFFIX}-Setup.exe"
             fi
           fi
-          [ -n "$winuser" ] && cp "$winuser" "out/AeroResearchGCS-1.6.19-Windows-x64${SUFFIX}-User-Setup.exe"
+          [ -n "$winuser" ] && cp "$winuser" "out/AeroResearchGCS-1.6.20-Windows-x64${SUFFIX}-User-Setup.exe"
           dywin=$(find dl -path 'dl/dywin/*' -iname '*.exe' | head -1)
           dywinuser=$(find dl -path 'dl/dywinuser/*' -iname '*.exe' | head -1)
-          if [ -n "$dywin" ]; then cp "$dywin" "out/DaeyoungMS-GCS-1.6.19-Windows-x64${SUFFIX}-Developer-Setup.exe"; fi
-          if [ -n "$dywinuser" ]; then cp "$dywinuser" "out/DaeyoungMS-GCS-1.6.19-Windows-x64${SUFFIX}-User-Setup.exe"; fi
+          if [ -n "$dywin" ]; then cp "$dywin" "out/DaeyoungMS-GCS-1.6.20-Windows-x64${SUFFIX}-Developer-Setup.exe"; fi
+          if [ -n "$dywinuser" ]; then cp "$dywinuser" "out/DaeyoungMS-GCS-1.6.20-Windows-x64${SUFFIX}-User-Setup.exe"; fi
           apk=$(find dl -path 'dl/android/*' -iname '*.apk' | head -1)
-          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.19-Android.apk"
+          [ -n "$apk" ] && cp "$apk" "out/AeroResearchGCS-1.6.20-Android.apk"
+          dyapk=$(find dl -path 'dl/dyandroid/*' -iname '*.apk' | head -1)
+          if [ -n "$dyapk" ]; then cp "$dyapk" "out/DaeyoungMS-GCS-1.6.20-Android.apk"; fi
           dmg=$(find dl -path 'dl/mac/*' -iname '*.dmg' | head -1)
-          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.19-macOS.dmg"
+          [ -n "$dmg" ] && cp "$dmg" "out/AeroResearchGCS-1.6.20-macOS.dmg"
           ls -l out
           [ -n "$(ls out)" ]
 
