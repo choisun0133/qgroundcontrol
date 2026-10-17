@@ -95,9 +95,20 @@ if(QGC_AERO_BRAND STREQUAL "daeyoung")
     file(COPY "${QGC_ANDROID_PACKAGE_SOURCE_DIR}/" DESTINATION "${_qgc_brand_android_dir}")
     file(REMOVE "${_qgc_brand_android_dir}/res/drawable/ic_launcher_foreground.xml")
     file(COPY "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/android/res" DESTINATION "${_qgc_brand_android_dir}")
+    # "M&S" must be escaped in XML: take the label from a string resource instead of the raw
+    # app-name substitution androiddeployqt does in the manifest
+    file(READ "${_qgc_brand_android_dir}/AndroidManifest.xml" _qgc_manifest)
+    string(REPLACE "-- %%INSERT_APP_NAME%% --" "@string/aero_app_name" _qgc_manifest "${_qgc_manifest}")
+    file(WRITE "${_qgc_brand_android_dir}/AndroidManifest.xml" "${_qgc_manifest}")
+    string(REPLACE "&" "&amp;" _qgc_app_name_xml "${QGC_APP_DISPLAY_NAME}")
+    file(WRITE "${_qgc_brand_android_dir}/res/values/aero_strings.xml"
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <string name=\"aero_app_name\">${_qgc_app_name_xml}</string>\n</resources>\n")
     set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${_qgc_brand_android_dir}")
     message(STATUS "QGC: Android package sources for brand daeyoung: ${_qgc_brand_android_dir}")
 endif()
+# Plain-text name for androiddeployqt (no XML-special characters); the 대영 manifest label above
+# comes from @string/aero_app_name instead
+string(REPLACE "&" "" _qgc_android_app_name "${QGC_APP_DISPLAY_NAME}")
 
 set_target_properties(${CMAKE_PROJECT_NAME}
     PROPERTIES
@@ -110,7 +121,7 @@ set_target_properties(${CMAKE_PROJECT_NAME}
         QT_ANDROID_PACKAGE_SOURCE_DIR "${QGC_ANDROID_PACKAGE_SOURCE_DIR}"
         QT_ANDROID_VERSION_NAME "${CMAKE_PROJECT_VERSION}"
         QT_ANDROID_VERSION_CODE ${ANDROID_VERSION_CODE}
-        QT_ANDROID_APP_NAME "${QGC_APP_DISPLAY_NAME}"
+        QT_ANDROID_APP_NAME "${_qgc_android_app_name}"
         QT_ANDROID_APP_ICON "@mipmap/ic_launcher"
         QT_ANDROID_LEGACY_PACKAGING $<BOOL:${QGC_ENABLE_ASAN}>
         QT_QML_ROOT_PATH "${CMAKE_SOURCE_DIR}"
