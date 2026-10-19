@@ -26,11 +26,13 @@ if(QGC_AERO_BRAND STREQUAL "daeyoung")
     set(_qgc_brand_copyright "Copyright (c) ${_copyright_year} Daeyoung M&S. Built by AeroResearch Co., Ltd. Based on QGroundControl.")
     set(_qgc_brand_description "Daeyoung M&S Ground Control Station")
     set(_qgc_brand_icon "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/daeyoung.ico")
+    set(_qgc_brand_install_header "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/installheader.bmp")
 elseif(QGC_AERO_BRAND STREQUAL "aero")
     set(_qgc_brand_name "AeroResearch GCS")
     set(_qgc_brand_copyright "Copyright (c) ${_copyright_year} AeroResearch Co., Ltd. Based on QGroundControl.")
     set(_qgc_brand_description "AeroResearch Ground Control Station")
     set(_qgc_brand_icon "${CMAKE_SOURCE_DIR}/deploy/windows/WindowsQGC.ico")
+    set(_qgc_brand_install_header "${CMAKE_SOURCE_DIR}/deploy/windows/installheader.bmp")
 else()
     message(FATAL_ERROR "QGC_AERO_BRAND must be aero or daeyoung (got '${QGC_AERO_BRAND}')")
 endif()
@@ -242,7 +244,7 @@ set_property(CACHE QGC_CPACK_GENERATOR PROPERTY STRINGS ${_qgc_cpack_strings})
 # ----------------------------------------------------------------------------
 # Windows Platform
 # ----------------------------------------------------------------------------
-set(QGC_WINDOWS_INSTALL_HEADER_PATH "${CMAKE_SOURCE_DIR}/deploy/windows/installheader.bmp" CACHE FILEPATH "Windows installer header image")
+set(QGC_WINDOWS_INSTALL_HEADER_PATH "${_qgc_brand_install_header}" CACHE FILEPATH "Windows installer header image")
 set(QGC_WINDOWS_ICON_PATH "${_qgc_brand_icon}" CACHE FILEPATH "Windows application icon")
 set(QGC_WINDOWS_RESOURCE_FILE_PATH "${CMAKE_SOURCE_DIR}/deploy/windows/QGroundControl.rc" CACHE FILEPATH "Windows resource file")
 

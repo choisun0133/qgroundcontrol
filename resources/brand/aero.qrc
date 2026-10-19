@@ -4,6 +4,7 @@
     <qresource prefix="/res">
         <file alias="QGCLogoFull.svg">../QGCLogoFull.svg</file>
         <file alias="AeroWordmark.svg">../AeroWordmark.svg</file>
+        <file alias="QGCLogoWhite.svg">../QGCLogoWhite.svg</file>
         <file alias="qgroundcontrol.ico">../icons/qgroundcontrol.ico</file>
     </qresource>
 </RCC>

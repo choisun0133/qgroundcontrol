@@ -71,7 +71,7 @@
 - 웨이포인트 마우스오버: `src/FlightMap/MapItems/PlanMapItems.qml` / 기체 위경도 칩: `src/FlyView/FlyViewMap.qml`
 - 다른 GCS 미션 변경 감지·다운로드: `src/MissionManager/MissionManager.*`, `src/Toolbar/AeroMissionSyncNotice.qml`
 - 임무 계획 첫 항목 이륙 고정: `src/PlanView/PlanView.qml`
-- 브랜드(에어로리서치/대영M&S): `cmake/CustomOptions.cmake`의 `QGC_AERO_BRAND`, 로고는 `resources/brand/<brand>.qrc`(같은 /res 별칭), 강조색 `QGCPalette.cc`의 `AERO_ACCENT`, QML은 `QGroundControl.aeroBrand/aeroWordmarkAspect/aeroWordmarkScale/aeroCopyright`. 대영 로고는 회사소개서 PDF에서 추출한 임시본 — 원본 받으면 `resources/brand/daeyoung/`만 교체
+- 브랜드(에어로리서치/대영M&S): `cmake/CustomOptions.cmake`의 `QGC_AERO_BRAND`, 로고는 `resources/brand/<brand>.qrc`(같은 /res 별칭), 강조색 `QGCPalette.cc`의 `AERO_ACCENT`, QML은 `QGroundControl.aeroBrand/aeroWordmarkAspect/aeroWordmarkScale/aeroCopyright`. 대영판은 `QGCLogoWhite.svg`(설정 메뉴 로고)→`DaeyoungMarkWhite.svg`, 설치 헤더→`resources/brand/daeyoung/installheader.bmp`, 안드로이드 아이콘은 `file(COPY_FILE)`로 하나씩 덮어씀(`file(COPY)`는 같은 시각 파일을 건너뛰어 AR 아이콘이 남았음). 대영 로고는 회사소개서 PDF에서 추출한 임시본 — 원본 받으면 `resources/brand/daeyoung/`만 교체
 - 계기판(크기·투명도·최소화): `src/FlyView/AeroInstrumentPanel.qml`
 - 키보드 수동 조종: `src/FlyView/AeroKeyboardControl.qml`, 도구 막대 버튼 `AeroManualControlAction.qml`, 명령은 `FirmwarePlugin::guidedModeSetBodyVelocity`(APM 구현)
 - QML 오류 사전 점검: PySide6(`pip install PySide6-Essentials`)로 스텁 모듈 만들어 컴포넌트를 offscreen 로드해 보면 부팅 테스트 실패(QML 로드 오류)를 빌드 전에 잡을 수 있음 (1.6.15 첫 빌드가 이걸로 실패)
