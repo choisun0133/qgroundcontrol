@@ -1,6 +1,8 @@
 qt_add_library(QGCAudio STATIC
     AudioOutput.cc
     AudioOutput.h
+    AeroKoreanSpeech.cc
+    AeroKoreanSpeech.h
 )
 
 target_link_libraries(QGCAudio
@@ -8,6 +10,7 @@ target_link_libraries(QGCAudio
         Qt6::Core
         Qt6::TextToSpeech
     PRIVATE
+        Qt6::Multimedia
         QGCLogging
 )
 

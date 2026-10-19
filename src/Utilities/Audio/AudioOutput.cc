@@ -1,4 +1,5 @@
 #include "AudioOutput.h"
+#include "AeroKoreanSpeech.h"
 #include "Fact.h"
 #include "AppMessages.h"
 #include "QGCLoggingCategory.h"
@@ -6,6 +7,13 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QTimer>
+#include <QtCore/QDir>
+#include <QtCore/QFile>
+#include <QtCore/QSettings>
+#include <QtCore/QStandardPaths>
+#include <QtCore/QUrl>
+#include <QtMultimedia/QAudioOutput>
+#include <QtMultimedia/QMediaPlayer>
 #include <QtTextToSpeech/QTextToSpeech>
 #include <QtTextToSpeech/QVoice>
 
@@ -184,16 +192,10 @@ void AudioOutput::_applyEngineSettings()
         return;
     }
 
-    const QLocale defaultLocale("en_US");
-    if (_engine->availableLocales().contains(defaultLocale)) {
-        _engine->setLocale(defaultLocale);
-    }
-
-    // Pin an explicit voice so output doesn't depend on the engine's per-OS default.
-    const QList<QVoice> voices = _engine->availableVoices();
-    if (!voices.isEmpty()) {
-        _engine->setVoice(voices.constFirst());
-    }
+    // AeroResearch: list Korean/English voices and use the saved one (default: first Korean voice,
+    // else en_US as before) so announcements can be spoken in Korean.
+    _collectVoices();
+    _applySavedVoice();
 
     _speakCapable = _engine->engineCapabilities().testFlag(QTextToSpeech::Capability::Speak);
 }
@@ -211,6 +213,13 @@ void AudioOutput::_setVolume()
 
     // Must normalize volume to 0.0 - 1.0 for QTextToSpeech
     const double normalizedVolume = volume / 100.0;
+    if (_clipAudio) {
+        _clipAudio->setVolume(static_cast<float>(normalizedVolume));
+        if (volume == 0.0 && _clipPlayer) {
+            _clipQueue.clear();
+            _clipPlayer->stop();
+        }
+    }
     (void) QMetaObject::invokeMethod(_engine, [this, volume, normalizedVolume]() {
         if (volume == 0.0) {
             // Prevent any queued text from being spoken once muted
@@ -240,14 +249,31 @@ void AudioOutput::say(const QString &text, TextMods textMods)
         return;
     }
 
-    QString outText = _fixTextMessageForAudio(text);
-
-    if (textMods.testFlag(TextMod::Translate)) {
-        outText = tr("%1").arg(outText);
+    // AeroResearch: Korean voice -> Korean phrase, and the recorded clip when the voice pack has it
+    QString outText;
+    QString clipId;
+    if (korean()) {
+        const AeroKoreanSpeech::Phrase phrase = AeroKoreanSpeech::translate(text);
+        outText = phrase.text;
+        clipId = phrase.clipId;
+    }
+    if (outText.isEmpty()) {
+        outText = _fixTextMessageForAudio(text);
+        if (textMods.testFlag(TextMod::Translate)) {
+            outText = tr("%1").arg(outText);
+        }
     }
 
     if (outText.isEmpty()) {
         return;
+    }
+
+    if (_voicePackEnabled && !clipId.isEmpty()) {
+        const QString clipPath = _clipPath(clipId);
+        if (!clipPath.isEmpty()) {
+            (void) QMetaObject::invokeMethod(this, [this, clipPath]() { _playClip(clipPath); });
+            return;
+        }
     }
 
     // All queue/counter mutation must stay on the engine thread (where stateChanged resets it).
@@ -281,8 +307,314 @@ void AudioOutput::testAudioOutput()
     _engine->stop(QTextToSpeech::BoundaryHint::Immediate);
     _textQueueSize = 0;
 
+    if (korean()) {
+        say(QStringLiteral("음성 안내 테스트. 볼륨 %1 퍼센트").arg(qRound(_volumeSetting())));
+        return;
+    }
     const QString testText = tr("Audio test. Volume is %1 percent").arg(_volumeSetting(), 0, 'f', 1);
     say(testText);
+}
+
+// ---------------------------------------------------------------------------------------------
+// AeroResearch: voice selection, speech rate and the recorded voice pack
+// ---------------------------------------------------------------------------------------------
+
+namespace {
+constexpr const char *kAeroSettingsGroup = "AeroResearch";
+constexpr const char *kVoiceKey = "ttsVoice";
+constexpr const char *kRateKey = "ttsRate";
+constexpr const char *kVoicePackKey = "ttsVoicePack";
+}
+
+void AudioOutput::_collectVoices()
+{
+    _voices.clear();
+    _voiceNames.clear();
+
+    const QLocale original = _engine->locale();
+    const QList<QLocale> locales = _engine->availableLocales();
+    for (const QLocale &locale : locales) {
+        if (locale.language() != QLocale::Korean && locale.language() != QLocale::English) {
+            continue;
+        }
+        _engine->setLocale(locale);
+        const QList<QVoice> voices = _engine->availableVoices();
+        for (const QVoice &voice : voices) {
+            bool duplicate = false;
+            for (const QVoice &known : std::as_const(_voices)) {
+                if (known.name() == voice.name() && known.locale() == voice.locale()) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (duplicate) {
+                continue;
+            }
+            _voices.append(voice);
+            const QString gender = voice.gender() == QVoice::Male ? QStringLiteral("남성")
+                                 : (voice.gender() == QVoice::Female ? QStringLiteral("여성") : QString());
+            const QString language = voice.locale().language() == QLocale::Korean ? QStringLiteral("한국어") : QStringLiteral("영어");
+            _voiceNames.append(gender.isEmpty() ? QStringLiteral("%1 (%2)").arg(voice.name(), language)
+                                                : QStringLiteral("%1 (%2 · %3)").arg(voice.name(), language, gender));
+        }
+    }
+    if (_voices.isEmpty() && locales.contains(original)) {
+        _engine->setLocale(original);
+    }
+
+    // Korean voices first
+    QList<int> order;
+    for (int i = 0; i < _voices.size(); ++i) {
+        order.append(i);
+    }
+    std::stable_sort(order.begin(), order.end(), [this](int a, int b) {
+        const bool ka = _voices.at(a).locale().language() == QLocale::Korean;
+        const bool kb = _voices.at(b).locale().language() == QLocale::Korean;
+        return ka && !kb;
+    });
+    QList<QVoice> sortedVoices;
+    QStringList sortedNames;
+    for (const int i : std::as_const(order)) {
+        sortedVoices.append(_voices.at(i));
+        sortedNames.append(_voiceNames.at(i));
+    }
+    _voices = sortedVoices;
+    _voiceNames = sortedNames;
+
+    qCDebug(AudioOutputLog) << "Voices:" << _voiceNames;
+    emit voicesChanged();
+}
+
+void AudioOutput::_applySavedVoice()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String(kAeroSettingsGroup));
+    const QString savedName = settings.value(QLatin1String(kVoiceKey)).toString();
+    _rate = std::clamp(settings.value(QLatin1String(kRateKey), 0.0).toDouble(), -1.0, 1.0);
+    _voicePackEnabled = settings.value(QLatin1String(kVoicePackKey), true).toBool();
+    settings.endGroup();
+
+    qsizetype index = _voiceNames.indexOf(savedName);
+    if (index < 0) {
+        // Default: first Korean voice, else the first en_US voice (QGC's previous behaviour)
+        for (qsizetype i = 0; i < _voices.size() && index < 0; ++i) {
+            if (_voices.at(i).locale().language() == QLocale::Korean) {
+                index = i;
+            }
+        }
+        for (qsizetype i = 0; i < _voices.size() && index < 0; ++i) {
+            if (_voices.at(i).locale() == QLocale(QStringLiteral("en_US"))) {
+                index = i;
+            }
+        }
+        if (index < 0 && !_voices.isEmpty()) {
+            index = 0;
+        }
+    }
+    if (index >= 0) {
+        const QVoice voice = _voices.at(index);
+        _engine->setLocale(voice.locale());
+        _engine->setVoice(voice);
+    }
+    _engine->setRate(_rate);
+
+    emit voiceNameChanged();
+    emit rateChanged();
+    emit voicePackChanged();
+}
+
+QString AudioOutput::voiceName() const
+{
+    const QVoice current = _engine->voice();
+    for (qsizetype i = 0; i < _voices.size(); ++i) {
+        if (_voices.at(i).name() == current.name() && _voices.at(i).locale() == current.locale()) {
+            return _voiceNames.at(i);
+        }
+    }
+    return QString();
+}
+
+void AudioOutput::setVoiceName(const QString &name)
+{
+    const qsizetype index = _voiceNames.indexOf(name);
+    if (index < 0 || name == voiceName()) {
+        return;
+    }
+    _engine->stop(QTextToSpeech::BoundaryHint::Immediate);
+    _textQueueSize = 0;
+    const QVoice voice = _voices.at(index);
+    _engine->setLocale(voice.locale());
+    _engine->setVoice(voice);
+    _engine->setRate(_rate);
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String(kAeroSettingsGroup));
+    settings.setValue(QLatin1String(kVoiceKey), name);
+    settings.endGroup();
+    emit voiceNameChanged();
+}
+
+void AudioOutput::setRate(double rate)
+{
+    rate = std::clamp(rate, -1.0, 1.0);
+    if (qFuzzyCompare(1.0 + rate, 1.0 + _rate)) {
+        return;
+    }
+    _rate = rate;
+    _engine->setRate(_rate);
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String(kAeroSettingsGroup));
+    settings.setValue(QLatin1String(kRateKey), _rate);
+    settings.endGroup();
+    emit rateChanged();
+}
+
+bool AudioOutput::korean() const
+{
+    return _engine && _engine->state() == QTextToSpeech::State::Ready
+           && _engine->voice().locale().language() == QLocale::Korean;
+}
+
+void AudioOutput::setVoicePack(bool enabled)
+{
+    if (enabled == _voicePackEnabled) {
+        return;
+    }
+    _voicePackEnabled = enabled;
+    QSettings settings;
+    settings.beginGroup(QLatin1String(kAeroSettingsGroup));
+    settings.setValue(QLatin1String(kVoicePackKey), enabled);
+    settings.endGroup();
+    emit voicePackChanged();
+}
+
+QString AudioOutput::voicePackFolder() const
+{
+    const QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    return QDir(documents).filePath(QStringLiteral("AeroResearch GCS/voice"));
+}
+
+QString AudioOutput::_clipPath(const QString &clipId) const
+{
+    const QDir folder(voicePackFolder());
+    for (const char *extension : { ".wav", ".mp3" }) {
+        const QString file = folder.filePath(clipId + QLatin1String(extension));
+        if (QFile::exists(file)) {
+            return file;
+        }
+    }
+    const QString bundled = QStringLiteral(":/voice/%1.wav").arg(clipId);
+    if (QFile::exists(bundled)) {
+        return bundled;
+    }
+    return QString();
+}
+
+int AudioOutput::voicePackClips() const
+{
+    int count = 0;
+    const QStringList clips = AeroKoreanSpeech::allClips();
+    for (const QString &entry : clips) {
+        if (!_clipPath(entry.section(QLatin1Char('|'), 0, 0)).isEmpty()) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+void AudioOutput::reloadVoicePack()
+{
+    (void) QDir().mkpath(voicePackFolder());
+    emit voicePackChanged();
+}
+
+void AudioOutput::_playClip(const QString &path)
+{
+    if (!_clipPlayer) {
+        _clipAudio = new QAudioOutput(this);
+        _clipAudio->setVolume(static_cast<float>(_volumeSetting() / 100.0));
+        _clipPlayer = new QMediaPlayer(this);
+        _clipPlayer->setAudioOutput(_clipAudio);
+        (void) connect(_clipPlayer, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
+            if (status == QMediaPlayer::EndOfMedia || status == QMediaPlayer::InvalidMedia) {
+                _playNextClip();
+            }
+        });
+        (void) connect(_clipPlayer, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error, const QString &errorString) {
+            qCWarning(AudioOutputLog) << "Voice pack clip failed:" << errorString;
+            _playNextClip();
+        });
+    }
+
+    if (_clipPlayer->playbackState() == QMediaPlayer::PlayingState) {
+        if (_clipQueue.size() < kMaxTextQueueSize) {
+            _clipQueue.append(path);
+        }
+        return;
+    }
+    _clipPlayer->setSource(path.startsWith(QLatin1Char(':')) ? QUrl(QStringLiteral("qrc") + path) : QUrl::fromLocalFile(path));
+    _clipPlayer->play();
+}
+
+void AudioOutput::_playNextClip()
+{
+    if (_clipQueue.isEmpty() || !_clipPlayer) {
+        return;
+    }
+    const QString next = _clipQueue.takeFirst();
+    _clipPlayer->setSource(next.startsWith(QLatin1Char(':')) ? QUrl(QStringLiteral("qrc") + next) : QUrl::fromLocalFile(next));
+    _clipPlayer->play();
+}
+
+void AudioOutput::testVoice()
+{
+    if (!_initialized) {
+        return;
+    }
+    _engine->stop(QTextToSpeech::BoundaryHint::Immediate);
+    _textQueueSize = 0;
+    if (korean()) {
+        sayClip(QStringLiteral("test"), QString());
+    } else {
+        say(QStringLiteral("Voice guidance test"));
+    }
+}
+
+void AudioOutput::sayClip(const QString &clipId, const QString &englishFallback)
+{
+    if (!_initialized || _volumeSetting() <= 0.0 || _mutedSetting()) {
+        return;
+    }
+    if (!korean()) {
+        if (!englishFallback.isEmpty()) {
+            say(englishFallback);
+        }
+        return;
+    }
+    if (_voicePackEnabled) {
+        const QString clipPath = _clipPath(clipId);
+        if (!clipPath.isEmpty()) {
+            _playClip(clipPath);
+            return;
+        }
+    }
+    QString sentence;
+    const QStringList clips = AeroKoreanSpeech::allClips();
+    for (const QString &entry : clips) {
+        if (entry.section(QLatin1Char('|'), 0, 0) == clipId) {
+            sentence = entry.section(QLatin1Char('|'), 1);
+            break;
+        }
+    }
+    if (sentence.isEmpty() || !_speakCapable) {
+        return;
+    }
+    (void) QMetaObject::invokeMethod(_engine, [this, sentence]() {
+        if (_engine->enqueue(sentence) >= 0) {
+            _textQueueSize++;
+        }
+    });
 }
 
 QString AudioOutput::_fixTextMessageForAudio(const QString &string)

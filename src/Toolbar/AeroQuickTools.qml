@@ -228,6 +228,98 @@ Popup {
             }
         }
 
+        // ---- Voice announcements ----
+        Rectangle {
+            Layout.fillWidth:       true
+            Layout.preferredHeight: voiceColumn.implicitHeight + control._u * 0.8
+            radius:                 control._u * 0.35
+            color:                  "#15181B"
+            border.color:           "#2A2D31"
+
+            ColumnLayout {
+                id:                 voiceColumn
+                anchors.left:       parent.left
+                anchors.right:      parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins:    control._u * 0.5
+                spacing:            control._u * 0.35
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    ColumnLayout {
+                        Layout.fillWidth:   true
+                        spacing:            0
+                        QGCLabel { text: qsTr("음성 안내"); font.bold: true }
+                        QGCLabel {
+                            Layout.fillWidth:   true
+                            text:               QGroundControl.audioOutput && QGroundControl.audioOutput.korean
+                                                ? qsTr("한국어로 안내합니다") : qsTr("한국어 목소리를 고르면 한국어로 안내합니다")
+                            color:              "#9BA1A6"
+                            font.pointSize:     ScreenTools.smallFontPointSize
+                            wrapMode:           Text.WordWrap
+                        }
+                    }
+                    QGCButton {
+                        text:       qsTr("테스트")
+                        onClicked:  QGroundControl.audioOutput.testVoice()
+                    }
+                }
+
+                QGCComboBox {
+                    id:                 voiceCombo
+                    Layout.fillWidth:   true
+                    model:              QGroundControl.audioOutput ? QGroundControl.audioOutput.voiceNames : []
+                    currentIndex:       QGroundControl.audioOutput ? model.indexOf(QGroundControl.audioOutput.voiceName) : -1
+                    onActivated:        (index) => QGroundControl.audioOutput.voiceName = model[index]
+                }
+
+                RowLayout {
+                    Layout.fillWidth:   true
+                    QGCLabel { text: qsTr("속도"); color: "#9BA1A6"; font.pointSize: ScreenTools.smallFontPointSize }
+                    QGCButton {
+                        text:       "−"
+                        onClicked:  QGroundControl.audioOutput.rate = Math.round((QGroundControl.audioOutput.rate - 0.1) * 10) / 10
+                    }
+                    QGCLabel {
+                        Layout.preferredWidth:  control._u * 3
+                        horizontalAlignment:    Text.AlignHCenter
+                        text:                   QGroundControl.audioOutput ? (QGroundControl.audioOutput.rate > 0 ? "+" : "") + Math.round(QGroundControl.audioOutput.rate * 100) + "%" : ""
+                        font.family:            ScreenTools.fixedFontFamily
+                    }
+                    QGCButton {
+                        text:       "+"
+                        onClicked:  QGroundControl.audioOutput.rate = Math.round((QGroundControl.audioOutput.rate + 0.1) * 10) / 10
+                    }
+                    Item { Layout.fillWidth: true }
+                }
+
+                // Recorded voice pack (male voice actor)
+                RowLayout {
+                    Layout.fillWidth: true
+                    QGCCheckBox {
+                        text:       qsTr("녹음 음성 사용")
+                        checked:    QGroundControl.audioOutput ? QGroundControl.audioOutput.voicePack : false
+                        onClicked:  QGroundControl.audioOutput.voicePack = checked
+                    }
+                    QGCLabel {
+                        Layout.fillWidth:   true
+                        horizontalAlignment: Text.AlignRight
+                        text:               QGroundControl.audioOutput ? qsTr("%1개 있음").arg(QGroundControl.audioOutput.voicePackClips) : ""
+                        color:              "#9BA1A6"
+                        font.pointSize:     ScreenTools.smallFontPointSize
+                    }
+                    QGCButton {
+                        text:       qsTr("폴더")
+                        visible:    !ScreenTools.isMobile
+                        onClicked: {
+                            QGroundControl.audioOutput.reloadVoicePack()
+                            Qt.openUrlExternally("file:///" + QGroundControl.audioOutput.voicePackFolder)
+                        }
+                    }
+                }
+            }
+        }
+
         QGCLabel {
             Layout.fillWidth:   true
             text:               qsTr("Esc 또는 바깥을 누르면 닫힙니다")

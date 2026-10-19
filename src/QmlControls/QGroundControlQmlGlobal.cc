@@ -348,6 +348,11 @@ void QGroundControlQmlGlobal::testAudioOutput()
     AudioOutput::instance()->testAudioOutput();
 }
 
+QObject* QGroundControlQmlGlobal::audioOutput() const
+{
+    return AudioOutput::instance();
+}
+
 void QGroundControlQmlGlobal::copyToClipboard(const QString& text)
 {
     QGuiApplication::clipboard()->setText(text);

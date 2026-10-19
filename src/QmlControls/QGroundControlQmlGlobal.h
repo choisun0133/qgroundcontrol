@@ -99,6 +99,8 @@ public:
     Q_PROPERTY(qreal   aeroWordmarkAspect   READ aeroWordmarkAspect     CONSTANT)
     Q_PROPERTY(qreal   aeroWordmarkScale    READ aeroWordmarkScale      CONSTANT)
     Q_PROPERTY(QString aeroCopyright        READ aeroCopyright          CONSTANT)
+    /// AeroResearch: voice announcements (voice selection, rate, voice pack) - see AudioOutput
+    Q_PROPERTY(QObject* audioOutput         READ audioOutput            CONSTANT)
 
     Q_PROPERTY(qreal zOrderTopMost              READ zOrderTopMost              CONSTANT) ///< z order for top most items, toolbar, main window sub view
     Q_PROPERTY(qreal zOrderWidgets              READ zOrderWidgets              CONSTANT) ///< z order value to widgets, for example: zoom controls, hud widgetss
@@ -154,6 +156,7 @@ public:
 
     // Test audio output
     Q_INVOKABLE void testAudioOutput();
+    QObject* audioOutput() const;
 
     /// Copy text to the system clipboard
     Q_INVOKABLE static void copyToClipboard(const QString& text);

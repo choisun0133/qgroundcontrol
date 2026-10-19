@@ -58,6 +58,36 @@ Rectangle {
     property real _speed:       _activeVehicle ? _num(_activeVehicle.groundSpeed) : NaN
     property real _alt:         _activeVehicle ? _num(_activeVehicle.altitudeRelative) : NaN
     property real _climb:       _activeVehicle ? _num(_activeVehicle.climbRate) : NaN
+
+    // AeroResearch: downward lidar / rangefinder (DISTANCE_SENSOR, orientation PITCH_270)
+    property var  _sensors:         _activeVehicle ? _activeVehicle.distanceSensors : null
+    property real _lidarGround:          _sensors ? _num(_sensors.rotationPitch270) : NaN
+    property real _groundMax:       _sensors ? _num(_sensors.maxDistance) : NaN
+    property bool _groundInRange:   !isNaN(_lidarGround) && (isNaN(_groundMax) || _groundMax <= 0 || _lidarGround < _groundMax - 0.05)
+    readonly property real _groundWarn:     5.0     // m: yellow
+    readonly property real _groundDanger:   2.0     // m: red, blinking
+    property string _groundState: isNaN(_lidarGround) ? "none" : (!_groundInRange ? "far"
+                                  : (_lidarGround <= _groundDanger ? "danger" : (_lidarGround <= _groundWarn ? "warn" : "ok")))
+    property color _groundColor: _groundState === "danger" ? "#FF4D4D" : (_groundState === "warn" ? "#F5C518"
+                                 : (_groundState === "ok" ? "#3DDC84" : "#5A6066"))
+
+    // Voice: "지면 2미터" / "지면 1미터" when descending through those heights while flying
+    property real _lastGroundCall: Infinity
+    on_LidarGroundChanged: {
+        if (!_groundInRange || !_activeVehicle || !_activeVehicle.flying) {
+            _lastGroundCall = Infinity
+            return
+        }
+        if (_lidarGround > 3.0) {
+            _lastGroundCall = Infinity
+        } else if (_lidarGround <= 1.0 && _lastGroundCall > 1.0) {
+            _lastGroundCall = 1.0
+            QGroundControl.audioOutput.sayClip("ground_1m", "ground 1 meter")
+        } else if (_lidarGround <= 2.0 && _lastGroundCall > 2.0) {
+            _lastGroundCall = 2.0
+            QGroundControl.audioOutput.sayClip("ground_2m", "ground 2 meters")
+        }
+    }
     property real _homeDist:    _activeVehicle ? _num(_activeVehicle.distanceToHome) : NaN
     property real _flightDist:  _activeVehicle ? _num(_activeVehicle.flightDistance) : NaN
     // flightTime has no Q_PROPERTY on Vehicle; look it up by name
@@ -131,8 +161,9 @@ Rectangle {
             }
         }
 
-        // Current value box
+        // Current value box (above the ground band added by the altitude tape)
         Rectangle {
+            z:              4
             x:              tape.leftSide ? control._u * 0.2 : 0
             width:          tape.width - control._u * 0.2
             height:         control._u * 1.9
@@ -300,15 +331,54 @@ Rectangle {
                 }
             }
 
+            ColumnLayout {
+                Layout.preferredWidth:  control._u * 4
+                Layout.fillWidth:       false   // layouts fill by default; keep the tape narrow
+                Layout.fillHeight:      true
+                spacing:                control._pad * 0.6
+
             Tape {
                 id:                     altTape
-                Layout.preferredWidth:  control._u * 4
+                Layout.fillWidth:       true
                 Layout.fillHeight:      true
                 title:                  qsTr("고도 m")
                 value:                  control._alt
                 step:                   10
                 pxPerUnit:              control._u * 0.22
                 leftSide:               false
+
+                // Ground from the downward lidar: hatched band from the ground level down
+                Item {
+                    readonly property real groundY: altTape.height / 2 + control._lidarGround * altTape.pxPerUnit
+                    visible:    control._groundInRange && groundY < altTape.height
+                    x:          0
+                    y:          Math.max(control._u * 1.4, groundY)
+                    width:      altTape.width
+                    height:     Math.max(0, altTape.height - y)
+                    z:          1
+                    clip:       true
+                    Rectangle {
+                        anchors.fill:   parent
+                        color:          Qt.rgba(0.48, 0.33, 0.2, 0.55)
+                    }
+                    Repeater {
+                        model: Math.ceil((parent.width + parent.height) / (control._u * 0.6))
+                        Rectangle {
+                            x:          index * control._u * 0.6 - parent.height
+                            y:          0
+                            width:      2
+                            height:     parent.height * 1.5
+                            rotation:   45
+                            transformOrigin: Item.Top
+                            color:      Qt.rgba(0.48, 0.33, 0.2, 0.9)
+                        }
+                    }
+                    Rectangle {
+                        width:  parent.width
+                        height: 2
+                        color:  control._groundColor
+                    }
+                }
 
                 // Climb-rate bar on the right edge: up = climbing, down = descending
                 Rectangle {
@@ -321,6 +391,44 @@ Rectangle {
                     color:  control._climb > 0.2 ? "#3DDC84" : (control._climb < -0.2 ? "#F5C518" : "#5A6066")
                     z:      3
                 }
+            }
+
+            // Distance to the ground (downward lidar); hidden without lidar data
+            Rectangle {
+                id:                     groundBox
+                Layout.fillWidth:       true
+                Layout.preferredHeight: control._u * 2.6
+                visible:                control._groundState !== "none"
+                radius:                 control._u * 0.25
+                color:                  control._groundState === "danger" ? Qt.rgba(1, 0.3, 0.3, 0.18) : "#0E0F11"
+                border.color:           control._groundColor
+                border.width:           2
+
+                SequentialAnimation on opacity {
+                    running:    control._groundState === "danger"
+                    loops:      Animation.Infinite
+                    onRunningChanged: if (!running) groundBox.opacity = 1
+                    NumberAnimation { to: 0.35; duration: 350 }
+                    NumberAnimation { to: 1.0;  duration: 350 }
+                }
+
+                Column {
+                    anchors.centerIn: parent
+                    QGCLabel {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text:           control._groundState === "danger" ? qsTr("위험") : qsTr("지면")
+                        color:          control._muted
+                        font.pointSize: ScreenTools.smallFontPointSize
+                    }
+                    QGCLabel {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text:           control._groundState === "far" ? qsTr("범위 밖") : control._fmt(control._lidarGround, 1) + " m"
+                        color:          control._groundColor
+                        font.family:    ScreenTools.fixedFontFamily
+                        font.bold:      true
+                    }
+                }
+            }
             }
         }
 
