@@ -36,7 +36,7 @@
    - **주의**: Windows 워크플로는 `paths-ignore`가 있어 **빈 커밋(`--allow-empty`)은 빌드를 시작하지 않음**. 빌드를 시작하려면 파일이 바뀐 커밋(`[skip ci]` 없이)을 push할 것 (예: 이 문서 갱신)
    - 사용자용 아티팩트가 있으면 `...-Developer-Setup.exe` / `...-User-Setup.exe`, 없으면 `...-Setup.exe` 하나
 3. **릴리스 노트**: `publish-aero` 브랜치의 `RELEASE_NOTES.md`가 릴리스 설명이 됨 (버전마다 이 파일도 갱신). 이 세션 환경에서는 릴리스 직접 수정(API)이 막혀 있어 워크플로를 다시 돌려 반영
-4. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.21`)을 sed로 바꿔 `[skip ci]` 커밋
+4. **버전 올리기**: `publish-aero` 브랜치의 aero-release.yml 안 버전 문자열(현재 `1.6.22`)을 sed로 바꿔 `[skip ci]` 커밋
 5. 링크 형식: `https://github.com/choisun0133/qgroundcontrol/releases/download/aerogcs-<ver>/AeroResearchGCS-<ver>-Windows-x64-Setup.exe`
 - 환경 메모: 이 세션 환경에서는 Actions 로그·아티팩트 직접 다운로드, 저장소 Secrets 설정이 프록시로 막혀 있었음 → 상태는 `gh api .../actions/runs/<id>/jobs`, 결과물은 릴리스로 확인
 
@@ -58,6 +58,7 @@
 | 1.6.19 | 안드로이드 화면 크기 자동 맞춤 (`ScreenTools.qml`, 약 40×72 글자 크기 기준) + 안드로이드 APK 릴리즈 |
 | 1.6.20 | 대영M&S 안드로이드 (패키지 kr.co.aeroresearch.daeyoung, 아이콘 `resources/brand/daeyoung/android/res`) |
 | 1.6.21 | 하방 라이다(계기판 지면 거리·음성), 한국어 음성 안내(`src/Utilities/Audio/AeroKoreanSpeech.*`), 목소리 선택·녹음 음성 팩(`AudioOutput`), Ctrl+F 음성 설정. 대영판 윈도우 빌드는 커밋 메시지에 `[daeyoung]`이 있을 때만 |
+| 1.6.22 | 대영판 로고 정리(안드로이드 아이콘 복사 수정, 설치 헤더, 설정 메뉴 로고 `QGCLogoWhite`), 안드로이드 기본 어두운 테마(연결 화면 글자 안 보이던 문제) |
 
 ## 5. 기능별 주요 파일
 
