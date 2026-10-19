@@ -141,13 +141,9 @@ void QGCCorePlugin::adjustSettingMetaData(const QString &settingsGroup, FactMeta
 
     if (settingsGroup == AppSettings::settingsGroup) {
         if (metaData.name() == AppSettings::indoorPaletteName) {
-            QVariant outdoorPalette;
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
-            outdoorPalette = 0;
-#else
-            outdoorPalette = 1;
-#endif
-            metaData.setRawDefaultValue(outdoorPalette);
+            // AeroResearch: the UI is designed dark (black + accent), so mobile defaults to the
+            // indoor (dark) scheme too — the light scheme made the start screen text unreadable
+            metaData.setRawDefaultValue(QVariant(1));
             return;
         }
 #ifndef Q_OS_ANDROID

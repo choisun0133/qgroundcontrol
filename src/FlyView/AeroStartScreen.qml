@@ -302,7 +302,7 @@ Rectangle {
                                 heightFactor:       0.7
                                 fontWeight:         Font.Bold
                                 backgroundColor:    control._mode === index ? control._accent : Qt.rgba(0.11, 0.12, 0.14, 0.7)
-                                textColor:          control._mode === index ? "#0E0F11" : qgcPal.buttonText
+                                textColor:          control._mode === index ? "#0E0F11" : "#ECEDEE"
                                 onClicked: {
                                     control._mode = index
                                     control._errorText = ""
