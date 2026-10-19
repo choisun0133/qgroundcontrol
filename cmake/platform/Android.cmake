@@ -94,7 +94,16 @@ if(QGC_AERO_BRAND STREQUAL "daeyoung")
     file(REMOVE_RECURSE "${_qgc_brand_android_dir}")
     file(COPY "${QGC_ANDROID_PACKAGE_SOURCE_DIR}/" DESTINATION "${_qgc_brand_android_dir}")
     file(REMOVE "${_qgc_brand_android_dir}/res/drawable/ic_launcher_foreground.xml")
-    file(COPY "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/android/res" DESTINATION "${_qgc_brand_android_dir}")
+    # file(COPY) skips a file whose destination has the same timestamp, and a fresh git checkout
+    # gives the AR icon.png / ic_launcher.png and their 대영 replacements the same mtime — so the
+    # AR icons survived (splash + launcher showed the AeroResearch logo). Copy each file explicitly.
+    set(_qgc_brand_res_src "${CMAKE_SOURCE_DIR}/resources/brand/daeyoung/android/res")
+    file(GLOB_RECURSE _qgc_brand_res_files RELATIVE "${_qgc_brand_res_src}" "${_qgc_brand_res_src}/*")
+    foreach(_f IN LISTS _qgc_brand_res_files)
+        get_filename_component(_d "${_qgc_brand_android_dir}/res/${_f}" DIRECTORY)
+        file(MAKE_DIRECTORY "${_d}")
+        file(COPY_FILE "${_qgc_brand_res_src}/${_f}" "${_qgc_brand_android_dir}/res/${_f}")
+    endforeach()
     # "M&S" must be escaped in XML: take the label from a string resource instead of the raw
     # app-name substitution androiddeployqt does in the manifest
     file(READ "${_qgc_brand_android_dir}/AndroidManifest.xml" _qgc_manifest)
