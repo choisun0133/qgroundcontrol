@@ -39,8 +39,9 @@ jobs:
           fetch() {  # workflow, artifact, dir, [commit sha to match]
             ev=$([ -n "$SUFFIX" ] && echo workflow_dispatch || echo push)
             if [ -n "${4:-}" ]; then
-              # several runs can exist for one commit (e.g. Android aero + daeyoung): use the newest that has the artifact
-              for run in $(gh run list -R "$REPO" -c "$4" -w "$1" -s success -L 5 --json databaseId -q '.[].databaseId'); do
+              # several runs can exist for one commit (e.g. Android aero + daeyoung): use the newest that has the artifact.
+              # Any completed run: an unrelated leg (e.g. Android mac cancelled) fails the run but the APK artifact is fine.
+              for run in $(gh run list -R "$REPO" -c "$4" -w "$1" -s completed -L 5 --json databaseId -q '.[].databaseId'); do
                 if gh run download "$run" -R "$REPO" -n "$2" -D "$3" 2>/dev/null; then
                   echo "$1/$2: run $run"
                   return 0
