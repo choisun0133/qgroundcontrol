@@ -55,6 +55,7 @@ set(_nsis_args
     "/DAPPNAME_AMP=${_qgc_appname_amp}"
     "/DEXENAME=${CMAKE_PROJECT_NAME}"
     "/DORGNAME=${QGC_ORG_NAME}"
+    "/DPUBLISHER=${QGC_ORG_DISPLAY_NAME}"
     "/DDESTDIR=${QGC_PAYLOAD_DIR}"
 )
 

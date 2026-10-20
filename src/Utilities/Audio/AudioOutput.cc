@@ -492,7 +492,11 @@ void AudioOutput::setVoicePack(bool enabled)
 QString AudioOutput::voicePackFolder() const
 {
     const QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+#ifdef QGC_AERO_BRAND_DAEYOUNG
+    return QDir(documents).filePath(QStringLiteral("DaeyoungMS GCS/voice"));
+#else
     return QDir(documents).filePath(QStringLiteral("AeroResearch GCS/voice"));
+#endif
 }
 
 QString AudioOutput::_clipPath(const QString &clipId) const

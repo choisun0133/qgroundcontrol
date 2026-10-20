@@ -165,7 +165,12 @@ void writeCrashReport(EXCEPTION_POINTERS* ep)
     }
     const DWORD code = (ep && ep->ExceptionRecord) ? ep->ExceptionRecord->ExceptionCode : 0;
     wchar_t line[256] = {};
-    (void) _snwprintf_s(line, _TRUNCATE, L"AeroResearch GCS %hs crash 0x%08lX thread %lu\r\n",
+#ifdef QGC_AERO_BRAND_DAEYOUNG
+    constexpr const wchar_t *kProduct = L"DaeyoungMS GCS";
+#else
+    constexpr const wchar_t *kProduct = L"AeroResearch GCS";
+#endif
+    (void) _snwprintf_s(line, _TRUNCATE, L"%ls %hs crash 0x%08lX thread %lu\r\n", kProduct,
                         QGC_APP_VERSION_STR, static_cast<unsigned long>(code), GetCurrentThreadId());
     crashReportWrite(file, line);
     if (ep && ep->ExceptionRecord) {

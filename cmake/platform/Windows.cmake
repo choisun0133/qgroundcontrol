@@ -31,7 +31,7 @@ endif()
 if(COMMAND _qt_internal_generate_win32_rc_file)
     set_target_properties(${CMAKE_PROJECT_NAME}
         PROPERTIES
-            QT_TARGET_COMPANY_NAME "${QGC_ORG_NAME}"
+            QT_TARGET_COMPANY_NAME "${QGC_ORG_DISPLAY_NAME}"
             QT_TARGET_DESCRIPTION "${CMAKE_PROJECT_NAME}"
             QT_TARGET_VERSION "${CMAKE_PROJECT_VERSION}"
             QT_TARGET_COPYRIGHT "${QGC_APP_COPYRIGHT}"
