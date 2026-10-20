@@ -59,7 +59,7 @@
 | 1.6.20 | 대영M&S 안드로이드 (패키지 kr.co.aeroresearch.daeyoung, 아이콘 `resources/brand/daeyoung/android/res`) |
 | 1.6.21 | 하방 라이다(계기판 지면 거리·음성), 한국어 음성 안내(`src/Utilities/Audio/AeroKoreanSpeech.*`), 목소리 선택·녹음 음성 팩(`AudioOutput`), Ctrl+F 음성 설정. 대영판 윈도우 빌드는 커밋 메시지에 `[daeyoung]`이 있을 때만 |
 | 1.6.22 | 대영판 로고 정리(안드로이드 아이콘 복사 수정, 설치 헤더, 설정 메뉴 로고 `QGCLogoWhite`), 안드로이드 기본 어두운 테마(연결 화면 글자 안 보이던 문제) |
-| 다음 버전(미빌드) | 대영판 게시자 이름 `QGC_ORG_DISPLAY_NAME`(exe 회사명·설치 게시자 "Daeyoung M&S", 설정 폴더는 그대로 AeroResearch), 음성 팩 폴더 `문서\\DaeyoungMS GCS\\voice`, 충돌 기록 제목. 릴리즈는 안드로이드 실행이 mac 취소로 실패 표시여도 같은 커밋 APK를 가져가도록 수정 |
+| 1.6.23 | 대영판 게시자 이름 `QGC_ORG_DISPLAY_NAME`(exe 회사명·설치 게시자 "Daeyoung M&S", 설정 폴더는 그대로 AeroResearch), 음성 팩 폴더 `문서\\DaeyoungMS GCS\\voice`, 충돌 기록 제목. 릴리즈는 안드로이드 실행이 mac 취소로 실패 표시여도 같은 커밋 APK를 가져가도록 수정 |
 
 ## 5. 기능별 주요 파일
 
