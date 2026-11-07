@@ -100,6 +100,7 @@ Rectangle {
                 same = existing.linkType === LinkConfiguration.TypeTcp && existing.host === host && existing.port === port
             } else {
                 same = existing.linkType === LinkConfiguration.TypeUdp && existing.hostList.indexOf(host + ":" + port) >= 0
+                        && existing.localPort === 0
             }
             if (same) {
                 _connectConfig(existing)
@@ -136,6 +137,11 @@ Rectangle {
         }
         cfg.dynamic = false
         cfg.autoConnect = autoConnectCheck.checked
+        if (_mode === 2 && !tcp) {
+            // UDP client (Mission Planner "UDPCl"): let the OS pick the local port. Auto-connect would
+            // bind 14550, which the built-in UDP listener already holds, so replies went to the wrong socket.
+            cfg.localPort = 0
+        }
         _linkManager.endCreateConfiguration(cfg)
         _connectConfig(_findConfig(name))
     }
