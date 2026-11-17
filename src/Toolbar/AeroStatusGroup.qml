@@ -268,9 +268,32 @@ Item {
 
             // Battery: user-set pack voltage range -> percentage from voltage
             ColumnLayout {
+                id:                 batRangeBox
                 Layout.fillWidth:   true
                 visible:            detailsPopup.itemKey === "bat"
                 spacing:            control._u * 0.3
+
+                // Applied as soon as both fields hold a valid range, so the % updates while typing.
+                // showErrors: only the 저장 button reports invalid input.
+                function applyRange(showErrors) {
+                    const maxV = parseFloat(batMaxField.text.replace(",", "."))
+                    const minV = parseFloat(batMinField.text.replace(",", "."))
+                    if (isNaN(maxV) || isNaN(minV) || maxV <= 0 || minV <= 0) {
+                        if (showErrors) {
+                            batRangeError.text = qsTr("최대·최소 전압을 숫자로 입력하세요.")
+                        }
+                        return
+                    }
+                    if (maxV <= minV) {
+                        if (showErrors) {
+                            batRangeError.text = qsTr("최대 전압이 최소 전압보다 커야 합니다.")
+                        }
+                        return
+                    }
+                    batRangeError.text = ""
+                    globals.aeroBatteryMaxVolt = maxV
+                    globals.aeroBatteryMinVolt = minV
+                }
 
                 QGCLabel {
                     text:           qsTr("배터리 전압 범위 (팩 전체 전압)")
@@ -286,6 +309,7 @@ Item {
                         text:                   globals.aeroBatteryMaxVolt > 0 ? globals.aeroBatteryMaxVolt.toFixed(2) : ""
                         placeholderText:        qsTr("예: 25.2")
                         inputMethodHints:       Qt.ImhFormattedNumbersOnly
+                        onTextChanged:          if (activeFocus) { batRangeBox.applyRange(false) }
                     }
                     QGCLabel { text: "V" }
                 }
@@ -299,6 +323,7 @@ Item {
                         text:                   globals.aeroBatteryMinVolt > 0 ? globals.aeroBatteryMinVolt.toFixed(2) : ""
                         placeholderText:        qsTr("예: 21.0")
                         inputMethodHints:       Qt.ImhFormattedNumbersOnly
+                        onTextChanged:          if (activeFocus) { batRangeBox.applyRange(false) }
                     }
                     QGCLabel { text: "V" }
                 }
@@ -315,9 +340,18 @@ Item {
                     spacing:            control._u * 0.4
                     QGCLabel {
                         Layout.fillWidth:   true
-                        text:               status.batVoltRangeSet ? qsTr("전압 기준으로 % 계산 중") : qsTr("미설정 · FC 잔량 사용")
+                        text: {
+                            if (!status.batVoltRangeSet) {
+                                return qsTr("미설정 · FC 잔량 사용")
+                            }
+                            if (isNaN(status._batVoltPct)) {
+                                return qsTr("전압 기준 적용됨 · 기체 전압 수신 대기")
+                            }
+                            return qsTr("전압 기준 적용됨 · %1V = %2%").arg(status._batVolt.toFixed(1)).arg(Math.round(status._batVoltPct))
+                        }
                         color:              status.batVoltRangeSet ? "#3DDC84" : "#9BA1A6"
                         font.pointSize:     ScreenTools.smallFontPointSize
+                        wrapMode:           Text.WordWrap
                     }
                     QGCButton {
                         text:       qsTr("초기화")
@@ -331,21 +365,7 @@ Item {
                     }
                     QGCButton {
                         text:       qsTr("저장")
-                        onClicked: {
-                            const maxV = parseFloat(batMaxField.text.replace(",", "."))
-                            const minV = parseFloat(batMinField.text.replace(",", "."))
-                            if (isNaN(maxV) || isNaN(minV) || maxV <= 0 || minV <= 0) {
-                                batRangeError.text = qsTr("최대·최소 전압을 숫자로 입력하세요.")
-                                return
-                            }
-                            if (maxV <= minV) {
-                                batRangeError.text = qsTr("최대 전압이 최소 전압보다 커야 합니다.")
-                                return
-                            }
-                            batRangeError.text = ""
-                            globals.aeroBatteryMaxVolt = maxV
-                            globals.aeroBatteryMinVolt = minV
-                        }
+                        onClicked:  batRangeBox.applyRange(true)
                     }
                 }
             }
