@@ -202,7 +202,19 @@ QtObject {
     }
 
     // ---- Battery ------------------------------------------------------------------------------
-    property var    _battery:   vehicle && vehicle.batteries.count > 0 ? vehicle.batteries.get(0) : null
+    // First battery that reports a voltage: with BATT2 or a second monitor, battery 0 may have none.
+    property var    _battery: {
+        if (!vehicle || vehicle.batteries.count === 0) {
+            return null
+        }
+        for (var i = 0; i < vehicle.batteries.count; i++) {
+            var b = vehicle.batteries.get(i)
+            if (!isNaN(b.voltage.rawValue) && b.voltage.rawValue > 0) {
+                return b
+            }
+        }
+        return vehicle.batteries.get(0)
+    }
     property real   _batPct:    _battery ? _battery.percentRemaining.rawValue : NaN
     property real   _batVolt:   _battery ? _battery.voltage.rawValue : NaN
     property string _batTime:   _battery ? _battery.timeRemainingStr.valueString : ""
