@@ -203,9 +203,37 @@ Item {
         }
     }
 
+    // AeroResearch: takeoff goes where the vehicle is (then planned home, then map center), so no
+    // map click is needed to place it. Fixed wing keeps QGC's climb-out wizard.
+    function _takeoffCoordinate() {
+        var vehicle = QGroundControl.multiVehicleManager.activeVehicle
+        if (vehicle && vehicle.coordinate.isValid) {
+            return vehicle.coordinate
+        }
+        var home = _missionController.plannedHomePosition
+        if (home && home.isValid) {
+            return home
+        }
+        return mapCenter()
+    }
+
+    function _insertTakeoff(makeCurrentItem) {
+        var item = _missionController.insertTakeoffItem(mapCenter(), 1, makeCurrentItem)
+        if (!item) {
+            return
+        }
+        var coord = _takeoffCoordinate()
+        if (item.launchTakeoffAtSameLocation) {
+            item.coordinate = coord
+            item.wizardMode = false
+        } else {
+            item.launchCoordinate = coord
+        }
+    }
+
     function _insertTakeoffFirst() {
         if (_takeoffIndex() < 0 && _missionController.isInsertTakeoffValid) {
-            _missionController.insertTakeoffItem(mapCenter(), 1, false /* makeCurrentItem */)
+            _insertTakeoff(false /* makeCurrentItem */)
         }
     }
 
@@ -232,7 +260,7 @@ Item {
     }
 
     function insertTakeoffItemAfterCurrent() {
-        _missionController.insertTakeoffItem(mapCenter(), 1, true /* makeCurrentItem */)
+        _insertTakeoff(true /* makeCurrentItem */)
     }
 
     function insertLandItemAfterCurrent() {
