@@ -255,9 +255,16 @@ Item {
         item.altitude.rawValue = metres
     }
 
+    function _aeroIsEndItem(visualItem) {
+        return !!visualItem && (visualItem.isLandCommand || visualItem.command === 20 /* MAV_CMD_NAV_RETURN_TO_LAUNCH */)
+    }
+
     // AeroResearch: add the "AI 임무" draft at the end of the mission
     function _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) {
-        if (addTakeoff && _takeoffIndex() < 0 && !_vehicleFlying() && _missionController.isInsertTakeoffValid) {
+        // Takeoff when the draft asks for one, or when the plan settings require it before any waypoint
+        var takeoffRequired = !QGroundControl.settingsManager.planViewSettings.takeoffItemNotRequired.rawValue
+                && !_planMasterController.controllerVehicle.rover
+        if ((addTakeoff || takeoffRequired) && _takeoffIndex() < 0 && !_vehicleFlying() && _missionController.isInsertTakeoffValid) {
             _insertTakeoff(false /* makeCurrentItem */)
             var takeoffIndex = _takeoffIndex()
             if (takeoffIndex >= 0 && !isNaN(takeoffAltitude)) {
@@ -265,10 +272,19 @@ Item {
             }
         }
         _planMasterController.userSelectedManualCreation = true
-        var index = Math.max(_visualItems.count, 1)
+        // Insert in front of an existing land / RTL ending, so the vehicle flies the draft before it ends
+        var index = _visualItems.count
+        while (index > 1 && _aeroIsEndItem(_visualItems.get(index - 1))) {
+            index--
+        }
+        index = Math.max(index, 1)
+        var missionHasEnd = index < _visualItems.count
         for (var i = 0; i < items.length; i++) {
             var it = items[i]
             var item = null
+            if ((it.type === "rtl" || it.type === "land") && missionHasEnd) {
+                continue    // keep the mission's own ending
+            }
             if (it.type === "rtl") {
                 item = _missionController.insertSimpleMissionItem(mapCenter(), index, false)
                 if (item) {
@@ -645,7 +661,9 @@ Item {
                         objectName: "planToolStrip_aeroAIButton"
                         text: qsTr("AI 임무")
                         iconSource: "/res/AeroAI.svg"
-                        enabled: _missionController.flyThroughCommandsAllowed
+                        // Not tied to flyThroughCommandsAllowed: the draft adds the takeoff itself and
+                        // goes in front of an existing land / RTL, so it also works on an empty plan
+                        enabled: !_planMasterController.syncInProgress
                         visible: toolStrip._isMissionLayer
                         onTriggered: aeroAIMissionDialog.openDialog()
                     },

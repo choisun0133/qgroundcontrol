@@ -37,11 +37,13 @@ Popup {
     property var    _items:                 []
     property string _status:                ""
     property bool   _overLimitAccepted:     false
+    property var    _requestRefs:           null    // reference points copied when the request was sent
     readonly property bool _overLimit:      _maxAltitude() > _legalMaxAlt
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
 
     function openDialog() {
+        _requestRefs = null
         _plan = null
         _items = []
         _status = ""
@@ -89,6 +91,14 @@ Popup {
             return
         }
         _status = qsTr("임무 초안을 만드는 중…")
+        // Keep the reference points of this request: the vehicle may move (or the link drop)
+        // before the answer arrives, and the offsets must be applied to the same points.
+        var refs = {
+            vehicle:    vehicleCoordinate && vehicleCoordinate.isValid ? QtPositioning.coordinate(vehicleCoordinate.latitude, vehicleCoordinate.longitude) : null,
+            home:       homeCoordinate && homeCoordinate.isValid ? QtPositioning.coordinate(homeCoordinate.latitude, homeCoordinate.longitude) : null,
+            mapCenter:  QtPositioning.coordinate(mapCenterCoordinate.latitude, mapCenterCoordinate.longitude)
+        }
+        _requestRefs = refs
         _plan = null
         _items = []
         _overLimitAccepted = false
@@ -104,34 +114,37 @@ Popup {
             + "- 150m 초과 고도, 애매한 요청, 위험해 보이는 부분은 warnings에 한국어로 적는다.\n"
             + "- summary는 한국어 한두 문장.\n\n"
             + "[기체 종류] " + vehicleType + "\n"
-            + "[기체 위치] " + _coordText(vehicleCoordinate) + "\n"
-            + "[홈 위치] " + _coordText(homeCoordinate) + "\n"
-            + "[지도 중심] " + _coordText(mapCenterCoordinate) + "\n"
+            + "[기체 위치] " + _coordText(refs.vehicle) + "\n"
+            + "[홈 위치] " + _coordText(refs.home) + "\n"
+            + "[지도 중심] " + _coordText(refs.mapCenter) + "\n"
             + "[기본 고도] " + defaultAltitude + " m\n"
             + "[현재 미션 항목 수] " + existingItemCount + " (0이면 새 미션)"
 
         aeroAI.ask(request, { instructions: instructions, schema: _schema, schemaName: "mission_draft", maxOutputTokens: 4000 },
                    function(ok, plan, error) {
+            if (control._requestRefs !== refs) {
+                return      // a newer request replaced this one
+            }
             if (!ok) {
                 control._status = error
                 return
             }
-            control._build(plan)
+            control._build(plan, refs)
         })
     }
 
-    function _referenceCoordinate(name) {
-        if (name === "vehicle" && vehicleCoordinate && vehicleCoordinate.isValid) {
-            return vehicleCoordinate
+    function _referenceCoordinate(name, refs) {
+        if (name === "vehicle" && refs.vehicle) {
+            return refs.vehicle
         }
-        if ((name === "vehicle" || name === "home") && homeCoordinate && homeCoordinate.isValid) {
-            return homeCoordinate
+        if ((name === "vehicle" || name === "home") && refs.home) {
+            return refs.home
         }
-        return mapCenterCoordinate
+        return refs.mapCenter
     }
 
-    function _build(plan) {
-        var ref = _referenceCoordinate(plan.reference)
+    function _build(plan, refs) {
+        var ref = _referenceCoordinate(plan.reference, refs)
         var items = []
         var src = plan.items || []
         for (var i = 0; i < src.length && i < 60; i++) {
