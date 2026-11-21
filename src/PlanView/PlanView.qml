@@ -243,6 +243,102 @@ Item {
         })
     }
 
+    // AeroResearch: AI drafts are in metres above the takeoff point. Force the relative frame
+    // (the plan default may be AMSL / terrain) and write rawValue (metres, not display units).
+    function _aeroSetRelativeAltitude(item, metres) {
+        if (!item || !item.altitude) {
+            return
+        }
+        if (item.altitudeFrame !== undefined) {
+            item.altitudeFrame = QGroundControl.AltitudeFrameRelative
+        }
+        item.altitude.rawValue = metres
+    }
+
+    function _aeroIsEndItem(visualItem) {
+        return !!visualItem && (visualItem.isLandCommand || visualItem.command === 20 /* MAV_CMD_NAV_RETURN_TO_LAUNCH */)
+    }
+
+    // AeroResearch: takeoff state for the AI draft, read when the dialog opens. The dialog
+    // decides whether a takeoff is added (draft request or plan setting) and checks its altitude.
+    function _aeroTakeoffRequired() {
+        return !QGroundControl.settingsManager.planViewSettings.takeoffItemNotRequired.rawValue
+                && !_planMasterController.controllerVehicle.rover
+    }
+
+    function _aeroCanAddTakeoff() {
+        return _takeoffIndex() < 0 && !_vehicleFlying() && !_planMasterController.controllerVehicle.rover
+    }
+
+    // AeroResearch: add the "AI 임무" draft. Returns "" on success or a Korean error message
+    // (then nothing was added). addTakeoff / takeoffAltitude are the values shown in the preview.
+    function _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) {
+        if (addTakeoff && _takeoffIndex() < 0) {
+            // A new offline plan has no home yet, and a takeoff cannot be inserted without one
+            var home = _missionController.plannedHomePosition
+            if (!home || !home.isValid) {
+                var vehicle = QGroundControl.multiVehicleManager.activeVehicle
+                var homeCoord = vehicle && vehicle.coordinate.isValid ? vehicle.coordinate : null
+                for (var h = 0; !homeCoord && h < items.length; h++) {
+                    if (items[h].coordinate && items[h].coordinate.isValid) {
+                        homeCoord = items[h].coordinate
+                    }
+                }
+                _missionController.setHomePosition(homeCoord ? homeCoord : mapCenter())
+                _missionController.setCurrentPlanViewSeqNum(0, true)   // recalculates isInsertTakeoffValid
+            }
+            if (!_missionController.isInsertTakeoffValid) {
+                return qsTr("이륙 항목을 넣을 수 없어 추가하지 않았습니다. 지도에서 홈 위치를 정한 뒤 다시 시도하세요.")
+            }
+            _insertTakeoff(false /* makeCurrentItem */)
+            var takeoffIndex = _takeoffIndex()
+            if (takeoffIndex < 0) {
+                return qsTr("이륙 항목을 넣지 못해 추가하지 않았습니다.")
+            }
+            if (!isNaN(takeoffAltitude)) {
+                _aeroSetRelativeAltitude(_visualItems.get(takeoffIndex), takeoffAltitude)
+            }
+        }
+        _planMasterController.userSelectedManualCreation = true
+        // Insert in front of an existing land / RTL ending, so the vehicle flies the draft before it ends
+        var index = _visualItems.count
+        while (index > 1 && _aeroIsEndItem(_visualItems.get(index - 1))) {
+            index--
+        }
+        index = Math.max(index, 1)
+        var missionHasEnd = index < _visualItems.count
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i]
+            var item = null
+            if ((it.type === "rtl" || it.type === "land") && missionHasEnd) {
+                continue    // keep the mission's own ending
+            }
+            if (it.type === "rtl") {
+                item = _missionController.insertSimpleMissionItem(mapCenter(), index, false)
+                if (item) {
+                    item.command = 20   // MAV_CMD_NAV_RETURN_TO_LAUNCH
+                }
+            } else if (it.type === "land" && _planMasterController.controllerVehicle.fixedWing && !_planMasterController.controllerVehicle.vtol) {
+                // Fixed wing: QGC's landing pattern (approach + land), same as the Land tool
+                item = _missionController.insertLandItem(it.coordinate, index, false)
+            } else {
+                item = _missionController.insertSimpleMissionItem(it.coordinate, index, false)
+                if (item && it.type === "land") {
+                    // VTOL: transition to multirotor and land vertically (as VTOLLandingComplexItem does)
+                    item.command = _planMasterController.controllerVehicle.vtol ? 85 /* MAV_CMD_NAV_VTOL_LAND */ : 21 /* MAV_CMD_NAV_LAND */
+                } else if (item && !isNaN(it.altitude)) {
+                    _aeroSetRelativeAltitude(item, it.altitude)
+                }
+            }
+            if (item) {
+                index++
+            }
+        }
+        _missionController.setCurrentPlanViewSeqNum(0, true)
+        mapFitFunctions.fitMapViewportToMissionItems()
+        return ""
+    }
+
     function insertROIAfterCurrent(coordinate) {
         var nextIndex = _nextInsertIndex()
         _missionController.insertROIMissionItem(coordinate, nextIndex, true /* makeCurrentItem */)
@@ -588,6 +684,20 @@ Item {
                         visible: toolStrip._isMissionLayer
                         onTriggered: {
                             insertLandItemAfterCurrent()
+                        }
+                    },
+                    ToolStripAction {
+                        objectName: "planToolStrip_aeroAIButton"
+                        text: qsTr("AI 임무")
+                        iconSource: "/res/AeroAI.svg"
+                        // Not tied to flyThroughCommandsAllowed: the draft adds the takeoff itself and
+                        // goes in front of an existing land / RTL, so it also works on an empty plan
+                        enabled: !_planMasterController.syncInProgress
+                        visible: toolStrip._isMissionLayer
+                        onTriggered: {
+                            aeroAIMissionDialog.takeoffRequired = _aeroTakeoffRequired()
+                            aeroAIMissionDialog.canAddTakeoff = _aeroCanAddTakeoff()
+                            aeroAIMissionDialog.openDialog()
                         }
                     },
                     ToolStripAction {
@@ -963,6 +1073,18 @@ Item {
                 }
             }
         }
+    }
+
+    // AeroResearch: natural-language mission draft (GPT)
+    AeroAIMissionDialog {
+        id:                     aeroAIMissionDialog
+        vehicleCoordinate:      QGroundControl.multiVehicleManager.activeVehicle ? QGroundControl.multiVehicleManager.activeVehicle.coordinate : QtPositioning.coordinate()
+        homeCoordinate:         _missionController.plannedHomePosition
+        mapCenterCoordinate:    editorMap.center
+        existingItemCount:      Math.max(_visualItems.count - 1, 0)
+        defaultAltitude:        _appSettings ? _appSettings.defaultMissionItemAltitude.rawValue : 50
+        vehicleType:            _planMasterController.controllerVehicle.vehicleTypeString
+        applyHandler:           function(items, addTakeoff, takeoffAltitude) { return _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) }
     }
 
     // AeroResearch: asked when the first waypoint/pattern of an empty plan is added

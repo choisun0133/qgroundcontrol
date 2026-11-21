@@ -126,6 +126,14 @@ AeroFloatingPanel {
                     wrapMode:           Text.WordWrap
                     color:              model.level === "E" ? "#FFD6D6" : qgcPal.text
                 }
+                // AeroResearch: ask the AI window what this warning/error means
+                QGCButton {
+                    Layout.alignment:   Qt.AlignTop
+                    visible:            model.level !== "N" && aeroAI.configured
+                    text:               "AI"
+                    heightFactor:       0.2
+                    onClicked:          aeroAI.explainRequested(model.text)
+                }
             }
         }
 

@@ -90,6 +90,7 @@ ApplicationWindow {
         property bool               aeroHealthPanelVisible:         false
         property bool               aeroProximityPanelVisible:      false
         property bool               aeroKeyboardControlActive:      false   // keyboard flight control (AeroKeyboardControl)
+        property bool               aeroAIPanelVisible:             false   // GPT window (AeroAIPanel)
 
         // AeroResearch: pack voltage range set by the user (0 = not set). When both are set the
         // battery percentage is computed from voltage instead of using the FC's estimate.
@@ -387,6 +388,9 @@ ApplicationWindow {
 
     // AeroResearch quick tools, Mission Planner style Ctrl+F (Cmd+F on macOS)
     AeroQuickTools { id: aeroQuickTools }
+
+    // AeroResearch: GPT client shared by the AI window, message "AI" buttons and the plan view
+    AeroAI { id: aeroAI }
 
     Shortcut {
         sequence:   "Ctrl+F"

@@ -130,7 +130,8 @@ Popup {
             model: [
                 { label: qsTr("근접 센서 창"),  sub: qsTr("방향별 장애물 거리"),        key: "proximity" },
                 { label: qsTr("진동 · EKF 창"), sub: qsTr("진동 · EKF 상태 · 플래그"),  key: "health" },
-                { label: qsTr("키보드 조종"),   sub: qsTr("비행 중 · W/S/A/D + 방향키 (모드2)"), key: "keyboard" }
+                { label: qsTr("키보드 조종"),   sub: qsTr("비행 중 · W/S/A/D + 방향키 (모드2)"), key: "keyboard" },
+                { label: qsTr("AI 비서"),       sub: qsTr("GPT 질문 · 비행 요약 · 경고 해설"), key: "ai" }
             ]
 
             Rectangle {
@@ -142,7 +143,8 @@ Popup {
                 border.color:           "#2A2D31"
 
                 property bool _on: modelData.key === "proximity" ? globals.aeroProximityPanelVisible
-                                 : (modelData.key === "keyboard" ? globals.aeroKeyboardControlActive : globals.aeroHealthPanelVisible)
+                                 : (modelData.key === "keyboard" ? globals.aeroKeyboardControlActive
+                                 : (modelData.key === "ai" ? globals.aeroAIPanelVisible : globals.aeroHealthPanelVisible))
 
                 RowLayout {
                     id:                 toggleRow
@@ -181,6 +183,8 @@ Popup {
                     onClicked: {
                         if (modelData.key === "proximity") {
                             globals.aeroProximityPanelVisible = !globals.aeroProximityPanelVisible
+                        } else if (modelData.key === "ai") {
+                            globals.aeroAIPanelVisible = !globals.aeroAIPanelVisible
                         } else if (modelData.key === "keyboard") {
                             globals.aeroKeyboardControlActive = !globals.aeroKeyboardControlActive
                             control.close()     // give keyboard focus back to the fly view

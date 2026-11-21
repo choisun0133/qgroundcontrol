@@ -55,6 +55,12 @@ Item {
         defaultY:   _root.height - height - _root._panelMargin
     }
 
+    // GPT window (Ctrl+F → AI 비서); starts at the left, under the tool strip
+    AeroAIPanel {
+        defaultX:   ScreenTools.defaultFontPixelWidth * 10
+        defaultY:   _root._panelMargin
+    }
+
     // Keyboard flight control (mode 2) with on-screen key display; started from the top pill or Ctrl+F
     AeroKeyboardControl { }
 
