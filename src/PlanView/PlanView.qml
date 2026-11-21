@@ -243,6 +243,41 @@ Item {
         })
     }
 
+    // AeroResearch: add the "AI 임무" draft at the end of the mission
+    function _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) {
+        if (addTakeoff && _takeoffIndex() < 0 && !_vehicleFlying() && _missionController.isInsertTakeoffValid) {
+            _insertTakeoff(false /* makeCurrentItem */)
+            var takeoffIndex = _takeoffIndex()
+            if (takeoffIndex >= 0 && !isNaN(takeoffAltitude) && _visualItems.get(takeoffIndex).altitude) {
+                _visualItems.get(takeoffIndex).altitude.value = takeoffAltitude
+            }
+        }
+        _planMasterController.userSelectedManualCreation = true
+        var index = Math.max(_visualItems.count, 1)
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i]
+            var item = null
+            if (it.type === "rtl") {
+                item = _missionController.insertSimpleMissionItem(mapCenter(), index, false)
+                if (item) {
+                    item.command = 20   // MAV_CMD_NAV_RETURN_TO_LAUNCH
+                }
+            } else {
+                item = _missionController.insertSimpleMissionItem(it.coordinate, index, false)
+                if (item && it.type === "land") {
+                    item.command = 21   // MAV_CMD_NAV_LAND
+                } else if (item && item.altitude && !isNaN(it.altitude)) {
+                    item.altitude.value = it.altitude
+                }
+            }
+            if (item) {
+                index++
+            }
+        }
+        _missionController.setCurrentPlanViewSeqNum(0, true)
+        mapFitFunctions.fitMapViewportToMissionItems()
+    }
+
     function insertROIAfterCurrent(coordinate) {
         var nextIndex = _nextInsertIndex()
         _missionController.insertROIMissionItem(coordinate, nextIndex, true /* makeCurrentItem */)
@@ -589,6 +624,14 @@ Item {
                         onTriggered: {
                             insertLandItemAfterCurrent()
                         }
+                    },
+                    ToolStripAction {
+                        objectName: "planToolStrip_aeroAIButton"
+                        text: qsTr("AI 임무")
+                        iconSource: "/res/AeroAI.svg"
+                        enabled: _missionController.flyThroughCommandsAllowed
+                        visible: toolStrip._isMissionLayer
+                        onTriggered: aeroAIMissionDialog.openDialog()
                     },
                     ToolStripAction {
                         text: qsTr("Stats")
@@ -963,6 +1006,18 @@ Item {
                 }
             }
         }
+    }
+
+    // AeroResearch: natural-language mission draft (GPT)
+    AeroAIMissionDialog {
+        id:                     aeroAIMissionDialog
+        vehicleCoordinate:      QGroundControl.multiVehicleManager.activeVehicle ? QGroundControl.multiVehicleManager.activeVehicle.coordinate : QtPositioning.coordinate()
+        homeCoordinate:         _missionController.plannedHomePosition
+        mapCenterCoordinate:    editorMap.center
+        existingItemCount:      Math.max(_visualItems.count - 1, 0)
+        defaultAltitude:        _appSettings ? _appSettings.defaultMissionItemAltitude.rawValue : 50
+        vehicleType:            _planMasterController.controllerVehicle.vehicleTypeString
+        onApplyRequested:       (items, addTakeoff, takeoffAltitude) => _aeroApplyAIMission(items, addTakeoff, takeoffAltitude)
     }
 
     // AeroResearch: asked when the first waypoint/pattern of an empty plan is added
