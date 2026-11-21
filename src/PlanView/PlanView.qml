@@ -274,10 +274,14 @@ Item {
                 if (item) {
                     item.command = 20   // MAV_CMD_NAV_RETURN_TO_LAUNCH
                 }
+            } else if (it.type === "land" && _planMasterController.controllerVehicle.fixedWing && !_planMasterController.controllerVehicle.vtol) {
+                // Fixed wing: QGC's landing pattern (approach + land), same as the Land tool
+                item = _missionController.insertLandItem(it.coordinate, index, false)
             } else {
                 item = _missionController.insertSimpleMissionItem(it.coordinate, index, false)
                 if (item && it.type === "land") {
-                    item.command = 21   // MAV_CMD_NAV_LAND
+                    // VTOL: transition to multirotor and land vertically (as VTOLLandingComplexItem does)
+                    item.command = _planMasterController.controllerVehicle.vtol ? 85 /* MAV_CMD_NAV_VTOL_LAND */ : 21 /* MAV_CMD_NAV_LAND */
                 } else if (item && !isNaN(it.altitude)) {
                     _aeroSetRelativeAltitude(item, it.altitude)
                 }
