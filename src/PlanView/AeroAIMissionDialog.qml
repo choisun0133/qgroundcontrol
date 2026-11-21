@@ -156,6 +156,11 @@ Popup {
             var alt = it.alt_m !== null && it.alt_m !== undefined ? it.alt_m : defaultAltitude
             items.push({ type: it.type, coordinate: coord, altitude: alt })
         }
+        // An omitted takeoff altitude becomes the default mission altitude, the value the
+        // takeoff item would get anyway, so it is shown and checked against the 150 m limit.
+        if (plan.add_takeoff && (plan.takeoff_alt_m === null || plan.takeoff_alt_m === undefined)) {
+            plan.takeoff_alt_m = defaultAltitude
+        }
         _plan = plan
         _items = items
         _status = items.length > 0 ? "" : qsTr("만들어진 항목이 없습니다. 요청을 더 구체적으로 적어 주세요.")

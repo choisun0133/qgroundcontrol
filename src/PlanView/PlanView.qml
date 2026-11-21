@@ -243,13 +243,25 @@ Item {
         })
     }
 
+    // AeroResearch: AI drafts are in metres above the takeoff point. Force the relative frame
+    // (the plan default may be AMSL / terrain) and write rawValue (metres, not display units).
+    function _aeroSetRelativeAltitude(item, metres) {
+        if (!item || !item.altitude) {
+            return
+        }
+        if (item.altitudeFrame !== undefined) {
+            item.altitudeFrame = QGroundControl.AltitudeFrameRelative
+        }
+        item.altitude.rawValue = metres
+    }
+
     // AeroResearch: add the "AI 임무" draft at the end of the mission
     function _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) {
         if (addTakeoff && _takeoffIndex() < 0 && !_vehicleFlying() && _missionController.isInsertTakeoffValid) {
             _insertTakeoff(false /* makeCurrentItem */)
             var takeoffIndex = _takeoffIndex()
-            if (takeoffIndex >= 0 && !isNaN(takeoffAltitude) && _visualItems.get(takeoffIndex).altitude) {
-                _visualItems.get(takeoffIndex).altitude.value = takeoffAltitude
+            if (takeoffIndex >= 0 && !isNaN(takeoffAltitude)) {
+                _aeroSetRelativeAltitude(_visualItems.get(takeoffIndex), takeoffAltitude)
             }
         }
         _planMasterController.userSelectedManualCreation = true
@@ -266,8 +278,8 @@ Item {
                 item = _missionController.insertSimpleMissionItem(it.coordinate, index, false)
                 if (item && it.type === "land") {
                     item.command = 21   // MAV_CMD_NAV_LAND
-                } else if (item && item.altitude && !isNaN(it.altitude)) {
-                    item.altitude.value = it.altitude
+                } else if (item && !isNaN(it.altitude)) {
+                    _aeroSetRelativeAltitude(item, it.altitude)
                 }
             }
             if (item) {
