@@ -259,15 +259,43 @@ Item {
         return !!visualItem && (visualItem.isLandCommand || visualItem.command === 20 /* MAV_CMD_NAV_RETURN_TO_LAUNCH */)
     }
 
-    // AeroResearch: add the "AI 임무" draft at the end of the mission
-    function _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) {
-        // Takeoff when the draft asks for one, or when the plan settings require it before any waypoint
-        var takeoffRequired = !QGroundControl.settingsManager.planViewSettings.takeoffItemNotRequired.rawValue
+    // AeroResearch: takeoff state for the AI draft, read when the dialog opens. The dialog
+    // decides whether a takeoff is added (draft request or plan setting) and checks its altitude.
+    function _aeroTakeoffRequired() {
+        return !QGroundControl.settingsManager.planViewSettings.takeoffItemNotRequired.rawValue
                 && !_planMasterController.controllerVehicle.rover
-        if ((addTakeoff || takeoffRequired) && _takeoffIndex() < 0 && !_vehicleFlying() && _missionController.isInsertTakeoffValid) {
+    }
+
+    function _aeroCanAddTakeoff() {
+        return _takeoffIndex() < 0 && !_vehicleFlying() && !_planMasterController.controllerVehicle.rover
+    }
+
+    // AeroResearch: add the "AI 임무" draft. Returns "" on success or a Korean error message
+    // (then nothing was added). addTakeoff / takeoffAltitude are the values shown in the preview.
+    function _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) {
+        if (addTakeoff && _takeoffIndex() < 0) {
+            // A new offline plan has no home yet, and a takeoff cannot be inserted without one
+            var home = _missionController.plannedHomePosition
+            if (!home || !home.isValid) {
+                var vehicle = QGroundControl.multiVehicleManager.activeVehicle
+                var homeCoord = vehicle && vehicle.coordinate.isValid ? vehicle.coordinate : null
+                for (var h = 0; !homeCoord && h < items.length; h++) {
+                    if (items[h].coordinate && items[h].coordinate.isValid) {
+                        homeCoord = items[h].coordinate
+                    }
+                }
+                _missionController.setHomePosition(homeCoord ? homeCoord : mapCenter())
+                _missionController.setCurrentPlanViewSeqNum(0, true)   // recalculates isInsertTakeoffValid
+            }
+            if (!_missionController.isInsertTakeoffValid) {
+                return qsTr("이륙 항목을 넣을 수 없어 추가하지 않았습니다. 지도에서 홈 위치를 정한 뒤 다시 시도하세요.")
+            }
             _insertTakeoff(false /* makeCurrentItem */)
             var takeoffIndex = _takeoffIndex()
-            if (takeoffIndex >= 0 && !isNaN(takeoffAltitude)) {
+            if (takeoffIndex < 0) {
+                return qsTr("이륙 항목을 넣지 못해 추가하지 않았습니다.")
+            }
+            if (!isNaN(takeoffAltitude)) {
                 _aeroSetRelativeAltitude(_visualItems.get(takeoffIndex), takeoffAltitude)
             }
         }
@@ -308,6 +336,7 @@ Item {
         }
         _missionController.setCurrentPlanViewSeqNum(0, true)
         mapFitFunctions.fitMapViewportToMissionItems()
+        return ""
     }
 
     function insertROIAfterCurrent(coordinate) {
@@ -665,7 +694,11 @@ Item {
                         // goes in front of an existing land / RTL, so it also works on an empty plan
                         enabled: !_planMasterController.syncInProgress
                         visible: toolStrip._isMissionLayer
-                        onTriggered: aeroAIMissionDialog.openDialog()
+                        onTriggered: {
+                            aeroAIMissionDialog.takeoffRequired = _aeroTakeoffRequired()
+                            aeroAIMissionDialog.canAddTakeoff = _aeroCanAddTakeoff()
+                            aeroAIMissionDialog.openDialog()
+                        }
                     },
                     ToolStripAction {
                         text: qsTr("Stats")
@@ -1051,7 +1084,7 @@ Item {
         existingItemCount:      Math.max(_visualItems.count - 1, 0)
         defaultAltitude:        _appSettings ? _appSettings.defaultMissionItemAltitude.rawValue : 50
         vehicleType:            _planMasterController.controllerVehicle.vehicleTypeString
-        onApplyRequested:       (items, addTakeoff, takeoffAltitude) => _aeroApplyAIMission(items, addTakeoff, takeoffAltitude)
+        applyHandler:           function(items, addTakeoff, takeoffAltitude) { return _aeroApplyAIMission(items, addTakeoff, takeoffAltitude) }
     }
 
     // AeroResearch: asked when the first waypoint/pattern of an empty plan is added

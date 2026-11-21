@@ -28,8 +28,11 @@ Popup {
     property real   defaultAltitude:    50
     property string vehicleType:        ""
 
-    // Emitted with [{ type: "waypoint"|"land"|"rtl", coordinate, altitude }], addTakeoff, takeoffAltitude
-    signal applyRequested(var items, bool addTakeoff, real takeoffAltitude)
+    property bool   takeoffRequired:    false   // plan setting: takeoff needed before waypoints
+    property bool   canAddTakeoff:      false   // no takeoff in the plan yet and not flying
+    // function(items, addTakeoff, takeoffAltitude) -> "" or error text.
+    // items: [{ type: "waypoint"|"land"|"rtl", coordinate, altitude }]
+    property var    applyHandler:       null
 
     readonly property real _u:              ScreenTools.defaultFontPixelHeight
     readonly property real _legalMaxAlt:    150
@@ -169,9 +172,13 @@ Popup {
             var alt = it.alt_m !== null && it.alt_m !== undefined ? it.alt_m : defaultAltitude
             items.push({ type: it.type, coordinate: coord, altitude: alt })
         }
-        // An omitted takeoff altitude becomes the default mission altitude, the value the
-        // takeoff item would get anyway, so it is shown and checked against the 150 m limit.
-        if (plan.add_takeoff && (plan.takeoff_alt_m === null || plan.takeoff_alt_m === undefined)) {
+        // Decide here whether a takeoff is really added (draft request or plan setting), and with
+        // which altitude (omitted -> default mission altitude, what the item would get anyway), so
+        // the preview, the 150 m check and the inserted item all use the same values.
+        plan.add_takeoff = canAddTakeoff && (plan.add_takeoff || takeoffRequired)
+        if (!plan.add_takeoff) {
+            plan.takeoff_alt_m = null
+        } else if (plan.takeoff_alt_m === null || plan.takeoff_alt_m === undefined) {
             plan.takeoff_alt_m = defaultAltitude
         }
         _plan = plan
@@ -321,8 +328,12 @@ Popup {
                 enabled:    !control._overLimit || control._overLimitAccepted
                 onClicked: {
                     var takeoffAlt = control._plan.takeoff_alt_m !== null ? control._plan.takeoff_alt_m : NaN
-                    control.applyRequested(control._items, control._plan.add_takeoff, takeoffAlt)
-                    control.close()
+                    var error = control.applyHandler ? control.applyHandler(control._items, control._plan.add_takeoff, takeoffAlt) : ""
+                    if (error) {
+                        control._status = error
+                    } else {
+                        control.close()
+                    }
                 }
             }
         }
