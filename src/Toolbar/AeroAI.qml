@@ -5,6 +5,8 @@ import QGroundControl
 
 // AeroResearch: AI client shared by the AI windows. Providers:
 //  - openai: OpenAI Responses API (paid)
+//  - aero:   AeroResearch shared AI (aero-ai-relay on the office server). The password is asked
+//            once per run and never saved.
 //  - claude: Anthropic Claude Messages API (paid)
 //  - gemini: Google Gemini through its OpenAI-compatible Chat Completions endpoint (free tier)
 //  - custom: any endpoint; ".../responses" is sent in Responses format, anything else as Chat
@@ -18,7 +20,9 @@ QtObject {
     id: control
 
     // ---- Settings (saved per PC) ----
-    property alias provider:        saved.provider          // "openai" | "gemini" | "custom"
+    property alias provider:        saved.provider          // "aero" | "openai" | "claude" | "gemini" | "custom"
+    property alias aeroEndpoint:    saved.aeroEndpoint
+    property string aeroPassword:   ""                      // shared AI password: this run only, never saved
     property alias apiKey:          saved.apiKey            // OpenAI
     property alias model:           saved.model
     property alias endpoint:        saved.endpoint
@@ -34,20 +38,23 @@ QtObject {
 
     readonly property string defaultEndpoint:   "https://api.openai.com/v1/responses"
     readonly property string defaultModel:      "gpt-6-astra"
+    readonly property string defaultAeroEndpoint: "http://192.168.0.239:8090/v1/chat/completions"
+    readonly property bool   aeroAvailable:     QGroundControl.aeroBrand === "aero"
+    readonly property bool   needsPassword:     provider === "aero" && aeroPassword === ""
     readonly property string claudeEndpoint:    "https://api.anthropic.com/v1/messages"
     readonly property string defaultClaudeModel: "claude-sonnet-5-5"
     readonly property string geminiEndpoint:    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
     readonly property string defaultGeminiModel: "gemini-flash-latest"
 
-    readonly property string activeKey:      provider === "claude" ? claudeKey : (provider === "gemini" ? geminiKey : (provider === "custom" ? customKey : apiKey))
-    readonly property string activeEndpoint: provider === "claude" ? claudeEndpoint : (provider === "gemini" ? geminiEndpoint : (provider === "custom" ? customEndpoint : endpoint))
-    readonly property string activeModel:    provider === "claude" ? (claudeModel !== "" ? claudeModel : defaultClaudeModel)
+    readonly property string activeKey:      provider === "aero" ? aeroPassword : provider === "claude" ? claudeKey : (provider === "gemini" ? geminiKey : (provider === "custom" ? customKey : apiKey))
+    readonly property string activeEndpoint: provider === "aero" ? (aeroEndpoint !== "" ? aeroEndpoint : defaultAeroEndpoint) : provider === "claude" ? claudeEndpoint : (provider === "gemini" ? geminiEndpoint : (provider === "custom" ? customEndpoint : endpoint))
+    readonly property string activeModel:    provider === "aero" ? "server" : provider === "claude" ? (claudeModel !== "" ? claudeModel : defaultClaudeModel)
                                              : provider === "gemini" ? (geminiModel !== "" ? geminiModel : defaultGeminiModel)
                                              : (provider === "custom" ? customModel : (model !== "" ? model : defaultModel))
     readonly property bool   claudeFormat:   provider === "claude"
-    readonly property bool   chatFormat:     provider === "gemini" || (provider === "custom" && !/\/responses\/?$/.test(customEndpoint))
+    readonly property bool   chatFormat:     provider === "aero" || provider === "gemini" || (provider === "custom" && !/\/responses\/?$/.test(customEndpoint))
     readonly property bool   configured:     activeEndpoint !== "" && activeModel !== ""
-                                             && (activeKey !== "" || provider === "custom" || (provider === "openai" && endpoint !== defaultEndpoint))
+                                             && (activeKey !== "" || provider === "aero" || provider === "custom" || (provider === "openai" && endpoint !== defaultEndpoint))
     readonly property bool   busy:              _pending.length > 0
     property var             _pending:          []
     readonly property int    _timeoutMs:        90000
@@ -59,6 +66,7 @@ QtObject {
         id:         saved
         category:   "AeroAI"
         property string provider:       "openai"
+        property string aeroEndpoint:   ""
         property string apiKey:         ""
         property string claudeKey:      ""
         property string claudeModel:    ""
@@ -86,6 +94,10 @@ QtObject {
     // done(ok, result, errorText): result is text, or the parsed object when a schema was given
     function ask(input, options, done) {
         options = options || {}
+        if (needsPassword) {
+            done(false, null, qsTr("AI 비서 창에서 공용 AI 비밀번호를 입력하세요"))
+            return
+        }
         if (!configured) {
             done(false, null, qsTr("AI 설정에서 API 키를 입력하세요"))
             return
@@ -95,6 +107,7 @@ QtObject {
         // The reply is parsed in the format the request was sent in
         options._chat = chatFormat
         options._claude = claudeFormat
+        options._aero = provider === "aero"
         var body = options._claude ? _claudeBody(input, instructions, options)
                  : (options._chat ? _chatBody(input, instructions, options) : _responsesBody(input, instructions, options))
 
@@ -243,6 +256,9 @@ QtObject {
             var msg = err && err.error && err.error.message ? err.error.message : ""
             if (xhr.status === 0) {
                 done(false, null, qsTr("서버에 연결할 수 없습니다 (인터넷·주소 확인)"))
+            } else if ((xhr.status === 401 || xhr.status === 403) && options._aero) {
+                aeroPassword = ""       // ask again
+                done(false, null, qsTr("공용 AI 비밀번호가 올바르지 않습니다"))
             } else if (xhr.status === 401 || xhr.status === 403) {
                 done(false, null, qsTr("API 키가 올바르지 않습니다 (%1) %2").arg(xhr.status).arg(msg))
             } else if (xhr.status === 429) {
