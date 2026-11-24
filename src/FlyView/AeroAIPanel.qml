@@ -467,7 +467,7 @@ AeroFloatingPanel {
             Layout.fillWidth:   true
             visible:            aeroAI.provider !== "openai"
             text:               aeroAI.provider === "aero"
-                                ? qsTr("사무실 AI 중계 서버를 함께 씁니다. 비밀번호는 관리자에게 받고, 이 PC에 저장하지 않아 앱을 켤 때마다 한 번 입력합니다. 주소는 비워 두면 사내 서버를 씁니다(현장에서는 관리자가 알려준 외부 주소).")
+                                ? qsTr("사무실 AI 중계 서버를 함께 씁니다. 비밀번호는 관리자에게 받고, 이 PC에 저장하지 않아 앱을 켤 때마다 한 번 입력합니다. 주소는 비워 두면 기본 주소(ai.aeroresearch.co.kr)를 씁니다. 사무실 안에서 연결이 안 되면 http://192.168.0.239:8090/v1/chat/completions 을 넣으세요.")
                                 : aeroAI.provider === "claude"
                                 ? qsTr("키 받기: platform.claude.com → API keys. Claude 채팅 구독과 API 요금은 따로입니다 (Max·Team 등 일부 요금제는 월 API 크레딧 포함).")
                                 : aeroAI.provider === "gemini"

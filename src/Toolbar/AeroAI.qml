@@ -38,7 +38,7 @@ QtObject {
 
     readonly property string defaultEndpoint:   "https://api.openai.com/v1/responses"
     readonly property string defaultModel:      "gpt-6-astra"
-    readonly property string defaultAeroEndpoint: "http://192.168.0.239:8090/v1/chat/completions"
+    readonly property string defaultAeroEndpoint: "http://ai.aeroresearch.co.kr:8090/v1/chat/completions"
     readonly property bool   aeroAvailable:     QGroundControl.aeroBrand === "aero"
     readonly property bool   needsPassword:     provider === "aero" && aeroPassword === ""
     readonly property string claudeEndpoint:    "https://api.anthropic.com/v1/messages"
