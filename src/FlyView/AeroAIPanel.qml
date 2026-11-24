@@ -8,7 +8,7 @@ import QGroundControl.Controls
 // AeroResearch: GPT window (Ctrl+F → "AI 비서"). Uses the shared `aeroAI` client from MainWindow.
 //  - 비서:      questions about the current flight; vehicle state and recent messages are sent along
 //  - 비행 요약:  flight report from the messages, written automatically after disarm (setting)
-//  - 설정:      API key / model / endpoint, auto summary, auto explanation of error messages
+//  - 설정:      provider (OpenAI / Gemini / custom), API key / model / endpoint, auto summary, auto explanation of error messages
 // Message rows in the message window have an "AI" button that asks for an explanation here.
 AeroFloatingPanel {
     id:             control
@@ -33,6 +33,8 @@ AeroFloatingPanel {
     readonly property int _historyTurns: 10
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
+    readonly property var _providers: [ "openai", "claude", "gemini", "custom" ]
+
     ListModel { id: chatModel }       // { role: "user"|"assistant"|"error", text }
 
     onCollapsedChanged: if (!collapsed && _tab === "summary") { _summaryUnread = false }
@@ -347,29 +349,81 @@ AeroFloatingPanel {
         columnSpacing:      control._u * 0.5
         rowSpacing:         control._u * 0.4
 
+        QGCLabel { text: qsTr("AI 제공사") }
+        QGCComboBox {
+            Layout.fillWidth:   true
+            model:              [ qsTr("OpenAI GPT (유료)"), qsTr("Anthropic Claude (유료)"), qsTr("Google Gemini (무료)"), qsTr("직접 입력 (Ollama·사내 서버)") ]
+            currentIndex:       Math.max(0, control._providers.indexOf(aeroAI.provider))
+            onActivated:        (index) => { aeroAI.provider = control._providers[index] }
+        }
+
         QGCLabel { text: qsTr("API 키") }
         QGCTextField {
             Layout.fillWidth:   true
-            text:               aeroAI.apiKey
+            text:               aeroAI.activeKey
             echoMode:           TextInput.Password
-            placeholderText:    "sk-..."
-            onEditingFinished:  aeroAI.apiKey = text.trim()
+            placeholderText:    aeroAI.provider === "claude" ? "sk-ant-..." : (aeroAI.provider === "gemini" ? "AIza..." : (aeroAI.provider === "custom" ? qsTr("필요 없으면 비워 두기") : "sk-..."))
+            onEditingFinished: {
+                if (aeroAI.provider === "claude") {
+                    aeroAI.claudeKey = text.trim()
+                } else if (aeroAI.provider === "gemini") {
+                    aeroAI.geminiKey = text.trim()
+                } else if (aeroAI.provider === "custom") {
+                    aeroAI.customKey = text.trim()
+                } else {
+                    aeroAI.apiKey = text.trim()
+                }
+            }
         }
 
         QGCLabel { text: qsTr("모델") }
         QGCTextField {
             Layout.fillWidth:   true
-            text:               aeroAI.model
-            placeholderText:    aeroAI.defaultModel
-            onEditingFinished:  aeroAI.model = text.trim() !== "" ? text.trim() : aeroAI.defaultModel
+            text:               aeroAI.provider === "claude" ? aeroAI.claudeModel : (aeroAI.provider === "gemini" ? aeroAI.geminiModel : (aeroAI.provider === "custom" ? aeroAI.customModel : aeroAI.model))
+            placeholderText:    aeroAI.provider === "claude" ? aeroAI.defaultClaudeModel : (aeroAI.provider === "gemini" ? aeroAI.defaultGeminiModel : (aeroAI.provider === "custom" ? qsTr("예: llama3.1") : aeroAI.defaultModel))
+            onEditingFinished: {
+                if (aeroAI.provider === "claude") {
+                    aeroAI.claudeModel = text.trim()
+                } else if (aeroAI.provider === "gemini") {
+                    aeroAI.geminiModel = text.trim()
+                } else if (aeroAI.provider === "custom") {
+                    aeroAI.customModel = text.trim()
+                } else {
+                    aeroAI.model = text.trim() !== "" ? text.trim() : aeroAI.defaultModel
+                }
+            }
         }
 
-        QGCLabel { text: qsTr("주소") }
+        QGCLabel {
+            text:       qsTr("주소")
+            visible:    aeroAI.provider === "openai" || aeroAI.provider === "custom"
+        }
         QGCTextField {
             Layout.fillWidth:   true
-            text:               aeroAI.endpoint
-            placeholderText:    aeroAI.defaultEndpoint
-            onEditingFinished:  aeroAI.endpoint = text.trim() !== "" ? text.trim() : aeroAI.defaultEndpoint
+            visible:            aeroAI.provider === "openai" || aeroAI.provider === "custom"
+            text:               aeroAI.provider === "custom" ? aeroAI.customEndpoint : aeroAI.endpoint
+            placeholderText:    aeroAI.provider === "custom" ? "http://localhost:11434/v1/chat/completions" : aeroAI.defaultEndpoint
+            onEditingFinished: {
+                if (aeroAI.provider === "custom") {
+                    aeroAI.customEndpoint = text.trim()
+                } else {
+                    aeroAI.endpoint = text.trim() !== "" ? text.trim() : aeroAI.defaultEndpoint
+                }
+            }
+        }
+
+        QGCLabel {
+            Layout.columnSpan:  2
+            Layout.fillWidth:   true
+            visible:            aeroAI.provider !== "openai"
+            text:               aeroAI.provider === "claude"
+                                ? qsTr("키 받기: platform.claude.com → API keys. Claude 채팅 구독과 API 요금은 따로입니다 (Max·Team 등 일부 요금제는 월 API 크레딧 포함).")
+                                : aeroAI.provider === "gemini"
+                                ? qsTr("무료 키 받기: aistudio.google.com → Get API key (구글 계정). 무료 등급은 분당·하루 사용 횟수 제한이 있고, 입력 내용이 구글 서비스 개선에 쓰일 수 있습니다.")
+                                : qsTr("Ollama 등 OpenAI 호환 서버 주소를 넣습니다. 주소가 …/responses로 끝나면 OpenAI Responses 방식, 그 밖에는 Chat Completions 방식으로 보냅니다.")
+            color:              "#9BA1A6"
+            font.pointSize:     ScreenTools.smallFontPointSize
+            wrapMode:           Text.WordWrap
         }
 
         QGCCheckBox {
@@ -408,7 +462,7 @@ AeroFloatingPanel {
         QGCLabel {
             Layout.columnSpan:  2
             Layout.fillWidth:   true
-            text:               qsTr("API 키는 이 PC에만 저장됩니다. 여러 PC에 배포할 때는 주소를 사내 중계 서버(NAS)로 바꾸고 키는 비워 두면 됩니다.")
+            text:               qsTr("API 키는 이 PC에만 저장됩니다. 여러 PC에 배포할 때는 \"직접 입력\"에 사내 중계 서버(NAS) 주소를 넣고 키는 비워 두면 됩니다.")
             color:              "#6E757B"
             font.pointSize:     ScreenTools.smallFontPointSize
             wrapMode:           Text.WordWrap
