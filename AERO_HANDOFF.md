@@ -64,6 +64,7 @@
 | 1.6.24 | LTE 서버 UDP 접속(미션플래너 UDPCl 방식): 로컬 포트를 OS가 고르게 해 기본 14550 수신과 충돌하지 않게 (`AeroStartScreen.qml`). 에어로리서치판 윈도우만 (Actions 다시 켬 11-08) |
 | 1.6.26 | GPT 연동: Ctrl+F → AI 비서 창(질문·비행 요약·설정, `src/FlyView/AeroAIPanel.qml`), 공용 클라이언트 `src/Toolbar/AeroAI.qml`(MainWindow `aeroAI`, OpenAI Responses API, 설정 `AeroAI` 그룹), 메시지 창 경고·오류 줄 "AI" 해설 버튼, 시동 끄면 비행 요약 자동 작성, 오류 자동 해설(기본 꺼짐), 임무 계획 도구 "AI 임무"(`src/PlanView/AeroAIMissionDialog.qml`, 미리보기 후 추가, 150m 초과 확인) |
 | 1.6.27 | AI 비서 제공사 선택: OpenAI / Claude / Gemini(무료) / 직접 입력(Ollama·NAS). Claude=Messages API, Gemini·직접 입력=Chat Completions, 프롬프트 방식 JSON은 스키마 검증(`AeroAI.qml`, `AeroAIPanel.qml`). Codex 리뷰 PR #2. 에어로리서치판 윈도우만 |
+| 1.6.28 | AI 비서 "에어로리서치 공용 AI"(aero 브랜드만): aero-ai-relay(사무실 서버) 기본 주소 http://ai.aeroresearch.co.kr:8090/v1/chat/completions, 비밀번호는 저장 안 함(실행마다 입력, 401이면 다시 물음). PR #3·#4 Codex 리뷰. 서버 패키지 aero-ai-relay.zip(비밀번호 직접 지정, 대입 차단). 에어로리서치판 윈도우만 |
 | 1.6.25 | 배터리 전압 범위: 입력 즉시 적용, 상태 줄에 "전압 = %" 표시(`AeroStatusGroup.qml`), 전압을 보내는 배터리를 골라 계산(`AeroLinkStatus.qml`). 에어로리서치판 윈도우만 |
 
 ## 5. 기능별 주요 파일
