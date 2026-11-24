@@ -66,6 +66,7 @@
 | 1.6.27 | AI 비서 제공사 선택: OpenAI / Claude / Gemini(무료) / 직접 입력(Ollama·NAS). Claude=Messages API, Gemini·직접 입력=Chat Completions, 프롬프트 방식 JSON은 스키마 검증(`AeroAI.qml`, `AeroAIPanel.qml`). Codex 리뷰 PR #2. 에어로리서치판 윈도우만 |
 | 1.6.28 | AI 비서 "에어로리서치 공용 AI"(aero 브랜드만): aero-ai-relay(사무실 서버) 기본 주소 http://ai.aeroresearch.co.kr:8090/v1/chat/completions, 비밀번호는 저장 안 함(실행마다 입력, 401이면 다시 물음). PR #3·#4 Codex 리뷰. 서버 패키지 aero-ai-relay.zip(비밀번호 직접 지정, 대입 차단). 에어로리서치판 윈도우만 |
 | 1.6.29 | 영상 주소의 줄바꿈·탭·앞뒤 공백 제거(`VideoManager::_updateVideoUri`) — 붙여넣은 RTSP 주소 끝 %0A 때문에 DeviceKey가 틀려 빈 SDP를 받던 문제. PR #5 Codex 리뷰. 에어로리서치판 윈도우만 |
+| 1.6.30 | 영상 주소 목록(`AeroVideoSources.qml` = MainWindow `aeroVideo`, `QmlControls/AeroVideoSourcePicker.qml`): 기본 주소(…?DeviceKey=)+디바이스 키 또는 rtsp:// 전체 주소, 저장된 연결과 묶으면 primaryLinkName으로 자동 전환, 표시는 실제 영상 설정에서 역산(activeName), 기체가 영상 주소를 보내면(autoStreamConfigured) 선택 막음. "영상 신호 없음" 패널·Ctrl+F. PR #6 Codex 리뷰 4회. 에어로리서치판 윈도우만 |
 | 1.6.25 | 배터리 전압 범위: 입력 즉시 적용, 상태 줄에 "전압 = %" 표시(`AeroStatusGroup.qml`), 전압을 보내는 배터리를 골라 계산(`AeroLinkStatus.qml`). 에어로리서치판 윈도우만 |
 
 ## 5. 기능별 주요 파일
