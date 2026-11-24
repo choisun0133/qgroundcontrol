@@ -168,6 +168,61 @@ QtObject {
         return start >= 0 && end > start ? t.substring(start, end + 1) : t
     }
 
+    // JSON schema subset used by the AI windows: type (single or list), enum, properties,
+    // required, additionalProperties:false, items. Numbers must be finite.
+    function _matchesSchema(value, schema) {
+        if (!schema) {
+            return true
+        }
+        var types = schema.type === undefined ? [] : (Array.isArray(schema.type) ? schema.type : [schema.type])
+        if (types.length > 0) {
+            var typeOk = false
+            for (var t = 0; t < types.length && !typeOk; t++) {
+                switch (types[t]) {
+                case "null":    typeOk = value === null; break
+                case "boolean": typeOk = typeof value === "boolean"; break
+                case "string":  typeOk = typeof value === "string"; break
+                case "number":  typeOk = typeof value === "number" && isFinite(value); break
+                case "integer": typeOk = typeof value === "number" && isFinite(value) && Math.floor(value) === value; break
+                case "array":   typeOk = Array.isArray(value); break
+                case "object":  typeOk = value !== null && typeof value === "object" && !Array.isArray(value); break
+                }
+            }
+            if (!typeOk) {
+                return false
+            }
+        }
+        if (schema.enum && schema.enum.indexOf(value) < 0) {
+            return false
+        }
+        if (Array.isArray(value) && schema.items) {
+            for (var i = 0; i < value.length; i++) {
+                if (!_matchesSchema(value[i], schema.items)) {
+                    return false
+                }
+            }
+        }
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+            var props = schema.properties || {}
+            var required = schema.required || []
+            for (var r = 0; r < required.length; r++) {
+                if (!(required[r] in value)) {
+                    return false
+                }
+            }
+            for (var key in value) {
+                if (props[key] !== undefined) {
+                    if (!_matchesSchema(value[key], props[key])) {
+                        return false
+                    }
+                } else if (schema.additionalProperties === false) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
     function _finish(entry) {
         entry.finished = true
         _pending = _pending.filter(function(e) { return e !== entry })
@@ -204,7 +259,14 @@ QtObject {
         }
         if (options.schema) {
             try {
-                done(true, JSON.parse(options._chat || options._claude ? _extractJson(text) : text), "")
+                var parsed = JSON.parse(options._chat || options._claude ? _extractJson(text) : text)
+                // Only the OpenAI Responses format enforces the schema on the server; the
+                // prompt-only formats are checked here so a "200m" altitude can't slip through.
+                if ((options._chat || options._claude) && !_matchesSchema(parsed, options.schema)) {
+                    done(false, null, qsTr("응답 형식이 맞지 않습니다. 다시 시도하세요"))
+                    return
+                }
+                done(true, parsed, "")
             } catch (e2) {
                 done(false, null, qsTr("응답 형식을 읽지 못했습니다"))
             }
