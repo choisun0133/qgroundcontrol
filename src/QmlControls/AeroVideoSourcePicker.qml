@@ -36,7 +36,13 @@ ColumnLayout {
             displayText:        currentIndex < 0 ? qsTr("선택 안 됨") : currentText
             onActivated: (index) => {
                 control._error = ""
-                aeroVideo.apply(aeroVideo.entries[index].name)
+                if (!aeroVideo.apply(aeroVideo.entries[index].name)) {
+                    // Activation already moved currentIndex (and broke its binding): show the
+                    // entry that is actually playing again
+                    currentIndex = Qt.binding(function() {
+                        return aeroVideo.entries.length > 0 ? aeroVideo.indexOfName(aeroVideo.selected) : 0
+                    })
+                }
             }
         }
         QGCButton {
