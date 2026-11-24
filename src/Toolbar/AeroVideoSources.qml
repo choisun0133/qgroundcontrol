@@ -54,9 +54,11 @@ QtObject {
     }
 
     // Replaces the whole list (from the editor). Blank rows are dropped, names made unique.
+    // A row flagged `wasSelected` keeps the selection under its (possibly new) name.
     function setEntries(list) {
         var out = []
         var used = {}
+        var newSelected = ""
         for (var i = 0; i < list.length; i++) {
             var name = clean(list[i].name)
             var value = clean(list[i].value)
@@ -72,12 +74,13 @@ QtObject {
             }
             used[unique] = true
             out.push({ name: unique, value: value, link: clean(list[i].link) })
+            if (list[i].wasSelected) {
+                newSelected = unique
+            }
         }
         entries = out
         saved.entriesJson = JSON.stringify(out)
-        if (indexOfName(selected) < 0) {
-            selected = ""
-        }
+        selected = newSelected !== "" ? newSelected : (indexOfName(selected) >= 0 ? selected : "")
     }
 
     function apply(name) {
@@ -94,12 +97,22 @@ QtObject {
             applyFailed(qsTr("rtsp:// 로 시작하는 주소만 쓸 수 있습니다"))
             return false
         }
+        // A vehicle that announces its own stream (MAVLink VIDEO_STREAM_INFORMATION) overrides the
+        // RTSP URL right away, so a pick would show one camera's name over another's video.
+        if (QGroundControl.videoManager.autoStreamConfigured) {
+            applyFailed(qsTr("기체가 영상 주소를 직접 보내고 있어 저장된 영상으로 바꿀 수 없습니다"))
+            return false
+        }
         var vs = QGroundControl.settingsManager.videoSettings
         if (vs.videoSource.rawValue !== vs.rtspVideoSource) {
             vs.videoSource.rawValue = vs.rtspVideoSource
         }
         if (vs.rtspUrl.rawValue !== url) {
             vs.rtspUrl.rawValue = url
+        }
+        if (vs.rtspUrl.rawValue !== url) {
+            applyFailed(qsTr("영상 주소를 바꾸지 못했습니다"))
+            return false
         }
         selected = name
         return true

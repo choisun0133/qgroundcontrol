@@ -32,7 +32,8 @@ ColumnLayout {
             Layout.fillWidth:   true
             enabled:            aeroVideo.entries.length > 0
             model:              aeroVideo.entries.length > 0 ? aeroVideo.entries.map(function(e) { return e.name }) : [ qsTr("저장된 영상 없음") ]
-            currentIndex:       Math.max(0, aeroVideo.indexOfName(aeroVideo.selected))
+            currentIndex:       aeroVideo.entries.length > 0 ? aeroVideo.indexOfName(aeroVideo.selected) : 0
+            displayText:        currentIndex < 0 ? qsTr("선택 안 됨") : currentText
             onActivated: (index) => {
                 control._error = ""
                 aeroVideo.apply(aeroVideo.entries[index].name)
@@ -71,10 +72,10 @@ ColumnLayout {
             rows.clear()
             for (var i = 0; i < aeroVideo.entries.length; i++) {
                 var e = aeroVideo.entries[i]
-                rows.append({ name: e.name, value: e.value, link: e.link || "" })
+                rows.append({ name: e.name, value: e.value, link: e.link || "", wasSelected: e.name === aeroVideo.selected })
             }
             if (rows.count === 0) {
-                rows.append({ name: "", value: "", link: "" })
+                rows.append({ name: "", value: "", link: "", wasSelected: false })
             }
             var names = [ qsTr("(자동 전환 안 함)") ]
             var configs = QGroundControl.linkManager.linkConfigurations
@@ -92,7 +93,7 @@ ColumnLayout {
             var list = []
             for (var i = 0; i < rows.count; i++) {
                 var r = rows.get(i)
-                list.push({ name: r.name, value: r.value, link: r.link })
+                list.push({ name: r.name, value: r.value, link: r.link, wasSelected: r.wasSelected })
             }
             aeroVideo.baseUrl = aeroVideo.clean(baseField.text)
             aeroVideo.setEntries(list)
@@ -182,7 +183,7 @@ ColumnLayout {
 
             QGCButton {
                 text:       qsTr("+ 영상 추가")
-                onClicked:  rows.append({ name: "", value: "", link: "" })
+                onClicked:  rows.append({ name: "", value: "", link: "", wasSelected: false })
             }
 
             RowLayout {
