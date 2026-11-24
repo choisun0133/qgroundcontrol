@@ -3,7 +3,12 @@ import QtQuick
 
 import QGroundControl
 
-// AeroResearch: GPT (OpenAI Responses API) client shared by the AI windows.
+// AeroResearch: AI client shared by the AI windows. Providers:
+//  - openai: OpenAI Responses API (paid)
+//  - claude: Anthropic Claude Messages API (paid)
+//  - gemini: Google Gemini through its OpenAI-compatible Chat Completions endpoint (free tier)
+//  - custom: any endpoint; ".../responses" is sent in Responses format, anything else as Chat
+//            Completions (Ollama, LM Studio, an in-house relay)
 // One instance lives in MainWindow as `aeroAI`.
 //  - ask(): sends a request and calls back with the answer text (or parsed JSON when a schema is given)
 //  - vehicleSnapshot() / recentMessages(): flight context in plain text for the prompts
@@ -13,15 +18,36 @@ QtObject {
     id: control
 
     // ---- Settings (saved per PC) ----
-    property alias apiKey:          saved.apiKey
+    property alias provider:        saved.provider          // "openai" | "gemini" | "custom"
+    property alias apiKey:          saved.apiKey            // OpenAI
     property alias model:           saved.model
     property alias endpoint:        saved.endpoint
+    property alias claudeKey:       saved.claudeKey
+    property alias claudeModel:     saved.claudeModel
+    property alias geminiKey:       saved.geminiKey
+    property alias geminiModel:     saved.geminiModel
+    property alias customKey:       saved.customKey
+    property alias customModel:     saved.customModel
+    property alias customEndpoint:  saved.customEndpoint
     property alias autoSummary:     saved.autoSummary       // write a flight summary after disarm
     property alias autoExplain:     saved.autoExplain       // explain error (E) messages automatically
 
     readonly property string defaultEndpoint:   "https://api.openai.com/v1/responses"
     readonly property string defaultModel:      "gpt-6-astra"
-    readonly property bool   configured:        endpoint !== "" && (apiKey !== "" || endpoint !== defaultEndpoint)
+    readonly property string claudeEndpoint:    "https://api.anthropic.com/v1/messages"
+    readonly property string defaultClaudeModel: "claude-sonnet-5-5"
+    readonly property string geminiEndpoint:    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    readonly property string defaultGeminiModel: "gemini-flash-latest"
+
+    readonly property string activeKey:      provider === "claude" ? claudeKey : (provider === "gemini" ? geminiKey : (provider === "custom" ? customKey : apiKey))
+    readonly property string activeEndpoint: provider === "claude" ? claudeEndpoint : (provider === "gemini" ? geminiEndpoint : (provider === "custom" ? customEndpoint : endpoint))
+    readonly property string activeModel:    provider === "claude" ? (claudeModel !== "" ? claudeModel : defaultClaudeModel)
+                                             : provider === "gemini" ? (geminiModel !== "" ? geminiModel : defaultGeminiModel)
+                                             : (provider === "custom" ? customModel : (model !== "" ? model : defaultModel))
+    readonly property bool   claudeFormat:   provider === "claude"
+    readonly property bool   chatFormat:     provider === "gemini" || (provider === "custom" && !/\/responses\/?$/.test(customEndpoint))
+    readonly property bool   configured:     activeEndpoint !== "" && activeModel !== ""
+                                             && (activeKey !== "" || provider === "custom" || (provider === "openai" && endpoint !== defaultEndpoint))
     readonly property bool   busy:              _pending.length > 0
     property var             _pending:          []
     readonly property int    _timeoutMs:        90000
@@ -32,7 +58,15 @@ QtObject {
     property Settings _saved: Settings {
         id:         saved
         category:   "AeroAI"
+        property string provider:       "openai"
         property string apiKey:         ""
+        property string claudeKey:      ""
+        property string claudeModel:    ""
+        property string geminiKey:      ""
+        property string geminiModel:    ""
+        property string customKey:      ""
+        property string customModel:    ""
+        property string customEndpoint: ""
         property string model:          "gpt-6-astra"
         property string endpoint:       "https://api.openai.com/v1/responses"
         property bool   autoSummary:    true
@@ -57,18 +91,12 @@ QtObject {
             return
         }
 
-        var body = {
-            model:          model !== "" ? model : defaultModel,
-            instructions:   options.instructions !== undefined ? options.instructions : baseInstructions,
-            input:          input,
-            store:          false
-        }
-        if (options.maxOutputTokens) {
-            body.max_output_tokens = options.maxOutputTokens
-        }
-        if (options.schema) {
-            body.text = { format: { type: "json_schema", name: options.schemaName || "result", schema: options.schema, strict: true } }
-        }
+        var instructions = options.instructions !== undefined ? options.instructions : baseInstructions
+        // The reply is parsed in the format the request was sent in
+        options._chat = chatFormat
+        options._claude = claudeFormat
+        var body = options._claude ? _claudeBody(input, instructions, options)
+                 : (options._chat ? _chatBody(input, instructions, options) : _responsesBody(input, instructions, options))
 
         var xhr = new XMLHttpRequest()
         var entry = { xhr: xhr, started: Date.now(), done: done, finished: false }
@@ -79,16 +107,120 @@ QtObject {
             control._finish(entry)
             control._handleReply(xhr, options, done)
         }
-        xhr.open("POST", endpoint)
+        xhr.open("POST", activeEndpoint)
         xhr.setRequestHeader("Content-Type", "application/json")
-        if (apiKey !== "") {
-            xhr.setRequestHeader("Authorization", "Bearer " + apiKey)
+        if (options._claude) {
+            xhr.setRequestHeader("x-api-key", activeKey)
+            xhr.setRequestHeader("anthropic-version", "2023-06-01")
+        } else if (activeKey !== "") {
+            xhr.setRequestHeader("Authorization", "Bearer " + activeKey)
         }
         var list = _pending.slice()
         list.push(entry)
         _pending = list
         _timeoutTimer.start()
         xhr.send(JSON.stringify(body))
+    }
+
+    function _responsesBody(input, instructions, options) {
+        var body = { model: activeModel, instructions: instructions, input: input, store: false }
+        if (options.maxOutputTokens) {
+            body.max_output_tokens = options.maxOutputTokens
+        }
+        if (options.schema) {
+            body.text = { format: { type: "json_schema", name: options.schemaName || "result", schema: options.schema, strict: true } }
+        }
+        return body
+    }
+
+    // Chat Completions. No max_tokens: Gemini's thinking tokens count against it and a small limit
+    // returns an empty answer. Structured output is requested in the prompt, which every
+    // compatible server understands, and the JSON is cut out of the reply.
+    function _chatBody(input, instructions, options) {
+        var system = instructions
+        if (options.schema) {
+            system += "\n\n응답은 아래 JSON 스키마를 따르는 JSON 객체 하나만 출력한다. 설명 문장이나 ``` 코드 블록 없이 JSON만 쓴다.\n"
+                      + JSON.stringify(options.schema)
+        }
+        var messages = [ { role: "system", content: system } ]
+        if (Array.isArray(input)) {
+            for (var i = 0; i < input.length; i++) {
+                messages.push({ role: input[i].role, content: String(input[i].content) })
+            }
+        } else {
+            messages.push({ role: "user", content: String(input) })
+        }
+        return { model: activeModel, messages: messages }
+    }
+
+    // Claude Messages API: system is a top-level field and max_tokens is required. Structured output
+    // goes through the prompt, as for Chat Completions.
+    function _claudeBody(input, instructions, options) {
+        var body = _chatBody(input, instructions, options)
+        var system = body.messages.shift().content
+        return { model: activeModel, max_tokens: Math.max(options.maxOutputTokens || 0, 4096), system: system, messages: body.messages }
+    }
+
+    function _extractJson(text) {
+        var t = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "")
+        var start = t.indexOf("{")
+        var end = t.lastIndexOf("}")
+        return start >= 0 && end > start ? t.substring(start, end + 1) : t
+    }
+
+    // JSON schema subset used by the AI windows: type (single or list), enum, properties,
+    // required, additionalProperties:false, items. Numbers must be finite.
+    function _matchesSchema(value, schema) {
+        if (!schema) {
+            return true
+        }
+        var types = schema.type === undefined ? [] : (Array.isArray(schema.type) ? schema.type : [schema.type])
+        if (types.length > 0) {
+            var typeOk = false
+            for (var t = 0; t < types.length && !typeOk; t++) {
+                switch (types[t]) {
+                case "null":    typeOk = value === null; break
+                case "boolean": typeOk = typeof value === "boolean"; break
+                case "string":  typeOk = typeof value === "string"; break
+                case "number":  typeOk = typeof value === "number" && isFinite(value); break
+                case "integer": typeOk = typeof value === "number" && isFinite(value) && Math.floor(value) === value; break
+                case "array":   typeOk = Array.isArray(value); break
+                case "object":  typeOk = value !== null && typeof value === "object" && !Array.isArray(value); break
+                }
+            }
+            if (!typeOk) {
+                return false
+            }
+        }
+        if (schema.enum && schema.enum.indexOf(value) < 0) {
+            return false
+        }
+        if (Array.isArray(value) && schema.items) {
+            for (var i = 0; i < value.length; i++) {
+                if (!_matchesSchema(value[i], schema.items)) {
+                    return false
+                }
+            }
+        }
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+            var props = schema.properties || {}
+            var required = schema.required || []
+            for (var r = 0; r < required.length; r++) {
+                if (!(required[r] in value)) {
+                    return false
+                }
+            }
+            for (var key in value) {
+                if (props[key] !== undefined) {
+                    if (!_matchesSchema(value[key], props[key])) {
+                        return false
+                    }
+                } else if (schema.additionalProperties === false) {
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     function _finish(entry) {
@@ -107,11 +239,12 @@ QtObject {
             data = null
         }
         if (xhr.status < 200 || xhr.status >= 300) {
-            var msg = data && data.error && data.error.message ? data.error.message : ""
+            var err = Array.isArray(data) ? data[0] : data     // Gemini can wrap the error in an array
+            var msg = err && err.error && err.error.message ? err.error.message : ""
             if (xhr.status === 0) {
                 done(false, null, qsTr("서버에 연결할 수 없습니다 (인터넷·주소 확인)"))
-            } else if (xhr.status === 401) {
-                done(false, null, qsTr("API 키가 올바르지 않습니다 (401)"))
+            } else if (xhr.status === 401 || xhr.status === 403) {
+                done(false, null, qsTr("API 키가 올바르지 않습니다 (%1) %2").arg(xhr.status).arg(msg))
             } else if (xhr.status === 429) {
                 done(false, null, qsTr("사용 한도 초과 또는 요청이 너무 많습니다 (429) %1").arg(msg))
             } else {
@@ -119,14 +252,21 @@ QtObject {
             }
             return
         }
-        var text = _outputText(data)
+        var text = options._claude ? _claudeText(data) : (options._chat ? _chatText(data) : _outputText(data))
         if (text === "") {
             done(false, null, qsTr("응답이 비어 있습니다"))
             return
         }
         if (options.schema) {
             try {
-                done(true, JSON.parse(text), "")
+                var parsed = JSON.parse(options._chat || options._claude ? _extractJson(text) : text)
+                // Only the OpenAI Responses format enforces the schema on the server; the
+                // prompt-only formats are checked here so a "200m" altitude can't slip through.
+                if ((options._chat || options._claude) && !_matchesSchema(parsed, options.schema)) {
+                    done(false, null, qsTr("응답 형식이 맞지 않습니다. 다시 시도하세요"))
+                    return
+                }
+                done(true, parsed, "")
             } catch (e2) {
                 done(false, null, qsTr("응답 형식을 읽지 못했습니다"))
             }
@@ -153,6 +293,36 @@ QtObject {
                 } else if (content[j].type === "refusal" && content[j].refusal) {
                     parts.push(content[j].refusal)
                 }
+            }
+        }
+        return parts.join("\n").trim()
+    }
+
+    // Chat Completions: choices[0].message.content (string, or an array of {type:"text", text})
+    function _chatText(data) {
+        if (!data || !data.choices || data.choices.length === 0 || !data.choices[0].message) {
+            return ""
+        }
+        var content = data.choices[0].message.content
+        if (typeof content === "string") {
+            return content.trim()
+        }
+        var parts = []
+        for (var i = 0; content && i < content.length; i++) {
+            if (content[i].text) {
+                parts.push(content[i].text)
+            }
+        }
+        return parts.join("\n").trim()
+    }
+
+    // Claude Messages API: content[] -> {type:"text", text}
+    function _claudeText(data) {
+        var parts = []
+        var content = data && data.content ? data.content : []
+        for (var i = 0; i < content.length; i++) {
+            if (content[i].type === "text" && content[i].text) {
+                parts.push(content[i].text)
             }
         }
         return parts.join("\n").trim()
