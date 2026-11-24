@@ -32,7 +32,7 @@ ColumnLayout {
             Layout.fillWidth:   true
             enabled:            aeroVideo.entries.length > 0
             model:              aeroVideo.entries.length > 0 ? aeroVideo.entries.map(function(e) { return e.name }) : [ qsTr("저장된 영상 없음") ]
-            currentIndex:       aeroVideo.entries.length > 0 ? aeroVideo.indexOfName(aeroVideo.selected) : 0
+            currentIndex:       aeroVideo.entries.length > 0 ? aeroVideo.indexOfName(aeroVideo.activeName) : 0
             displayText:        currentIndex < 0 ? qsTr("선택 안 됨") : currentText
             onActivated: (index) => {
                 control._error = ""
@@ -40,7 +40,7 @@ ColumnLayout {
                     // Activation already moved currentIndex (and broke its binding): show the
                     // entry that is actually playing again
                     currentIndex = Qt.binding(function() {
-                        return aeroVideo.entries.length > 0 ? aeroVideo.indexOfName(aeroVideo.selected) : 0
+                        return aeroVideo.entries.length > 0 ? aeroVideo.indexOfName(aeroVideo.activeName) : 0
                     })
                 }
             }
@@ -78,7 +78,7 @@ ColumnLayout {
             rows.clear()
             for (var i = 0; i < aeroVideo.entries.length; i++) {
                 var e = aeroVideo.entries[i]
-                rows.append({ name: e.name, value: e.value, link: e.link || "", wasSelected: e.name === aeroVideo.selected })
+                rows.append({ name: e.name, value: e.value, link: e.link || "", wasSelected: e.name === aeroVideo.activeName })
             }
             if (rows.count === 0) {
                 rows.append({ name: "", value: "", link: "", wasSelected: false })
@@ -104,8 +104,9 @@ ColumnLayout {
             aeroVideo.baseUrl = aeroVideo.clean(baseField.text)
             aeroVideo.setEntries(list)
             control._error = ""
-            if (aeroVideo.selected !== "") {
-                aeroVideo.apply(aeroVideo.selected)     // the selected entry may have been edited
+            var playingKept = list.some(function(r) { return r.wasSelected && aeroVideo.clean(r.value) !== "" })
+            if (playingKept && aeroVideo.selected !== "") {
+                aeroVideo.apply(aeroVideo.selected)     // the playing entry may have been edited
             }
             close()
         }

@@ -15,6 +15,28 @@ QtObject {
     property alias selected:    saved.selected
     property var   entries:     []          // [{ name, value, link }]
 
+    // The entry that is actually playing, read back from the video settings: stays right when the
+    // URL is changed elsewhere (영상 설정 page) or a pick did not take. "" when none matches.
+    readonly property string activeName: {
+        var vs = QGroundControl.settingsManager.videoSettings
+        if (vs.videoSource.rawValue !== vs.rtspVideoSource) {
+            return ""
+        }
+        var current = clean(vs.rtspUrl.rawValue)
+        var match = ""
+        for (var i = 0; i < entries.length; i++) {
+            if (urlFor(entries[i]) === current) {
+                if (entries[i].name === selected) {
+                    return selected
+                }
+                if (match === "") {
+                    match = entries[i].name
+                }
+            }
+        }
+        return match
+    }
+
     readonly property var _vehicle:     QGroundControl.multiVehicleManager.activeVehicle
     readonly property string _linkName: _vehicle && _vehicle.vehicleLinkManager ? _vehicle.vehicleLinkManager.primaryLinkName : ""
 
