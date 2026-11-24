@@ -33,7 +33,9 @@ AeroFloatingPanel {
     readonly property int _historyTurns: 10
 
     QGCPalette { id: qgcPal; colorGroupEnabled: true }
-    readonly property var _providers: [ "openai", "claude", "gemini", "custom" ]
+    readonly property var _providers:       aeroAI.aeroAvailable ? [ "aero", "openai", "claude", "gemini", "custom" ] : [ "openai", "claude", "gemini", "custom" ]
+    readonly property var _providerNames:   ({ aero: qsTr("에어로리서치 공용 AI"), openai: qsTr("OpenAI GPT (유료)"), claude: qsTr("Anthropic Claude (유료)"),
+                                               gemini: qsTr("Google Gemini (무료)"), custom: qsTr("직접 입력 (Ollama·사내 서버)") })
 
     ListModel { id: chatModel }       // { role: "user"|"assistant"|"error", text }
 
@@ -185,6 +187,31 @@ AeroFloatingPanel {
         visible:            control._tab === "chat"
         spacing:            control._u * 0.4
 
+        RowLayout {
+            Layout.fillWidth:   true
+            visible:            aeroAI.needsPassword
+            spacing:            control._u * 0.3
+
+            QGCLabel { text: qsTr("공용 AI 비밀번호") }
+            QGCTextField {
+                id:                 aeroPasswordField
+                Layout.fillWidth:   true
+                echoMode:           TextInput.Password
+                placeholderText:    qsTr("입력 후 Enter (저장하지 않음)")
+                onAccepted: {
+                    aeroAI.aeroPassword = text.trim()
+                    text = ""
+                }
+            }
+            QGCButton {
+                text:       qsTr("확인")
+                onClicked: {
+                    aeroAI.aeroPassword = aeroPasswordField.text.trim()
+                    aeroPasswordField.text = ""
+                }
+            }
+        }
+
         ListView {
             id:                     chatList
             Layout.fillWidth:       true
@@ -240,7 +267,7 @@ AeroFloatingPanel {
                 QGCButton {
                     text:           modelData
                     heightFactor:   0.25
-                    enabled:        aeroAI.configured
+                    enabled:        aeroAI.configured && !aeroAI.needsPassword
                     onClicked:      control.send(modelData)
                 }
             }
@@ -253,8 +280,8 @@ AeroFloatingPanel {
             QGCTextField {
                 id:                 questionField
                 Layout.fillWidth:   true
-                placeholderText:    aeroAI.configured ? qsTr("질문 입력 후 Enter") : qsTr("설정에서 API 키를 먼저 입력하세요")
-                enabled:            aeroAI.configured
+                placeholderText:    aeroAI.needsPassword ? qsTr("위에 공용 AI 비밀번호를 먼저 입력하세요") : (aeroAI.configured ? qsTr("질문 입력 후 Enter") : qsTr("설정에서 API 키를 먼저 입력하세요"))
+                enabled:            aeroAI.configured && !aeroAI.needsPassword
                 onAccepted: {
                     control.send(text)
                     text = ""
@@ -352,14 +379,31 @@ AeroFloatingPanel {
         QGCLabel { text: qsTr("AI 제공사") }
         QGCComboBox {
             Layout.fillWidth:   true
-            model:              [ qsTr("OpenAI GPT (유료)"), qsTr("Anthropic Claude (유료)"), qsTr("Google Gemini (무료)"), qsTr("직접 입력 (Ollama·사내 서버)") ]
+            model:              control._providers.map(function(p) { return control._providerNames[p] })
             currentIndex:       Math.max(0, control._providers.indexOf(aeroAI.provider))
             onActivated:        (index) => { aeroAI.provider = control._providers[index] }
         }
 
-        QGCLabel { text: qsTr("API 키") }
+        QGCLabel {
+            text:       qsTr("비밀번호")
+            visible:    aeroAI.provider === "aero"
+        }
         QGCTextField {
             Layout.fillWidth:   true
+            visible:            aeroAI.provider === "aero"
+            text:               aeroAI.aeroPassword
+            echoMode:           TextInput.Password
+            placeholderText:    qsTr("저장하지 않음 · 앱을 켤 때마다 입력")
+            onEditingFinished:  aeroAI.aeroPassword = text.trim()
+        }
+
+        QGCLabel {
+            text:       qsTr("API 키")
+            visible:    aeroAI.provider !== "aero"
+        }
+        QGCTextField {
+            Layout.fillWidth:   true
+            visible:            aeroAI.provider !== "aero"
             text:               aeroAI.activeKey
             echoMode:           TextInput.Password
             placeholderText:    aeroAI.provider === "claude" ? "sk-ant-..." : (aeroAI.provider === "gemini" ? "AIza..." : (aeroAI.provider === "custom" ? qsTr("필요 없으면 비워 두기") : "sk-..."))
@@ -376,9 +420,13 @@ AeroFloatingPanel {
             }
         }
 
-        QGCLabel { text: qsTr("모델") }
+        QGCLabel {
+            text:       qsTr("모델")
+            visible:    aeroAI.provider !== "aero"
+        }
         QGCTextField {
             Layout.fillWidth:   true
+            visible:            aeroAI.provider !== "aero"
             text:               aeroAI.provider === "claude" ? aeroAI.claudeModel : (aeroAI.provider === "gemini" ? aeroAI.geminiModel : (aeroAI.provider === "custom" ? aeroAI.customModel : aeroAI.model))
             placeholderText:    aeroAI.provider === "claude" ? aeroAI.defaultClaudeModel : (aeroAI.provider === "gemini" ? aeroAI.defaultGeminiModel : (aeroAI.provider === "custom" ? qsTr("예: llama3.1") : aeroAI.defaultModel))
             onEditingFinished: {
@@ -396,15 +444,17 @@ AeroFloatingPanel {
 
         QGCLabel {
             text:       qsTr("주소")
-            visible:    aeroAI.provider === "openai" || aeroAI.provider === "custom"
+            visible:    aeroAI.provider !== "gemini" && aeroAI.provider !== "claude"
         }
         QGCTextField {
             Layout.fillWidth:   true
-            visible:            aeroAI.provider === "openai" || aeroAI.provider === "custom"
-            text:               aeroAI.provider === "custom" ? aeroAI.customEndpoint : aeroAI.endpoint
-            placeholderText:    aeroAI.provider === "custom" ? "http://localhost:11434/v1/chat/completions" : aeroAI.defaultEndpoint
+            visible:            aeroAI.provider !== "gemini" && aeroAI.provider !== "claude"
+            text:               aeroAI.provider === "aero" ? aeroAI.aeroEndpoint : (aeroAI.provider === "custom" ? aeroAI.customEndpoint : aeroAI.endpoint)
+            placeholderText:    aeroAI.provider === "aero" ? aeroAI.defaultAeroEndpoint : (aeroAI.provider === "custom" ? "http://localhost:11434/v1/chat/completions" : aeroAI.defaultEndpoint)
             onEditingFinished: {
-                if (aeroAI.provider === "custom") {
+                if (aeroAI.provider === "aero") {
+                    aeroAI.aeroEndpoint = text.trim()
+                } else if (aeroAI.provider === "custom") {
                     aeroAI.customEndpoint = text.trim()
                 } else {
                     aeroAI.endpoint = text.trim() !== "" ? text.trim() : aeroAI.defaultEndpoint
@@ -416,7 +466,9 @@ AeroFloatingPanel {
             Layout.columnSpan:  2
             Layout.fillWidth:   true
             visible:            aeroAI.provider !== "openai"
-            text:               aeroAI.provider === "claude"
+            text:               aeroAI.provider === "aero"
+                                ? qsTr("사무실 AI 중계 서버를 함께 씁니다. 비밀번호는 관리자에게 받고, 이 PC에 저장하지 않아 앱을 켤 때마다 한 번 입력합니다. 주소는 비워 두면 사내 서버를 씁니다(현장에서는 관리자가 알려준 외부 주소).")
+                                : aeroAI.provider === "claude"
                                 ? qsTr("키 받기: platform.claude.com → API keys. Claude 채팅 구독과 API 요금은 따로입니다 (Max·Team 등 일부 요금제는 월 API 크레딧 포함).")
                                 : aeroAI.provider === "gemini"
                                 ? qsTr("무료 키 받기: aistudio.google.com → Get API key (구글 계정). 무료 등급은 분당·하루 사용 횟수 제한이 있고, 입력 내용이 구글 서비스 개선에 쓰일 수 있습니다.")
