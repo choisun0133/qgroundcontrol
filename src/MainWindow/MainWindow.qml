@@ -391,6 +391,7 @@ ApplicationWindow {
 
     // AeroResearch: GPT client shared by the AI window, message "AI" buttons and the plan view
     AeroAI { id: aeroAI }
+    AeroVideoSources { id: aeroVideo }
 
     Shortcut {
         sequence:   "Ctrl+F"

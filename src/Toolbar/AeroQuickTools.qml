@@ -232,6 +232,27 @@ Popup {
             }
         }
 
+        // ---- Video source ----
+        Rectangle {
+            Layout.fillWidth:       true
+            Layout.preferredHeight: videoSourceColumn.implicitHeight + control._u * 0.8
+            radius:                 control._u * 0.35
+            color:                  "#15181B"
+            border.color:           "#2A2D31"
+
+            ColumnLayout {
+                id:                     videoSourceColumn
+                anchors.left:           parent.left
+                anchors.right:          parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins:        control._u * 0.5
+                spacing:                control._u * 0.3
+
+                QGCLabel { text: qsTr("영상 선택"); font.bold: true }
+                AeroVideoSourcePicker { Layout.fillWidth: true }
+            }
+        }
+
         // ---- Voice announcements ----
         Rectangle {
             Layout.fillWidth:       true

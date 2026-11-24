@@ -43,6 +43,9 @@ AeroFloatingPanel {
                 color:                  "#5A6066"
                 font.pointSize:         ScreenTools.smallFontPointSize
             }
+            AeroVideoSourcePicker {
+                Layout.fillWidth:   true
+            }
             QGCButton {
                 Layout.alignment:   Qt.AlignHCenter
                 text:               qsTr("영상 설정")
