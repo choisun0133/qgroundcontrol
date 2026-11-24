@@ -676,11 +676,21 @@ bool VideoManager::_updateAutoStream(VideoReceiver *receiver)
     return settingsChanged;
 }
 
-bool VideoManager::_updateVideoUri(VideoReceiver *receiver, const QString &uri)
+bool VideoManager::_updateVideoUri(VideoReceiver *receiver, const QString &rawUri)
 {
     if (!receiver) {
         qCDebug(VideoManagerLog) << "VideoReceiver is NULL";
         return false;
+    }
+
+    // AeroResearch: a URL pasted with a line break ended in "%0A", which the RTSP server took as
+    // part of the DeviceKey and answered with an empty SDP. Line breaks, tabs and edge spaces
+    // never belong in a stream URL.
+    QString uri = rawUri;
+    uri.remove(QLatin1Char('\r')).remove(QLatin1Char('\n')).remove(QLatin1Char('\t'));
+    uri = uri.trimmed();
+    if (uri.isEmpty() && rawUri.isNull()) {
+        uri = QString();
     }
 
     if ((uri == receiver->uri()) && !receiver->uri().isNull()) {
