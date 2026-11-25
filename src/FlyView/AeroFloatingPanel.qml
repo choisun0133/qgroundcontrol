@@ -96,6 +96,14 @@ Item {
         border.color:   qgcPal.groupBorder
         border.width:   1
 
+        // Swallow wheel and clicks that reach the panel background, so scrolling a list that hits
+        // its end (or clicking a gap between controls) doesn't zoom or click the map underneath.
+        MouseArea {
+            anchors.fill:       parent
+            acceptedButtons:    Qt.AllButtons
+            onWheel:            (wheel) => { wheel.accepted = true }
+        }
+
         ColumnLayout {
             id:         layout
             x:          control._margin
@@ -199,6 +207,7 @@ Item {
             id:             pillMouse
             anchors.fill:   parent
             hoverEnabled:   true
+            onWheel:        (wheel) => { wheel.accepted = true }
             cursorShape:    pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
             drag.target:    control
             drag.minimumX:  0
