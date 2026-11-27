@@ -25,7 +25,17 @@ Item {
     readonly property string mode:          globals.aeroPayloadMode
     readonly property var    _vehicle:      QGroundControl.multiVehicleManager.activeVehicle
     readonly property real   _u:            ScreenTools.defaultFontPixelHeight
-    readonly property real   scale_:        Math.max(minScale, Math.min(maxScale, globals.aeroPayloadScale))
+    // The chosen size, shrunk when needed so every button stays on screen (all five in a vertical
+    // column on a short screen, for example); the saved choice is kept for larger screens.
+    readonly property real   scale_:        Math.max(0.4, Math.min(Math.max(minScale, Math.min(maxScale, globals.aeroPayloadScale)), _fitScale))
+    readonly property int    _count:        mode === "hook" ? _hookButtons.length : (mode === "gripper" ? _gripperButtons.length : 0)
+    readonly property real   _fitScale: {
+        if (!parent || _count === 0) {
+            return maxScale
+        }
+        var room = (saved.vertical ? parent.height : parent.width) - _u * 1.4 - _gap * (_count + 1)
+        return room / (_count * _u * 4.6)
+    }
     readonly property real   _button:       _u * 4.6 * scale_
     readonly property real   minScale:      0.6
     readonly property real   maxScale:      2.0
