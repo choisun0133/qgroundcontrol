@@ -30,10 +30,12 @@ Item {
     property string          _last:         ""      // id of the last button pressed (highlighted)
     property string          gripperState:  "release"   // "grab" | "release" | "unknown", from the FC's command ACK
     property string          _gripperPending: ""
+    property string          _gripperPendingVia: ""  // "fc" (DO_GRIPPER) | "servo" (DO_SET_SERVO): which result settles it
 
     on_VehicleChanged: {
         gripperState = "release"
         _gripperPending = ""
+        _gripperPendingVia = ""
         _servoBusy = false
         _servoQueue = []
         _servoInFlight = null
@@ -56,13 +58,14 @@ Item {
                     control._servoRejectedAsDuplicate()
                 } else if (command === control._mavCmdDoGripper && control._sendingGripper) {
                     control._gripperPending = ""    // ours was not sent
+                    control._gripperPendingVia = ""
                 }
                 return
             }
             if (command === control._mavCmdDoSetServo && control._servoBusy) {
                 control._servoDone(ackResult, failureCode)
             } else if (command === control._mavCmdDoGripper) {
-                if (control._gripperPending === "") {
+                if (control._gripperPending === "" || control._gripperPendingVia !== "fc") {
                     // A gripper command from elsewhere (joystick): we can't tell grab from release
                     if (ackResult === 0) {
                         control.gripperState = "unknown"
@@ -75,6 +78,7 @@ Item {
                     control.gripperState = "unknown"
                 }
                 control._gripperPending = ""
+                control._gripperPendingVia = ""
             }
         }
     }
@@ -148,6 +152,12 @@ Item {
             var queue = _servoQueue.slice()
             var index = queue.findIndex(function(r) { return r.channel === channel })
             if (index >= 0) {
+                if (queue[index].tag !== "" && queue[index].tag !== request.tag) {
+                    // A queued gripper request replaced by another command on the same output
+                    // will never be sent: release the gripper lock
+                    _gripperPending = ""
+                    _gripperPendingVia = ""
+                }
                 queue[index] = request
             } else {
                 queue.push(request)
@@ -173,6 +183,7 @@ Item {
                 gripperState = "unknown"
             }
             _gripperPending = ""
+            _gripperPendingVia = ""
         }
         _servoBusy = false
         _servoInFlight = null
@@ -213,6 +224,7 @@ Item {
                 return              // one gripper command at a time
             }
             _gripperPending = id
+            _gripperPendingVia = gripperUsesServo ? "servo" : "fc"
             if (gripperUsesServo) {
                 _sendServo(vehicle, gripperChannel, id === "grab" ? gripperGrabPwm : gripperReleasePwm, id)
             } else {
