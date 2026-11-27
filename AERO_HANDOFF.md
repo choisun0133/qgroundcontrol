@@ -68,6 +68,7 @@
 | 1.6.29 | 영상 주소의 줄바꿈·탭·앞뒤 공백 제거(`VideoManager::_updateVideoUri`) — 붙여넣은 RTSP 주소 끝 %0A 때문에 DeviceKey가 틀려 빈 SDP를 받던 문제. PR #5 Codex 리뷰. 에어로리서치판 윈도우만 |
 | 1.6.30 | 영상 주소 목록(`AeroVideoSources.qml` = MainWindow `aeroVideo`, `QmlControls/AeroVideoSourcePicker.qml`): 기본 주소(…?DeviceKey=)+디바이스 키 또는 rtsp:// 전체 주소, 저장된 연결과 묶으면 primaryLinkName으로 자동 전환, 표시는 실제 영상 설정에서 역산(activeName), 기체가 영상 주소를 보내면(autoStreamConfigured) 선택 막음. "영상 신호 없음" 패널·Ctrl+F. PR #6 Codex 리뷰 4회. 에어로리서치판 윈도우만 |
 | 1.6.31 | 떠 있는 창(AeroFloatingPanel: AI 비서·상태·메시지·카메라·근접·영상) 배경과 접힌 알약이 휠·클릭을 받아 지도로 새지 않게. PR #7 Codex 리뷰. 에어로리서치판 윈도우만 |
+| 1.6.32 | 화물 버튼(`FlyView/AeroPayloadBar.qml`, 창 아님, 손잡이 이동·가로/세로·위치 저장): Ctrl+F에서 끄기/후크+윈치/그리퍼. 후크·윈치 = DO_SET_SERVO(서보 번호·PWM은 globals.aeroPayload*), 그리퍼 = FC 그리퍼(DO_GRIPPER) 또는 서보 직접. 서보 명령은 한 번에 하나, 대기 요청은 채널별 보관(줄 멈춤 유실 방지), 중복 거절은 우리 전송 중일 때만 처리, 확인창은 연 시점 기체로만 전송. 그리퍼 상태: 연결 시 투하, ACK로 갱신, 외부 명령·무응답은 확인 필요. 아이콘 `resources/aero/payload/`. PR #8·#9 Codex 리뷰. 에어로리서치판 윈도우만 |
 | 1.6.25 | 배터리 전압 범위: 입력 즉시 적용, 상태 줄에 "전압 = %" 표시(`AeroStatusGroup.qml`), 전압을 보내는 배터리를 골라 계산(`AeroLinkStatus.qml`). 에어로리서치판 윈도우만 |
 
 ## 5. 기능별 주요 파일
