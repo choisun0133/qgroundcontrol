@@ -9,7 +9,8 @@ import QGroundControl.Controls
 
 // AeroResearch: payload buttons on the fly view, switched on from Ctrl+F (globals.aeroPayloadMode).
 //  - "hook":    hook (SERVO12) open/close + winch line (SERVO13) up/stop/down, MAV_CMD_DO_SET_SERVO
-//  - "gripper": grab / release through the flight controller's gripper, MAV_CMD_DO_GRIPPER
+//  - "gripper": grab / release through the flight controller's gripper (MAV_CMD_DO_GRIPPER), or a
+//               servo output directly (MAV_CMD_DO_SET_SERVO), chosen in Ctrl+F
 // Not a window: just the buttons, moved by the grip handle, horizontal or vertical, position saved.
 // Releasing a load (hook open, gripper release) asks for confirmation first.
 // Gripper state: released when a vehicle connects (the gripper boots open), then follows the
@@ -59,7 +60,7 @@ Item {
                 return
             }
             if (command === control._mavCmdDoSetServo && control._servoBusy) {
-                control._servoDone()
+                control._servoDone(ackResult, failureCode)
             } else if (command === control._mavCmdDoGripper) {
                 if (control._gripperPending === "") {
                     // A gripper command from elsewhere (joystick): we can't tell grab from release
@@ -89,6 +90,10 @@ Item {
     readonly property int lineUpPwm:     globals.aeroPayloadLineUpPwm
     readonly property int lineStopPwm:   globals.aeroPayloadLineStopPwm
     readonly property int lineDownPwm:   globals.aeroPayloadLineDownPwm
+    readonly property bool gripperUsesServo: globals.aeroPayloadGripperOutput === "servo"
+    readonly property int gripperChannel:    globals.aeroPayloadGripperServo
+    readonly property int gripperGrabPwm:    globals.aeroPayloadGripperGrabPwm
+    readonly property int gripperReleasePwm: globals.aeroPayloadGripperReleasePwm
 
     readonly property int _mavCmdDoSetServo:    183     // MAV_CMD_DO_SET_SERVO
     readonly property int _mavCmdDoGripper:     211     // MAV_CMD_DO_GRIPPER
@@ -113,9 +118,9 @@ Item {
     // that channel wins, in the order the channels were first queued), so a winch stop can't be
     // replaced by a hook command.
     property bool   _servoBusy:     false
-    property var    _servoQueue:    []          // [{ channel, pwm }], at most one per channel
+    property var    _servoQueue:    []          // [{ channel, pwm, tag }], at most one per channel
     property var    _servoVehicle:  null
-    property var    _servoInFlight: null        // { channel, pwm } last sent
+    property var    _servoInFlight: null        // { channel, pwm, tag } last sent; tag "grab"/"release" for a servo gripper
     // True only while our own sendCommand() runs: the vehicle's queue reports a duplicate rejection
     // synchronously, so this tells our rejection apart from another source's (joystick, other UI).
     property bool   _sendingServo:      false
@@ -137,28 +142,38 @@ Item {
         _servoBusy = true       // still waiting for the older command's result
     }
 
-    function _sendServo(vehicle, channel, pwm) {
+    function _sendServo(vehicle, channel, pwm, tag) {
+        var request = { channel: channel, pwm: pwm, tag: tag || "" }
         if (_servoBusy) {
             var queue = _servoQueue.slice()
             var index = queue.findIndex(function(r) { return r.channel === channel })
             if (index >= 0) {
-                queue[index] = { channel: channel, pwm: pwm }
+                queue[index] = request
             } else {
-                queue.push({ channel: channel, pwm: pwm })
+                queue.push(request)
             }
             _servoQueue = queue
             return
         }
         _servoBusy = true
         _servoVehicle = vehicle
-        _servoInFlight = { channel: channel, pwm: pwm }
+        _servoInFlight = request
         servoWatchdog.restart()
         _sendingServo = true
         vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, channel, pwm)
         _sendingServo = false
     }
 
-    function _servoDone() {
+    // ackResult: MAV_RESULT (-1 when unknown); failureCode: Vehicle::MavCmdResultFailureCode_t
+    function _servoDone(ackResult, failureCode) {
+        if (_servoInFlight && _servoInFlight.tag !== "") {
+            if (ackResult === 0) {                  // MAV_RESULT_ACCEPTED
+                gripperState = _servoInFlight.tag
+            } else if (failureCode === 1) {         // no response: it may or may not have moved
+                gripperState = "unknown"
+            }
+            _gripperPending = ""
+        }
         _servoBusy = false
         _servoInFlight = null
         servoWatchdog.stop()
@@ -170,7 +185,7 @@ Item {
         var queue = _servoQueue.slice()
         var next = queue.shift()
         _servoQueue = queue
-        _sendServo(vehicle, next.channel, next.pwm)
+        _sendServo(vehicle, next.channel, next.pwm, next.tag)
     }
 
     // The queue always reports a result (ACK, no response or failure; high-latency links wait up to
@@ -179,7 +194,7 @@ Item {
     Timer {
         id:         servoWatchdog
         interval:   130000
-        onTriggered: control._servoDone()
+        onTriggered: control._servoDone(-1, 1)
     }
 
     function _send(id, vehicle) {
@@ -198,9 +213,13 @@ Item {
                 return              // one gripper command at a time
             }
             _gripperPending = id
-            _sendingGripper = true
-            vehicle.sendCommand(_compIdAutopilot, _mavCmdDoGripper, true, 0, id === "grab" ? _gripperGrab : _gripperRelease)
-            _sendingGripper = false
+            if (gripperUsesServo) {
+                _sendServo(vehicle, gripperChannel, id === "grab" ? gripperGrabPwm : gripperReleasePwm, id)
+            } else {
+                _sendingGripper = true
+                vehicle.sendCommand(_compIdAutopilot, _mavCmdDoGripper, true, 0, id === "grab" ? _gripperGrab : _gripperRelease)
+                _sendingGripper = false
+            }
             break
         default:
             return

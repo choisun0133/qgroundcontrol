@@ -106,6 +106,10 @@ ApplicationWindow {
         property alias              aeroPayloadLineUpPwm:           aeroPayloadSettings.lineUpPwm
         property alias              aeroPayloadLineDownPwm:         aeroPayloadSettings.lineDownPwm
         property alias              aeroPayloadLineStopPwm:         aeroPayloadSettings.lineStopPwm
+        property alias              aeroPayloadGripperOutput:       aeroPayloadSettings.gripperOutput     // "fc" | "servo"
+        property alias              aeroPayloadGripperServo:        aeroPayloadSettings.gripperServo
+        property alias              aeroPayloadGripperGrabPwm:      aeroPayloadSettings.gripperGrabPwm
+        property alias              aeroPayloadGripperReleasePwm:   aeroPayloadSettings.gripperReleasePwm
 
         // Property to manage RemoteID quick access to settings page
         property bool               commingFromRIDIndicator:        false
@@ -122,6 +126,10 @@ ApplicationWindow {
         property int    lineUpPwm:      1900
         property int    lineDownPwm:    1100
         property int    lineStopPwm:    1500
+        property string gripperOutput:      "fc"
+        property int    gripperServo:       9
+        property int    gripperGrabPwm:     1100
+        property int    gripperReleasePwm:  1900
     }
 
     Settings {
