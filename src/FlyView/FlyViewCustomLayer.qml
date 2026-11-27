@@ -64,6 +64,12 @@ Item {
     // Keyboard flight control (mode 2) with on-screen key display; started from the top pill or Ctrl+F
     AeroKeyboardControl { }
 
+    // Payload buttons (hook + winch or gripper), switched on from Ctrl+F; starts next to the tool strip
+    AeroPayloadBar {
+        defaultX:   ScreenTools.defaultFontPixelWidth * 10
+        defaultY:   _root.height * 0.42
+    }
+
     // since this file is a placeholder for the custom layer in a standard build, we will just pass through the parent insets
     QGCToolInsets {
         id:                     _toolInsets

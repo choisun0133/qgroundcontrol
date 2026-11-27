@@ -232,6 +232,123 @@ Popup {
             }
         }
 
+        // ---- Payload buttons ----
+        Rectangle {
+            Layout.fillWidth:       true
+            Layout.preferredHeight: payloadColumn.implicitHeight + control._u * 0.8
+            radius:                 control._u * 0.35
+            color:                  "#15181B"
+            border.color:           "#2A2D31"
+
+            ColumnLayout {
+                id:                     payloadColumn
+                anchors.left:           parent.left
+                anchors.right:          parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins:        control._u * 0.5
+                spacing:                control._u * 0.3
+
+                QGCLabel { text: qsTr("화물 버튼"); font.bold: true }
+                RowLayout {
+                    id:                 payloadModeRow
+                    Layout.fillWidth:   true
+                    spacing:            control._u * 0.3
+
+                    Repeater {
+                        model: [ { mode: "off", label: qsTr("끄기") }, { mode: "hook", label: qsTr("후크 + 윈치") }, { mode: "gripper", label: qsTr("그리퍼") } ]
+
+                        QGCButton {
+                            required property var modelData
+                            Layout.fillWidth:   true
+                            text:               modelData.label
+                            checkable:          true
+                            checked:            globals.aeroPayloadMode === modelData.mode
+                            onClicked:          globals.aeroPayloadMode = modelData.mode
+                        }
+                    }
+                }
+
+                // Hook / winch outputs: servo number and PWM (max = open / up, min = close / down)
+                GridLayout {
+                    Layout.fillWidth:   true
+                    visible:            globals.aeroPayloadMode === "hook"
+                    columns:            4
+                    rowSpacing:         control._u * 0.25
+                    columnSpacing:      control._u * 0.3
+
+                    QGCLabel { text: qsTr("후크 서보") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 3
+                        text:                   globals.aeroPayloadHookServo
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 1; top: 32 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadHookServo = parseInt(text) }
+                    }
+                    QGCLabel { text: qsTr("열림(최대)") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadHookOpenPwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadHookOpenPwm = parseInt(text) }
+                    }
+                    Item { Layout.columnSpan: 2; Layout.preferredHeight: 1 }
+                    QGCLabel { text: qsTr("닫힘(최소)") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadHookClosePwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadHookClosePwm = parseInt(text) }
+                    }
+
+                    QGCLabel { text: qsTr("줄 서보") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 3
+                        text:                   globals.aeroPayloadLineServo
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 1; top: 32 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadLineServo = parseInt(text) }
+                    }
+                    QGCLabel { text: qsTr("올림(최대)") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadLineUpPwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadLineUpPwm = parseInt(text) }
+                    }
+                    Item { Layout.columnSpan: 2; Layout.preferredHeight: 1 }
+                    QGCLabel { text: qsTr("내림(최소)") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadLineDownPwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadLineDownPwm = parseInt(text) }
+                    }
+                    Item { Layout.columnSpan: 2; Layout.preferredHeight: 1 }
+                    QGCLabel { text: qsTr("멈춤(중립)") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadLineStopPwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadLineStopPwm = parseInt(text) }
+                    }
+                }
+
+                QGCLabel {
+                    Layout.fillWidth:   true
+                    visible:            globals.aeroPayloadMode === "gripper"
+                    wrapMode:           Text.WordWrap
+                    color:              "#9BA1A6"
+                    font.pointSize:     ScreenTools.smallFontPointSize
+                    text:               qsTr("그리퍼는 비행 컨트롤러의 그리퍼 기능(잡기/놓기 명령)을 씁니다. 서보 번호와 값은 비행 컨트롤러 그리퍼 설정을 따릅니다.")
+                }
+            }
+        }
+
         // ---- Video source ----
         Rectangle {
             Layout.fillWidth:       true

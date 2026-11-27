@@ -17,6 +17,15 @@
         <file alias="AeroManualControl.svg">resources/AeroManualControl.svg</file>
         <file alias="AeroLockup.svg">resources/AeroLockup.svg</file>
         <file alias="AeroDroneLineArt.svg">resources/AeroDroneLineArt.svg</file>
+        <file alias="AeroPayloadHookOpen.svg">resources/aero/payload/HookOpen.svg</file>
+        <file alias="AeroPayloadHookClose.svg">resources/aero/payload/HookClose.svg</file>
+        <file alias="AeroPayloadLineUp.svg">resources/aero/payload/LineUp.svg</file>
+        <file alias="AeroPayloadLineStop.svg">resources/aero/payload/LineStop.svg</file>
+        <file alias="AeroPayloadLineDown.svg">resources/aero/payload/LineDown.svg</file>
+        <file alias="AeroPayloadGripperGrab.svg">resources/aero/payload/GripperGrab.svg</file>
+        <file alias="AeroPayloadGripperRelease.svg">resources/aero/payload/GripperRelease.svg</file>
+        <file alias="AeroPayloadGripperGrabActive.svg">resources/aero/payload/GripperGrabActive.svg</file>
+        <file alias="AeroPayloadGripperReleaseActive.svg">resources/aero/payload/GripperReleaseActive.svg</file>
         <file alias="rtl.svg">resources/rtl.svg</file>
         <file alias="SplashScreen">resources/SplashScreen.png</file>
         <file alias="takeoff.svg">resources/takeoff.svg</file>
