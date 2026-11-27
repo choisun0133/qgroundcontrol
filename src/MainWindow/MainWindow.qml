@@ -110,6 +110,7 @@ ApplicationWindow {
         property alias              aeroPayloadGripperServo:        aeroPayloadSettings.gripperServo
         property alias              aeroPayloadGripperGrabPwm:      aeroPayloadSettings.gripperGrabPwm
         property alias              aeroPayloadGripperReleasePwm:   aeroPayloadSettings.gripperReleasePwm
+        property alias              aeroPayloadScale:               aeroPayloadSettings.scale             // button size, 0.6 - 2.0
 
         // Property to manage RemoteID quick access to settings page
         property bool               commingFromRIDIndicator:        false
@@ -130,6 +131,7 @@ ApplicationWindow {
         property int    gripperServo:       9
         property int    gripperGrabPwm:     1100
         property int    gripperReleasePwm:  1900
+        property real   scale:              1.0
     }
 
     Settings {
