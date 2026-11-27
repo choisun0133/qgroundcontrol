@@ -49,12 +49,12 @@ Item {
             }
             if (failureCode === control._failureDuplicate) {
                 // Our send was refused because an older identical command is still pending
-                if (command === control._mavCmdDoSetServo && control._servoBusy) {
+                // Only our own send can be rejected while the flag is up; another source's rejection
+                // leaves our pending request alone
+                if (command === control._mavCmdDoSetServo && control._sendingServo) {
                     control._servoRejectedAsDuplicate()
-                } else if (command === control._mavCmdDoGripper) {
-                    // This panel sends one gripper command at a time, so the pending one belongs to
-                    // another source (joystick): ours was not sent, and that ACK must not set our state
-                    control._gripperPending = ""
+                } else if (command === control._mavCmdDoGripper && control._sendingGripper) {
+                    control._gripperPending = ""    // ours was not sent
                 }
                 return
             }
@@ -107,6 +107,10 @@ Item {
     property var    _servoQueue:    []          // [{ channel, pwm }], at most one per channel
     property var    _servoVehicle:  null
     property var    _servoInFlight: null        // { channel, pwm } last sent
+    // True only while our own sendCommand() runs: the vehicle's queue reports a duplicate rejection
+    // synchronously, so this tells our rejection apart from another source's (joystick, other UI).
+    property bool   _sendingServo:      false
+    property bool   _sendingGripper:    false
 
     // A request rejected as a duplicate (an older DO_SET_SERVO is still pending in the vehicle's
     // queue) goes back to the front of the queue and is sent when that older command finishes.
@@ -140,7 +144,9 @@ Item {
         _servoVehicle = vehicle
         _servoInFlight = { channel: channel, pwm: pwm }
         servoWatchdog.restart()
+        _sendingServo = true
         vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, channel, pwm)
+        _sendingServo = false
     }
 
     function _servoDone() {
@@ -183,7 +189,9 @@ Item {
                 return              // one gripper command at a time
             }
             _gripperPending = id
+            _sendingGripper = true
             vehicle.sendCommand(_compIdAutopilot, _mavCmdDoGripper, true, 0, id === "grab" ? _gripperGrab : _gripperRelease)
+            _sendingGripper = false
             break
         default:
             return
