@@ -338,13 +338,67 @@ Popup {
                     }
                 }
 
-                QGCLabel {
+                // Gripper output: the flight controller's gripper function, or a servo output directly
+                RowLayout {
                     Layout.fillWidth:   true
                     visible:            globals.aeroPayloadMode === "gripper"
+                    spacing:            control._u * 0.3
+
+                    Repeater {
+                        model: [ { output: "fc", label: qsTr("FC 그리퍼 기능") }, { output: "servo", label: qsTr("서보 직접") } ]
+
+                        QGCButton {
+                            required property var modelData
+                            Layout.fillWidth:   true
+                            text:               modelData.label
+                            checkable:          true
+                            checked:            globals.aeroPayloadGripperOutput === modelData.output
+                            onClicked:          globals.aeroPayloadGripperOutput = modelData.output
+                        }
+                    }
+                }
+
+                GridLayout {
+                    Layout.fillWidth:   true
+                    visible:            globals.aeroPayloadMode === "gripper" && globals.aeroPayloadGripperOutput === "servo"
+                    columns:            4
+                    rowSpacing:         control._u * 0.25
+                    columnSpacing:      control._u * 0.3
+
+                    QGCLabel { text: qsTr("그리퍼 서보") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 3
+                        text:                   globals.aeroPayloadGripperServo
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 1; top: 32 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadGripperServo = parseInt(text) }
+                    }
+                    QGCLabel { text: qsTr("잡기") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadGripperGrabPwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadGripperGrabPwm = parseInt(text) }
+                    }
+                    Item { Layout.columnSpan: 2; Layout.preferredHeight: 1 }
+                    QGCLabel { text: qsTr("투하") }
+                    QGCTextField {
+                        Layout.preferredWidth:  control._u * 4
+                        text:                   globals.aeroPayloadGripperReleasePwm
+                        inputMethodHints:       Qt.ImhDigitsOnly
+                        validator:              IntValidator { bottom: 800; top: 2200 }
+                        onEditingFinished:      if (acceptableInput) { globals.aeroPayloadGripperReleasePwm = parseInt(text) }
+                    }
+                }
+
+                QGCLabel {
+                    Layout.fillWidth:   true
+                    visible:            globals.aeroPayloadMode === "gripper" && globals.aeroPayloadGripperOutput !== "servo"
                     wrapMode:           Text.WordWrap
                     color:              "#9BA1A6"
                     font.pointSize:     ScreenTools.smallFontPointSize
-                    text:               qsTr("그리퍼는 비행 컨트롤러의 그리퍼 기능(잡기/놓기 명령)을 씁니다. 서보 번호와 값은 비행 컨트롤러 그리퍼 설정을 따릅니다.")
+                    text:               qsTr("비행 컨트롤러의 그리퍼 기능(잡기/놓기 명령)을 씁니다. 서보 번호와 값은 비행 컨트롤러 그리퍼 설정을 따릅니다.")
                 }
             }
         }
