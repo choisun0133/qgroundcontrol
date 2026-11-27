@@ -51,8 +51,12 @@ Item {
                 // Our send was refused because an older identical command is still pending
                 if (command === control._mavCmdDoSetServo && control._servoBusy) {
                     control._servoRejectedAsDuplicate()
+                } else if (command === control._mavCmdDoGripper) {
+                    // This panel sends one gripper command at a time, so the pending one belongs to
+                    // another source (joystick): ours was not sent, and that ACK must not set our state
+                    control._gripperPending = ""
                 }
-                return      // the gripper keeps its pending state; the original's result follows
+                return
             }
             if (command === control._mavCmdDoSetServo && control._servoBusy) {
                 control._servoDone()
