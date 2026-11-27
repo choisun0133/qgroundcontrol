@@ -34,7 +34,7 @@ Item {
         gripperState = "release"
         _gripperPending = ""
         _servoBusy = false
-        _servoNext = null
+        _servoQueue = []
         servoWatchdog.stop()
     }
 
@@ -88,14 +88,23 @@ Item {
     ]
 
     // The vehicle's command queue rejects a second DO_SET_SERVO while one is waiting for its ACK, so
-    // servo commands go one at a time and the newest request waits (a winch stop is never dropped).
+    // servo commands go one at a time. Requests made meanwhile wait, one per channel (the newest for
+    // that channel wins, in the order the channels were first queued), so a winch stop can't be
+    // replaced by a hook command.
     property bool   _servoBusy:     false
-    property var    _servoNext:     null        // { channel, pwm }
+    property var    _servoQueue:    []          // [{ channel, pwm }], at most one per channel
     property var    _servoVehicle:  null
 
     function _sendServo(vehicle, channel, pwm) {
         if (_servoBusy) {
-            _servoNext = { channel: channel, pwm: pwm }
+            var queue = _servoQueue.slice()
+            var index = queue.findIndex(function(r) { return r.channel === channel })
+            if (index >= 0) {
+                queue[index] = { channel: channel, pwm: pwm }
+            } else {
+                queue.push({ channel: channel, pwm: pwm })
+            }
+            _servoQueue = queue
             return
         }
         _servoBusy = true
@@ -107,12 +116,15 @@ Item {
     function _servoDone() {
         _servoBusy = false
         servoWatchdog.stop()
-        var next = _servoNext
-        _servoNext = null
         var vehicle = QGroundControl.multiVehicleManager.activeVehicle
-        if (next && vehicle && vehicle === _servoVehicle) {
-            _sendServo(vehicle, next.channel, next.pwm)
+        if (_servoQueue.length === 0 || !vehicle || vehicle !== _servoVehicle) {
+            _servoQueue = []
+            return
         }
+        var queue = _servoQueue.slice()
+        var next = queue.shift()
+        _servoQueue = queue
+        _sendServo(vehicle, next.channel, next.pwm)
     }
 
     // The queue always reports a result (ACK, no response or failure); this only guards a lost signal
