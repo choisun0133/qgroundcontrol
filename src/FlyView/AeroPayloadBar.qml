@@ -35,6 +35,7 @@ Item {
         _gripperPending = ""
         _servoBusy = false
         _servoQueue = []
+        _servoInFlight = null
         servoWatchdog.stop()
     }
 
@@ -43,8 +44,15 @@ Item {
     Connections {
         target: control._vehicle
         function onMavCommandResult(vehicleId, targetComponent, command, ackResult, failureCode) {
-            if (targetComponent !== control._compIdAutopilot || failureCode === control._failureDuplicate) {
-                return      // someone else's command, or a rejected duplicate (the original is still pending)
+            if (targetComponent !== control._compIdAutopilot) {
+                return
+            }
+            if (failureCode === control._failureDuplicate) {
+                // Our send was refused because an older identical command is still pending
+                if (command === control._mavCmdDoSetServo && control._servoBusy) {
+                    control._servoRejectedAsDuplicate()
+                }
+                return      // the gripper keeps its pending state; the original's result follows
             }
             if (command === control._mavCmdDoSetServo && control._servoBusy) {
                 control._servoDone()
@@ -94,6 +102,23 @@ Item {
     property bool   _servoBusy:     false
     property var    _servoQueue:    []          // [{ channel, pwm }], at most one per channel
     property var    _servoVehicle:  null
+    property var    _servoInFlight: null        // { channel, pwm } last sent
+
+    // A request rejected as a duplicate (an older DO_SET_SERVO is still pending in the vehicle's
+    // queue) goes back to the front of the queue and is sent when that older command finishes.
+    function _servoRejectedAsDuplicate() {
+        if (!_servoInFlight) {
+            return
+        }
+        var queue = _servoQueue.slice()
+        var rejected = _servoInFlight
+        if (!queue.some(function(r) { return r.channel === rejected.channel })) {
+            queue.unshift(rejected)
+        }
+        _servoQueue = queue
+        _servoInFlight = null
+        _servoBusy = true       // still waiting for the older command's result
+    }
 
     function _sendServo(vehicle, channel, pwm) {
         if (_servoBusy) {
@@ -109,12 +134,14 @@ Item {
         }
         _servoBusy = true
         _servoVehicle = vehicle
+        _servoInFlight = { channel: channel, pwm: pwm }
         servoWatchdog.restart()
         vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, channel, pwm)
     }
 
     function _servoDone() {
         _servoBusy = false
+        _servoInFlight = null
         servoWatchdog.stop()
         var vehicle = QGroundControl.multiVehicleManager.activeVehicle
         if (_servoQueue.length === 0 || !vehicle || vehicle !== _servoVehicle) {
@@ -127,10 +154,12 @@ Item {
         _sendServo(vehicle, next.channel, next.pwm)
     }
 
-    // The queue always reports a result (ACK, no response or failure); this only guards a lost signal
+    // The queue always reports a result (ACK, no response or failure; high-latency links wait up to
+    // 120 s); this only guards a lost signal. A send it triggers too early is rejected as a duplicate
+    // and re-queued, so nothing is lost.
     Timer {
         id:         servoWatchdog
-        interval:   15000
+        interval:   130000
         onTriggered: control._servoDone()
     }
 
