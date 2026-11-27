@@ -33,18 +33,27 @@ Item {
     on_VehicleChanged: {
         gripperState = "release"
         _gripperPending = ""
+        _servoBusy = false
+        _servoNext = null
+        servoWatchdog.stop()
     }
+
+    readonly property int _failureDuplicate: 2      // Vehicle::MavCmdResultFailureDuplicateCommand
 
     Connections {
         target: control._vehicle
         function onMavCommandResult(vehicleId, targetComponent, command, ackResult, failureCode) {
-            if (command !== control._mavCmdDoGripper || control._gripperPending === "") {
-                return
+            if (targetComponent !== control._compIdAutopilot || failureCode === control._failureDuplicate) {
+                return      // someone else's command, or a rejected duplicate (the original is still pending)
             }
-            if (ackResult === 0) {          // MAV_RESULT_ACCEPTED
-                control.gripperState = control._gripperPending
+            if (command === control._mavCmdDoSetServo && control._servoBusy) {
+                control._servoDone()
+            } else if (command === control._mavCmdDoGripper && control._gripperPending !== "") {
+                if (ackResult === 0) {      // MAV_RESULT_ACCEPTED
+                    control.gripperState = control._gripperPending
+                }
+                control._gripperPending = ""
             }
-            control._gripperPending = ""
         }
     }
 
@@ -78,40 +87,81 @@ Item {
         { id: "release", label: qsTr("물건 투하"), icon: "/res/AeroPayloadGripperRelease.svg", confirm: true }
     ]
 
-    function _send(id) {
+    // The vehicle's command queue rejects a second DO_SET_SERVO while one is waiting for its ACK, so
+    // servo commands go one at a time and the newest request waits (a winch stop is never dropped).
+    property bool   _servoBusy:     false
+    property var    _servoNext:     null        // { channel, pwm }
+    property var    _servoVehicle:  null
+
+    function _sendServo(vehicle, channel, pwm) {
+        if (_servoBusy) {
+            _servoNext = { channel: channel, pwm: pwm }
+            return
+        }
+        _servoBusy = true
+        _servoVehicle = vehicle
+        servoWatchdog.restart()
+        vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, channel, pwm)
+    }
+
+    function _servoDone() {
+        _servoBusy = false
+        servoWatchdog.stop()
+        var next = _servoNext
+        _servoNext = null
         var vehicle = QGroundControl.multiVehicleManager.activeVehicle
-        if (!vehicle) {
+        if (next && vehicle && vehicle === _servoVehicle) {
+            _sendServo(vehicle, next.channel, next.pwm)
+        }
+    }
+
+    // The queue always reports a result (ACK, no response or failure); this only guards a lost signal
+    Timer {
+        id:         servoWatchdog
+        interval:   15000
+        onTriggered: control._servoDone()
+    }
+
+    function _send(id, vehicle) {
+        if (!vehicle || vehicle !== QGroundControl.multiVehicleManager.activeVehicle) {
             return
         }
         switch (id) {
-        case "hookOpen":  vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, hookChannel, hookOpenPwm); break
-        case "hookClose": vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, hookChannel, hookClosePwm); break
-        case "lineUp":    vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, lineChannel, lineUpPwm); break
-        case "lineStop":  vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, lineChannel, lineStopPwm); break
-        case "lineDown":  vehicle.sendCommand(_compIdAutopilot, _mavCmdDoSetServo, true, lineChannel, lineDownPwm); break
+        case "hookOpen":  _sendServo(vehicle, hookChannel, hookOpenPwm); break
+        case "hookClose": _sendServo(vehicle, hookChannel, hookClosePwm); break
+        case "lineUp":    _sendServo(vehicle, lineChannel, lineUpPwm); break
+        case "lineStop":  _sendServo(vehicle, lineChannel, lineStopPwm); break
+        case "lineDown":  _sendServo(vehicle, lineChannel, lineDownPwm); break
         case "grab":
-            _gripperPending = "grab"
-            vehicle.sendCommand(_compIdAutopilot, _mavCmdDoGripper, true, 0, _gripperGrab)
-            break
         case "release":
-            _gripperPending = "release"
-            vehicle.sendCommand(_compIdAutopilot, _mavCmdDoGripper, true, 0, _gripperRelease)
+            if (_gripperPending !== "") {
+                return              // one gripper command at a time
+            }
+            _gripperPending = id
+            vehicle.sendCommand(_compIdAutopilot, _mavCmdDoGripper, true, 0, id === "grab" ? _gripperGrab : _gripperRelease)
             break
-        default:          return
+        default:
+            return
         }
         _last = id
     }
 
     function _press(button) {
+        // The command goes to the vehicle the button was pressed for; if the active vehicle changes
+        // (or disconnects) while the confirmation is open, nothing is sent.
+        var vehicle = QGroundControl.multiVehicleManager.activeVehicle
+        if (!vehicle) {
+            return
+        }
         if (!button.confirm) {
-            _send(button.id)
+            _send(button.id, vehicle)
             return
         }
         QGroundControl.showMessageDialog(control, button.label,
                                          button.id === "hookOpen" ? qsTr("후크를 엽니다. 화물이 분리될 수 있습니다. 진행할까요?")
                                                                   : qsTr("그리퍼를 열어 물건을 투하합니다. 진행할까요?"),
                                          Dialog.Cancel | Dialog.Ok,
-                                         function() { control._send(button.id) })
+                                         function() { control._send(button.id, vehicle) })
     }
 
     // ---- placement ----
