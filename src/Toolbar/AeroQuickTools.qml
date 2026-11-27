@@ -268,6 +268,29 @@ Popup {
                     }
                 }
 
+                RowLayout {
+                    Layout.fillWidth:   true
+                    visible:            globals.aeroPayloadMode !== "off"
+                    spacing:            control._u * 0.3
+
+                    QGCLabel { text: qsTr("버튼 크기"); Layout.fillWidth: true }
+                    QGCButton {
+                        text:       "−"
+                        enabled:    globals.aeroPayloadScale > 0.6
+                        onClicked:  globals.aeroPayloadScale = Math.round(Math.max(0.6, globals.aeroPayloadScale - 0.1) * 10) / 10
+                    }
+                    QGCLabel {
+                        Layout.preferredWidth:  control._u * 3
+                        horizontalAlignment:    Text.AlignHCenter
+                        text:                   Math.round(globals.aeroPayloadScale * 100) + "%"
+                    }
+                    QGCButton {
+                        text:       "+"
+                        enabled:    globals.aeroPayloadScale < 2.0
+                        onClicked:  globals.aeroPayloadScale = Math.round(Math.min(2.0, globals.aeroPayloadScale + 0.1) * 10) / 10
+                    }
+                }
+
                 // Hook / winch outputs: servo number and PWM (max = open / up, min = close / down)
                 GridLayout {
                     Layout.fillWidth:   true

@@ -25,7 +25,15 @@ Item {
     readonly property string mode:          globals.aeroPayloadMode
     readonly property var    _vehicle:      QGroundControl.multiVehicleManager.activeVehicle
     readonly property real   _u:            ScreenTools.defaultFontPixelHeight
-    readonly property real   _button:       _u * 4.6
+    readonly property real   scale_:        Math.max(minScale, Math.min(maxScale, globals.aeroPayloadScale))
+    readonly property real   _button:       _u * 4.6 * scale_
+    readonly property real   minScale:      0.6
+    readonly property real   maxScale:      2.0
+
+    function setScale(value) {
+        globals.aeroPayloadScale = Math.round(Math.max(minScale, Math.min(maxScale, value)) * 10) / 10
+        Qt.callLater(_clamp)
+    }
     readonly property real   _gap:          _u * 0.35
     property string          _last:         ""      // id of the last button pressed (highlighted)
     property string          gripperState:  "release"   // "grab" | "release" | "unknown", from the FC's command ACK
@@ -352,6 +360,32 @@ Item {
                     font.bold:          control.mode === "gripper"
                     elide:              Text.ElideRight
                 }
+                // Button size − / +
+                Repeater {
+                    model: [ { text: "−", step: -0.1 }, { text: "+", step: 0.1 } ]
+
+                    Rectangle {
+                        required property var modelData
+                        Layout.preferredWidth:  control._u * 1.2
+                        Layout.preferredHeight: control._u * 1.1
+                        radius:                 control._u * 0.25
+                        color:                  sizeMouse.containsMouse ? "#2A2D31" : "transparent"
+                        opacity:                (modelData.step < 0 ? control.scale_ > control.minScale : control.scale_ < control.maxScale) ? 1 : 0.35
+
+                        QGCLabel {
+                            anchors.centerIn:   parent
+                            text:               modelData.text
+                            color:              "#ECEDEE"
+                            font.bold:          true
+                        }
+                        MouseArea {
+                            id:             sizeMouse
+                            anchors.fill:   parent
+                            hoverEnabled:   true
+                            onClicked:      control.setScale(control.scale_ + modelData.step)
+                        }
+                    }
+                }
                 Rectangle {
                     Layout.preferredWidth:  control._u * 1.4
                     Layout.preferredHeight: control._u * 1.1
@@ -418,6 +452,9 @@ Item {
                     anchors.bottomMargin:       control._u * 0.3
                     text:                       modelData.label
                     font.bold:                  true
+                    font.pointSize:             ScreenTools.defaultFontPointSize * Math.max(0.8, Math.min(1.6, control.scale_))
+                    width:                      Math.min(implicitWidth, parent.width - control._u * 0.2)
+                    elide:                      Text.ElideRight
                     color:                      "#ECEDEE"
                 }
                 MouseArea {
