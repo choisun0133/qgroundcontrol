@@ -97,8 +97,31 @@ ApplicationWindow {
         property alias              aeroBatteryMaxVolt:             aeroBatterySettings.maxVolt
         property alias              aeroBatteryMinVolt:             aeroBatterySettings.minVolt
 
+        // AeroResearch: payload buttons on the fly view: "off" | "hook" (hook + winch) | "gripper"
+        property alias              aeroPayloadMode:                aeroPayloadSettings.mode
+        property alias              aeroPayloadHookServo:           aeroPayloadSettings.hookServo
+        property alias              aeroPayloadHookOpenPwm:         aeroPayloadSettings.hookOpenPwm
+        property alias              aeroPayloadHookClosePwm:        aeroPayloadSettings.hookClosePwm
+        property alias              aeroPayloadLineServo:           aeroPayloadSettings.lineServo
+        property alias              aeroPayloadLineUpPwm:           aeroPayloadSettings.lineUpPwm
+        property alias              aeroPayloadLineDownPwm:         aeroPayloadSettings.lineDownPwm
+        property alias              aeroPayloadLineStopPwm:         aeroPayloadSettings.lineStopPwm
+
         // Property to manage RemoteID quick access to settings page
         property bool               commingFromRIDIndicator:        false
+    }
+
+    Settings {
+        id:         aeroPayloadSettings
+        category:   "AeroPayload"
+        property string mode:           "off"
+        property int    hookServo:      12
+        property int    hookOpenPwm:    1900
+        property int    hookClosePwm:   1100
+        property int    lineServo:      13
+        property int    lineUpPwm:      1900
+        property int    lineDownPwm:    1100
+        property int    lineStopPwm:    1500
     }
 
     Settings {
