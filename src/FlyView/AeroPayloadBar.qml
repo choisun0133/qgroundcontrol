@@ -27,7 +27,7 @@ Item {
     readonly property real   _button:       _u * 4.6
     readonly property real   _gap:          _u * 0.35
     property string          _last:         ""      // id of the last button pressed (highlighted)
-    property string          gripperState:  "release"   // "grab" | "release", from the FC's command ACK
+    property string          gripperState:  "release"   // "grab" | "release" | "unknown", from the FC's command ACK
     property string          _gripperPending: ""
 
     on_VehicleChanged: {
@@ -60,9 +60,18 @@ Item {
             }
             if (command === control._mavCmdDoSetServo && control._servoBusy) {
                 control._servoDone()
-            } else if (command === control._mavCmdDoGripper && control._gripperPending !== "") {
-                if (ackResult === 0) {      // MAV_RESULT_ACCEPTED
+            } else if (command === control._mavCmdDoGripper) {
+                if (control._gripperPending === "") {
+                    // A gripper command from elsewhere (joystick): we can't tell grab from release
+                    if (ackResult === 0) {
+                        control.gripperState = "unknown"
+                    }
+                    return
+                }
+                if (ackResult === 0) {                      // MAV_RESULT_ACCEPTED
                     control.gripperState = control._gripperPending
+                } else if (failureCode === 1) {             // no response: it may or may not have acted
+                    control.gripperState = "unknown"
                 }
                 control._gripperPending = ""
             }
@@ -302,10 +311,13 @@ Item {
                         if (control._gripperPending !== "") {
                             return "⠿  " + qsTr("그리퍼: 전송 중…")
                         }
+                        if (control.gripperState === "unknown") {
+                            return "⠿  " + qsTr("그리퍼: 상태 확인 필요")
+                        }
                         return "⠿  " + (control.gripperState === "grab" ? qsTr("그리퍼: 잡는 중") : qsTr("그리퍼: 투하 상태"))
                     }
                     color:              control.mode !== "gripper" || control._gripperPending !== "" ? "#9BA1A6"
-                                        : (control.gripperState === "grab" ? "#3DDC84" : "#FF6B6B")
+                                        : (control.gripperState === "grab" ? "#3DDC84" : (control.gripperState === "release" ? "#FF6B6B" : "#F5C518"))
                     font.bold:          control.mode === "gripper"
                     elide:              Text.ElideRight
                 }
@@ -356,7 +368,7 @@ Item {
                 }
                 border.color:           _gripperActive ? "#ECEDEE" : (control.mode !== "gripper" && control._last === modelData.id ? "#ECEDEE" : "#2A2D31")
                 border.width:           _gripperActive || (control.mode !== "gripper" && control._last === modelData.id) ? 2 : 1
-                opacity:                control.mode === "gripper" && !_gripperActive ? 0.75 : 1
+                opacity:                control.mode === "gripper" && !_gripperActive && control.gripperState !== "unknown" ? 0.75 : 1
 
                 Image {
                     anchors.horizontalCenter:   parent.horizontalCenter
