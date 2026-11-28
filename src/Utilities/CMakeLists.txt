@@ -5,6 +5,8 @@
 
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE
+        AeroUpdater.cc
+        AeroUpdater.h
         AppMessages.cc
         AppMessages.h
         DataRateTracker.cc

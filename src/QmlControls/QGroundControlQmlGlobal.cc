@@ -11,6 +11,7 @@
 #include "QGCMapEngineManager.h"
 #include "ADSBVehicleManager.h"
 #include "AudioOutput.h"
+#include "AeroUpdater.h"
 #include "NTRIPManager.h"
 #include "MAVLinkSigningKeys.h"
 #include "MissionCommandTree.h"
@@ -351,6 +352,11 @@ void QGroundControlQmlGlobal::testAudioOutput()
 QObject* QGroundControlQmlGlobal::audioOutput() const
 {
     return AudioOutput::instance();
+}
+
+QObject* QGroundControlQmlGlobal::aeroUpdater() const
+{
+    return AeroUpdater::instance();
 }
 
 void QGroundControlQmlGlobal::copyToClipboard(const QString& text)

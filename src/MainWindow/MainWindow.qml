@@ -934,4 +934,7 @@ ApplicationWindow {
             }
         }
     }
+
+    // AeroResearch: "new version" banner and the release notes on the first start of a new version
+    AeroUpdateNotice { }
 }
