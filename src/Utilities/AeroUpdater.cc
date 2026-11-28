@@ -44,6 +44,14 @@ bool AeroUpdater::canInstall()
 #endif
 }
 
+void AeroUpdater::setInstallBlocked(bool blocked)
+{
+    if (blocked != _installBlocked) {
+        _installBlocked = blocked;
+        emit installBlockedChanged();
+    }
+}
+
 int AeroUpdater::compareVersions(const QString &a, const QString &b)
 {
     const QStringList pa = a.trimmed().split(QLatin1Char('.'));
@@ -87,6 +95,7 @@ void AeroUpdater::downloadAndInstall(const QString &url, const QString &sha256)
     }
 
     _hash.reset();
+    _writeFailed = false;
     _expectedSha = expected;
     _progress = 0;
     emit progressChanged();
@@ -100,7 +109,10 @@ void AeroUpdater::downloadAndInstall(const QString &url, const QString &sha256)
     connect(_reply, &QNetworkReply::readyRead, this, [this]() {
         const QByteArray chunk = _reply->readAll();
         _hash.addData(chunk);
-        _file.write(chunk);
+        if (_file.write(chunk) != chunk.size()) {
+            _writeFailed = true;        // disk full etc.: the saved file would not match the hash
+            _reply->abort();
+        }
     });
     connect(_reply, &QNetworkReply::downloadProgress, this, [this](qint64 received, qint64 total) {
         _progress = total > 0 ? static_cast<qreal>(received) / static_cast<qreal>(total) : -1;
@@ -130,6 +142,10 @@ void AeroUpdater::_finished()
     reply->deleteLater();
     emit busyChanged();
 
+    if (_writeFailed) {
+        _fail(tr("설치 파일을 저장하지 못했습니다 (디스크 공간을 확인하세요)"));
+        return;
+    }
     if (reply->error() == QNetworkReply::OperationCanceledError) {
         _fail(tr("업데이트를 취소했습니다"));
         return;
@@ -140,12 +156,21 @@ void AeroUpdater::_finished()
     }
     const QByteArray rest = reply->readAll();
     _hash.addData(rest);
-    _file.write(rest);
+    if ((_file.write(rest) != rest.size()) || !_file.flush()) {
+        _fail(tr("설치 파일을 저장하지 못했습니다 (디스크 공간을 확인하세요)"));
+        return;
+    }
     _file.close();
 
     if (QString::fromLatin1(_hash.result().toHex()) != _expectedSha) {
         _file.remove();
         emit failed(tr("받은 파일이 손상되었거나 다른 파일입니다. 다시 시도하세요"));
+        return;
+    }
+
+    if (_installBlocked) {
+        _file.remove();
+        emit failed(tr("기체가 연결되어 있어 설치하지 않았습니다. 기체 연결을 끊고 다시 시도하세요"));
         return;
     }
 

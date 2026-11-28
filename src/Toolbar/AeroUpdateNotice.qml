@@ -97,12 +97,25 @@ Item {
         }
         _error = ""
         if (!_updater.canInstall) {
-            Qt.openUrlExternally(_manifest.page)
+            Qt.openUrlExternally(_manifest.page ? _manifest.page : "https://github.com/choisun0133/qgroundcontrol/releases/latest")
             return
         }
         saved.pendingVersion = _manifest.version
         saved.pendingNotes = _manifest.notes || ""
         _updater.downloadAndInstall(_manifest.url, _manifest.sha256)
+    }
+
+    // A vehicle connecting during the download stops it, and the updater refuses to start the
+    // installer while one is connected
+    Binding {
+        target:     control._updater
+        property:   "installBlocked"
+        value:      control._vehicleConnected
+    }
+    on_VehicleConnectedChanged: {
+        if (_vehicleConnected && _updater.busy) {
+            _updater.cancel()
+        }
     }
 
     Connections {

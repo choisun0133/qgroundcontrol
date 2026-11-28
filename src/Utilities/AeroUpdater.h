@@ -18,6 +18,8 @@ class AeroUpdater : public QObject
     Q_PROPERTY(bool     canInstall      READ canInstall     CONSTANT)   ///< installer can be run from the app (Windows)
     Q_PROPERTY(bool     busy            READ busy           NOTIFY busyChanged)
     Q_PROPERTY(qreal    progress        READ progress       NOTIFY progressChanged)  ///< 0..1, -1 when size unknown
+    /// Set by the UI while a vehicle is connected: the installer is never started then
+    Q_PROPERTY(bool     installBlocked  READ installBlocked WRITE setInstallBlocked NOTIFY installBlockedChanged)
 
 public:
     explicit AeroUpdater(QObject *parent = nullptr);
@@ -27,6 +29,8 @@ public:
     static bool canInstall();
     bool busy() const { return _reply != nullptr; }
     qreal progress() const { return _progress; }
+    bool installBlocked() const { return _installBlocked; }
+    void setInstallBlocked(bool blocked);
 
     /// -1 / 0 / 1 for a < b / a == b / a > b, comparing dotted numbers ("1.6.34" > "1.6.9")
     Q_INVOKABLE static int compareVersions(const QString &a, const QString &b);
@@ -38,6 +42,7 @@ public:
 signals:
     void busyChanged();
     void progressChanged();
+    void installBlockedChanged();
     void failed(const QString &message);
     void installerStarted();
 
@@ -51,4 +56,6 @@ private:
     QCryptographicHash _hash{QCryptographicHash::Sha256};
     QString _expectedSha;
     qreal _progress = 0;
+    bool _installBlocked = false;
+    bool _writeFailed = false;
 };
