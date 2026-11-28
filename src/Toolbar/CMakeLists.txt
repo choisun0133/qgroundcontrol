@@ -12,6 +12,7 @@ qt_add_qml_module(ToolbarModule
         AeroQuickTools.qml
         AeroStatusAlert.qml
         AeroStatusGroup.qml
+        AeroUpdateNotice.qml
         AeroVideoSources.qml
         AeroViewSwitch.qml
         ArmedIndicator.qml

@@ -362,6 +362,11 @@ endif()
 if(QGC_AERO_BRAND STREQUAL "daeyoung")
     add_compile_definitions(QGC_AERO_BRAND_DAEYOUNG)
 endif()
+# AeroResearch release version (AERO_VERSION at the repo root), used by the in-app updater
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/AERO_VERSION")
+file(STRINGS "${CMAKE_SOURCE_DIR}/AERO_VERSION" QGC_AERO_VERSION LIMIT_COUNT 1)
+string(STRIP "${QGC_AERO_VERSION}" QGC_AERO_VERSION)
+add_compile_definitions(QGC_AERO_VERSION="${QGC_AERO_VERSION}")
 if(MSVC)
     add_compile_options(/utf-8)     # Korean product name / strings in generated headers
 endif()
