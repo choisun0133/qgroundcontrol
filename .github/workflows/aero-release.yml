@@ -28,6 +28,7 @@ jobs:
       TAG: ${{ inputs.variant == 'FFmpeg' && 'aerogcs-1.6.33-ffmpeg' || 'aerogcs-1.6.33' }}
       SUFFIX: ${{ inputs.variant == 'FFmpeg' && '-FFmpeg' || '' }}
       TITLE: ${{ inputs.variant == 'FFmpeg' && 'AeroResearch GCS 1.6.33 (FFmpeg 영상 시험판)' || 'AeroResearch GCS 1.6.33' }}
+      VERSION: '1.6.33'
     steps:
       - name: Download build artifacts (newest successful aero-gcs build)
         run: |
@@ -108,6 +109,38 @@ jobs:
             :
           else
             echo "AeroResearch GCS 설치 파일. Windows: Developer = 개발자용(기체 설정·파라미터 포함), User = 사용자용(파라미터 수정 불가). 로그인 없이 아래 Assets에서 바로 받을 수 있습니다." > notes.md
+          fi
+          # Update manifests for the in-app updater (normal releases only): one per brand and edition,
+          # fetched by the app from releases/latest/download/update-<brand>-<edition>.json
+          if [ -z "$SUFFIX" ]; then
+            awk -v v="$VERSION" '
+              $0 ~ "^## " v " " { on = 1; next }
+              on && /^## / { exit }
+              on { print }' notes.md > version-notes.md || true
+            manifest() {  # file, manifest name
+              [ -f "out/$1" ] || return 0
+              python3 - "$1" "$2" <<'PY'
+          import hashlib, json, os, sys
+          name, target = sys.argv[1], sys.argv[2]
+          path = os.path.join("out", name)
+          sha = hashlib.sha256(open(path, "rb").read()).hexdigest()
+          notes = open("version-notes.md", encoding="utf-8").read().strip() if os.path.exists("version-notes.md") else ""
+          data = {
+              "version": os.environ["VERSION"],
+              "url": "https://github.com/%s/releases/download/%s/%s" % (os.environ["REPO"], os.environ["TAG"], name),
+              "sha256": sha,
+              "size": os.path.getsize(path),
+              "notes": notes,
+              "page": "https://github.com/%s/releases/tag/%s" % (os.environ["REPO"], os.environ["TAG"]),
+          }
+          json.dump(data, open(os.path.join("out", target), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+          PY
+            }
+            manifest "AeroResearchGCS-${VERSION}-Windows-x64-Developer-Setup.exe" update-aero-dev.json
+            manifest "AeroResearchGCS-${VERSION}-Windows-x64-User-Setup.exe"      update-aero-user.json
+            manifest "DaeyoungMS-GCS-${VERSION}-Windows-x64-Developer-Setup.exe"  update-daeyoung-dev.json
+            manifest "DaeyoungMS-GCS-${VERSION}-Windows-x64-User-Setup.exe"       update-daeyoung-user.json
+            ls -l out/update-*.json || true
           fi
           gh release delete "$TAG" -R "$REPO" -y --cleanup-tag || true
           gh release create "$TAG" -R "$REPO" --target "${{ github.sha }}" \
